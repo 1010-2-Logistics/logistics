@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: template-service # 서비스명 컨벤션대로 바꾸세요 (예: order-service)
+  profiles:
+    active: local
+
+server:
+  port: 19100 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
