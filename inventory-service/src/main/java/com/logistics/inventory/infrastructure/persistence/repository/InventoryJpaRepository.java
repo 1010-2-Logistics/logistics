@@ -15,6 +15,8 @@ interface InventoryJpaRepository extends JpaRepository<Inventory, UUID> {
 
     Optional<Inventory> findByInventoryIdAndDeletedAtIsNull(UUID inventoryId);
 
+    Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(UUID productId, UUID hubId);
+
     @Query("""
             SELECT i
             FROM Inventory i
