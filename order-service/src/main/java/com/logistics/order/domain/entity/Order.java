@@ -8,16 +8,36 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-// 실제 서비스로 복사할 때: Sample -> 도메인 엔티티명, p_sample -> p_{테이블명}으로 바꾸세요.
 @Getter
 @Entity
-@Table(name = "p_sample")
+@Table(name = "p_order")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "sample_id")
-    private UUID sampleId;
+    @Column(name = "order_id", nullable = false, unique = true)
+    private UUID orderId;
 
+    @Column(name = "start_company_id", nullable = false)
+    private UUID startCompanyId;
+
+    @Column(name = "end_company_id", nullable = false)
+    private UUID endCompanyId;
+
+    @Column(name = "delivery_id", nullable = false)
+    private UUID deliveryId;
+
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private OrderStatus status;
+
+    @Column(name = "request", nullable = false)
+    private String request;
 }

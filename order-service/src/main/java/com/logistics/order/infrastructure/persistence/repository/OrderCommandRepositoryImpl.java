@@ -20,6 +20,6 @@ public class OrderCommandRepositoryImpl implements OrderCommandRepository {
 
     @Override
     public Optional<Order> findByIdAndDeletedAtIsNull(UUID sampleId) {
-        return jpaRepository.findBySampleIdAndDeletedAtIsNull(sampleId);
+        return jpaRepository.findByOrderIdAndDeletedAtIsNull(sampleId);
     }
 }
