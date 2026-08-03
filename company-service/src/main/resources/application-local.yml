@@ -1,11 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=template_service # 스키마명 바꾸세요
+    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=company_service # 스키마명 바꾸세요
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true

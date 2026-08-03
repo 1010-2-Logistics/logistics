@@ -8,9 +8,9 @@ import org.springframework.http.HttpStatus;
 // 네이밍 컨벤션({도메인명}_{에러타입})에 맞춰 항목을 채우세요. (예: HUB_NOT_FOUND)
 @Getter
 @RequiredArgsConstructor
-public enum SampleErrorCode implements ErrorCode {
+public enum CompanyErrorCode implements ErrorCode {
 
-    SAMPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 샘플입니다.");
+    COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 업체입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
