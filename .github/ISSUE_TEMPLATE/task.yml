@@ -1,0 +1,56 @@
+name: 작업 이슈
+description: 기능 구현, 버그 수정 등 작업 단위 이슈를 작성합니다.
+title: "[타입] "
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: 작업 타입
+      description: 이슈 제목 [타입]에 들어갈 값을 선택해주세요. 선택 후 제목의 [타입] 부분을 직접 채워주세요.
+      options:
+        - Feature
+        - Fix
+        - Bug
+        - Refactor
+        - Chore
+        - Docs
+        - Test
+    validations:
+      required: true
+
+  - type: textarea
+    id: work
+    attributes:
+      label: 작업 내용
+      description: 이번 이슈에서 처리할 작업을 한 줄씩 정리해주세요.
+      placeholder: |
+        - 주문 생성 API 구현
+        - 재고 차감 로직 추가
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 상세 설명
+      description: 왜 필요한지, 어떻게 구현할 계획인지 설명해주세요.
+      placeholder: |
+        예) 허브에 재고가 없으면 주문이 실패해야 하므로, 재고 확인 로직을 주문 생성 트랜잭션 안에 포함합니다.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 체크리스트
+      options:
+        - label: API 명세 작성
+        - label: 구현
+        - label: 테스트 코드 작성
+        - label: 코드 리뷰 반영
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: 참고 사항
+      description: 관련 문서, 논의 링크, 캡처 등이 있으면 남겨주세요.
+    validations:
+      required: false
