@@ -59,6 +59,15 @@ public class InventoryCommandService {
     public InventoryRestorationResultDto restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        return null;
+        Inventory inventory = inventoryCommandRepository.findByProductAndHubId(
+                inventoryRestorationCommand.productId(),
+                inventoryRestorationCommand.hubId()
+        ).orElseThrow(()-> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+        inventory.restore(inventoryRestorationCommand.stock());
+
+        Inventory savedInventory = inventoryCommandRepository.save(inventory);
+
+        return InventoryRestorationResultDto.from(savedInventory);
     }
 }

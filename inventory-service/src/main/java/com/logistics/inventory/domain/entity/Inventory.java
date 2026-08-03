@@ -60,7 +60,13 @@ public class Inventory extends BaseEntity {
         validDeductionQuantity(quantity);
         validateStockAvailability(quantity);
 
-        stock -= quantity;
+        this.stock -= quantity;
+    }
+
+    public void restore(Integer quantity) {
+        validateRestorationQuantity(quantity);
+
+        this.stock += quantity;
     }
 
     private void validDeductionQuantity(Integer quantity) {
@@ -72,6 +78,12 @@ public class Inventory extends BaseEntity {
     private void validateStockAvailability(Integer quantity) {
         if (stock < quantity) {
             throw new CustomException(InventoryErrorCode.INVENTORY_OUT_OF_STOCK);
+        }
+    }
+
+    private void validateRestorationQuantity(Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new CustomException(InventoryErrorCode.INVENTORY_INVALID_REQUEST);
         }
     }
 }

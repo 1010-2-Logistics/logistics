@@ -1,7 +1,9 @@
 package com.logistics.inventory.application.service;
 
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
+import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResultDto;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -18,8 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -94,6 +95,52 @@ class InventoryCommandServiceTest {
                     .isInstanceOfSatisfying(CustomException.class,
                             exception -> assertThat(exception.getErrorCode())
                                     .isEqualTo(InventoryErrorCode.INVENTORY_INVALID_REQUEST));
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 복원")
+    class Restore {
+        @Test
+        @DisplayName("재고 정상 복원 성공")
+        void inventory_restore_success() {
+            Inventory inventory = Inventory.create(
+                    productId,
+                    hubId,
+                    100
+            );
+
+            InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    productId,
+                    hubId,
+                    30
+            );
+
+            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
+            given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
+
+            InventoryRestorationResultDto inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
+
+            assertThat(inventoryRestorationResultDto.stock()).isEqualTo(130);
+            assertThat(inventory.getStock()).isEqualTo(130);
+
+            verify(inventoryCommandRepository).findByProductAndHubId(
+                    productId,
+                    hubId
+            );
+            verify(inventoryCommandRepository).save(inventory);
+        }
+
+        @Test
+        @DisplayName("복원할 재고 없으면 예외 처리")
+        void inventory_restore_not_found() {
+
+        }
+
+        @Test
+        @DisplayName("복원수량이 1보다 작으면 예외 처리")
+        void inventory_restore_invalid_quantity() {
+
         }
     }
 }
