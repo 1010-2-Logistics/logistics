@@ -15,6 +15,7 @@ import com.logistics.inventory.presentation.dto.response.InventorySummaryRespons
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,12 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/inventories")
 
 @RequiredArgsConstructor
-public class QueryController {
+public class InventoryQueryController {
 
     private final InventoryQueryService inventoryQueryService;
 
     @GetMapping("/{inventoryId}")
-    public ApiResponse<InventoryGetOneResponseDto> getInventory(
+    public ResponseEntity<ApiResponse<InventoryGetOneResponseDto>> getInventory(
             @PathVariable UUID inventoryId
     ) {
         GetOneInventoryQuery getOneInventoryQuery = new GetOneInventoryQuery();
@@ -39,15 +40,15 @@ public class QueryController {
 
         InventoryGetOneResponseDto getOneInventoryResponseDto = new InventoryGetOneResponseDto();
 
-        return ApiResponse.success(
+        return ResponseEntity.ok(ApiResponse.success(
                 200,
                 "재고 단건 조회 성공",
                 getOneInventoryResponseDto
-        );
+        ));
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<InventorySummaryResponseDto>> searchInventory(
+    public ResponseEntity<ApiResponse<PageResponse<InventorySummaryResponseDto>>> searchInventory(
             @RequestParam(required = false) UUID productId,
             @RequestParam(required = false) UUID hubId,
             Pageable pageable
@@ -62,10 +63,10 @@ public class QueryController {
 
         Page<InventorySummaryResponseDto> responsePage = null;
 
-        return ApiResponse.success(
+        return ResponseEntity.ok(ApiResponse.success(
                 200,
                 "재고 목록 조회 성공",
                 PageResponse.of(responsePage)
-        );
+        ));
     }
 }
