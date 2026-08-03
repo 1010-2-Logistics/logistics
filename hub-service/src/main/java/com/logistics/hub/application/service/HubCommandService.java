@@ -40,14 +40,14 @@ public class HubCommandService {
     }
 
     public void update(UpdateHubCommand command) {
-        Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(command.sampleId())
-                .orElseThrow(() -> new CustomException(HubErrorCode.SAMPLE_NOT_FOUND));
+        Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(command.hubId())
+                .orElseThrow(() -> new CustomException(HubErrorCode.HUB_NOT_FOUND));
         hub.update(command.name());
     }
 
-    public void delete(UUID sampleId, Long deletedBy) {
-        Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(sampleId)
-                .orElseThrow(() -> new CustomException(HubErrorCode.SAMPLE_NOT_FOUND));
+    public void delete(UUID hubId, Long deletedBy) {
+        Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(hubId)
+                .orElseThrow(() -> new CustomException(HubErrorCode.HUB_NOT_FOUND));
         hub.markDeleted(deletedBy);
     }
 

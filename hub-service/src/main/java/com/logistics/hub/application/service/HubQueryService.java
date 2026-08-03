@@ -19,11 +19,11 @@ public class HubQueryService {
     private final HubQueryRepository hubQueryRepository;
 
     public Hub get(GetHubQuery query) {
-        return hubQueryRepository.findByIdAndDeletedAtIsNull(query.sampleId())
-                .orElseThrow(() -> new CustomException(HubErrorCode.SAMPLE_NOT_FOUND));
+        return hubQueryRepository.findByIdAndDeletedAtIsNull(query.hubId())
+                .orElseThrow(() -> new CustomException(HubErrorCode.HUB_NOT_FOUND));
     }
 
     public Page<Hub> search(SearchHubQuery query) {
-        return hubQueryRepository.search(query.keyword(), query.pageable());
+        return hubQueryRepository.search(query.hubId(), query.pageable());
     }
 }

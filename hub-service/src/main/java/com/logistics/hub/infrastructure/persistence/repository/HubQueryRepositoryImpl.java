@@ -21,7 +21,7 @@ public class HubQueryRepositoryImpl implements HubQueryRepository {
     }
 
     @Override
-    public Page<Hub> search(String keyword, Pageable pageable) {
-        return jpaRepository.search(keyword, pageable);
+    public Page<Hub> search(UUID hubId, Pageable pageable) {
+        return jpaRepository.search(hubId, pageable);
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface HubQueryRepository {
 
-    Optional<Hub> findByIdAndDeletedAtIsNull(UUID sampleId);
+    Optional<Hub> findByIdAndDeletedAtIsNull(UUID hubId);
 
-    Page<Hub> search(String keyword, Pageable pageable);
+    Page<Hub> search(UUID hubId, Pageable pageable);
 }

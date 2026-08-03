@@ -13,7 +13,7 @@ interface HubJpaRepository extends JpaRepository<Hub, UUID> {
 
     Optional<Hub> findByHubIdAndDeletedAtIsNull(UUID hubId);
 
-    @Query("SELECT s FROM Hub s WHERE s.deletedAt IS NULL "
-            + "AND (:keyword IS NULL OR s.hubName LIKE %:keyword%)")
-    Page<Hub> search(@Param("keyword") String keyword, Pageable pageable);
+    @Query("SELECT h FROM Hub h WHERE h.deletedAt IS NULL "
+            + "AND (:hubId IS NULL OR h.hubId = :hubId)")
+    Page<Hub> search(@Param("hubId") UUID hubId, Pageable pageable);
 }

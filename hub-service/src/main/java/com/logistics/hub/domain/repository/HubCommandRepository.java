@@ -8,5 +8,5 @@ public interface HubCommandRepository {
 
     Hub save(Hub hub);
 
-    Optional<Hub> findByIdAndDeletedAtIsNull(UUID sampleId);
+    Optional<Hub> findByIdAndDeletedAtIsNull(UUID hubId);
 }
