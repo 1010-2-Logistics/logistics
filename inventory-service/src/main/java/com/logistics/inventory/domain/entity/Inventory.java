@@ -1,13 +1,17 @@
 package com.logistics.inventory.domain.entity;
 
 import com.logistics.inventory.global.entity.BaseEntity;
+import com.logistics.inventory.global.exception.CustomException;
+import com.logistics.inventory.global.exception.InventoryErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.util.UUID;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,5 +54,24 @@ public class Inventory extends BaseEntity {
             Integer stock
     ) {
         this.stock = stock;
+    }
+
+    public void deduct(Integer quantity) {
+        validDeductionQuantity(quantity);
+        validateStockAvailability(quantity);
+
+        stock -= quantity;
+    }
+
+    private void validDeductionQuantity(Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new CustomException(InventoryErrorCode.INVENTORY_INVALID_REQUEST);
+        }
+    }
+
+    private void validateStockAvailability(Integer quantity) {
+        if (stock < quantity) {
+            throw new CustomException(InventoryErrorCode.INVENTORY_OUT_OF_STOCK);
+        }
     }
 }
