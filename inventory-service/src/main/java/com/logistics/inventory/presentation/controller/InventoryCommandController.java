@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/inventories")
 
 @RequiredArgsConstructor
-public class CommandController {
+public class InventoryCommandController {
 
     private final InventoryFacade inventoryFacade;
     private final InventoryCommandService inventoryCommandService;
