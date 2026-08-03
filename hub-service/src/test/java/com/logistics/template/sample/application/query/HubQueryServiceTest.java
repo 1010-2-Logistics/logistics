@@ -48,8 +48,7 @@ class HubQueryServiceTest {
                 "주소",
                 BigDecimal.valueOf(37.1234567),
                 BigDecimal.valueOf(127.1234567),
-
-                request.getCreatedBy());
+                1L);
         when(hubQueryRepository.findByIdAndDeletedAtIsNull(sampleId)).thenReturn(Optional.of(hub));
 
         // when
