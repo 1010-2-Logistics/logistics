@@ -42,12 +42,6 @@ class InventoryCommandServiceTest {
     @InjectMocks
     InventoryCommandService inventoryCommandService;
 
-    @Test
-    @DisplayName("복원수량이 1보다 작으면 예외 처리")
-    void inventory_restore_invalid_quantity() {
-
-    }
-
     @Nested
     @DisplayName("재고 차감")
     class Deduct {
