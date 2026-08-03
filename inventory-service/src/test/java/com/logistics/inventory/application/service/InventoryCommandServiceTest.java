@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 
@@ -39,6 +41,12 @@ class InventoryCommandServiceTest {
 
     @InjectMocks
     InventoryCommandService inventoryCommandService;
+
+    @Test
+    @DisplayName("복원수량이 1보다 작으면 예외 처리")
+    void inventory_restore_invalid_quantity() {
+
+    }
 
     @Nested
     @DisplayName("재고 차감")
@@ -134,13 +142,24 @@ class InventoryCommandServiceTest {
         @Test
         @DisplayName("복원할 재고 없으면 예외 처리")
         void inventory_restore_not_found() {
+            InventoryRestorationCommand command =
+                    new InventoryRestorationCommand(
+                            productId,
+                            hubId,
+                            30
+                    );
 
-        }
+            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.empty());
 
-        @Test
-        @DisplayName("복원수량이 1보다 작으면 예외 처리")
-        void inventory_restore_invalid_quantity() {
+            assertThatThrownBy(
+                    () -> inventoryCommandService.restoreInventory(command)
+            ).isInstanceOfSatisfying(
+                    CustomException.class,
+                    exception -> assertThat(exception.getErrorCode())
+                            .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND)
+            );
 
+            verify(inventoryCommandRepository, never()).save(any(Inventory.class));
         }
     }
 }
