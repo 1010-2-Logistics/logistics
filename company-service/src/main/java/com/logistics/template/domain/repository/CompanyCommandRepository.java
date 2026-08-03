@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public interface CompanyCommandRepository {
 
-    Company save(Company company);
+  Company save(Company company);
 
-    Optional<Company> findByIdAndDeletedAtIsNull(UUID companyId);
+  Optional<Company> findByIdAndDeletedAtIsNull(UUID companyId);
 }

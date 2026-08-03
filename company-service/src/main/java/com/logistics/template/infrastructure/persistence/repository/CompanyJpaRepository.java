@@ -11,5 +11,4 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 
 	Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId);
 
-	
 }
