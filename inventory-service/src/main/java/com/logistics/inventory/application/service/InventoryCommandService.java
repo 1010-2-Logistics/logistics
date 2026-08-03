@@ -2,8 +2,10 @@ package com.logistics.inventory.application.service;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
+import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
 import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResultDto;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -52,5 +54,11 @@ public class InventoryCommandService {
         Inventory savedInventory = inventoryCommandRepository.save(inventory);
         // 차감 후 결과 DTO 반환
         return InventoryDeductionResultDto.from(savedInventory);
+    }
+
+    public InventoryRestorationResultDto restoreInventory(
+            InventoryRestorationCommand inventoryRestorationCommand
+    ) {
+        return null;
     }
 }
