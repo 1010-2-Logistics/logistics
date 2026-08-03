@@ -37,15 +37,16 @@ body:
       placeholder: |
         예) 허브에 재고가 없으면 주문이 실패해야 하므로, 재고 확인 로직을 주문 생성 트랜잭션 안에 포함합니다.
 
-  - type: checkboxes
+  - type: textarea
     id: checklist
     attributes:
       label: 체크리스트
-      options:
-        - label: API 명세 작성
-        - label: 구현
-        - label: 테스트 코드 작성
-        - label: 코드 리뷰 반영
+      description: 필요에 따라 항목을 자유롭게 추가/삭제/수정하세요. (`- [ ] 할 일` 형식)
+      value: |
+        - [ ] API 명세 작성
+        - [ ] 구현
+        - [ ] 테스트 코드 작성
+        - [ ] 코드 리뷰 반영
 
   - type: textarea
     id: reference
