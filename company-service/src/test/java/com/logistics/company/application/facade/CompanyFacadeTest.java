@@ -14,14 +14,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.logistics.template.application.dto.command.CompanyCreateCommand;
-import com.logistics.template.application.dto.result.CompanyCreateResultDto;
-import com.logistics.template.application.facade.CompanyFacade;
-import com.logistics.template.application.service.CompanyCommandService;
-import com.logistics.template.domain.entity.Company;
-import com.logistics.template.domain.entity.CompanyType;
-import com.logistics.template.infrastructure.feign.client.HubClient;
-import com.logistics.template.infrastructure.feign.response.HubValidationResponse;
+import com.logistics.company.application.dto.command.CompanyCreateCommand;
+import com.logistics.company.application.dto.result.CompanyCreateResultDto;
+import com.logistics.company.application.facade.CompanyFacade;
+import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.infrastructure.feign.client.HubClient;
+import com.logistics.company.infrastructure.feign.response.HubValidationResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class CompanyFacadeTest {
