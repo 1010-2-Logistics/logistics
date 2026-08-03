@@ -1,4 +1,4 @@
-package com.logistics.company.application;
+package com.logistics.company.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
