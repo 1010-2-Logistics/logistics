@@ -1,4 +1,4 @@
-package com.logistics.hub.presentation.controller.dto.request;
+package com.logistics.hub.presentation.dto.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

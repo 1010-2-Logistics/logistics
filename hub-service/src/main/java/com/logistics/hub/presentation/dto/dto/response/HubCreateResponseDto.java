@@ -1,4 +1,4 @@
-package com.logistics.hub.presentation.controller.dto.response;
+package com.logistics.hub.presentation.dto.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,18 +1,13 @@
 package com.logistics.hub.presentation.controller;
 
-import com.logistics.hub.application.dto.command.UpdateHubCommand;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.global.response.ApiResponse;
-import com.logistics.hub.presentation.controller.dto.request.HubCreateRequestDto;
-import com.logistics.hub.presentation.controller.dto.request.HubUpdateRequest;
-import com.logistics.hub.presentation.controller.dto.response.HubCreateResponseDto;
+import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
+import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;

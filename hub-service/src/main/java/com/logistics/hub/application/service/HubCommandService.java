@@ -1,8 +1,6 @@
 package com.logistics.hub.application.service;
 
-import com.logistics.hub.application.dto.command.CreateHubCommand;
 import com.logistics.hub.application.dto.command.UpdateHubCommand;
-import com.logistics.hub.application.event.HubCreatedEvent;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubCommandRepository;
@@ -10,8 +8,8 @@ import com.logistics.hub.global.exception.CustomException;
 import com.logistics.hub.global.exception.HubErrorCode;
 import java.util.UUID;
 
-import com.logistics.hub.presentation.controller.dto.request.HubCreateRequestDto;
-import com.logistics.hub.presentation.controller.dto.response.HubCreateResponseDto;
+import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
+import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
