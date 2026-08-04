@@ -135,4 +135,36 @@ class DeliveryManagerCommandServiceTest {
         // then
         assertThat(result.getDeliverySequence()).isEqualTo(4);
     }
+
+    @Test
+    void 존재하지_않는_담당자_수정시_예외() {
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryManagerCommandService.update(999L, null))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
+    }
+
+    @Test
+    void 업체_담당자_hubId_정상_수정() {
+        UUID newHubId = UUID.randomUUID();
+        DeliveryManager manager = DeliveryManager.create(10L, UUID.randomUUID(), "U10", ManagerType.COMPANY_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(manager));
+
+        DeliveryManager result = deliveryManagerCommandService.update(10L, newHubId);
+
+        assertThat(result.getHubId()).isEqualTo(newHubId);
+    }
+
+    @Test
+    void 허브_담당자에게_hubId_수정_시도하면_예외() {
+        DeliveryManager manager = DeliveryManager.create(11L, null, "U11", ManagerType.HUB_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(11L)).thenReturn(Optional.of(manager));
+
+        assertThatThrownBy(() -> deliveryManagerCommandService.update(11L, UUID.randomUUID()))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
+    }
 }
