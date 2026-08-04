@@ -1,5 +1,7 @@
 package com.logistics.order.presentation.dto.response;
 
+import com.logistics.order.application.dto.result.OrderListItemResult;
+
 import java.util.UUID;
 
 public record OrderListItemResponseDto(
@@ -11,15 +13,15 @@ public record OrderListItemResponseDto(
         Integer quantity,
         String request
 ) {
-    public static OrderListItemResponseDto from(OrderListItemResponseDto orderListItemResponseDto) {
+    public static OrderListItemResponseDto from(OrderListItemResult orderListItemResult) {
         return new OrderListItemResponseDto(
-                orderListItemResponseDto.orderId(),
-                orderListItemResponseDto.startCompanyId(),
-                orderListItemResponseDto.endCompanyId(),
-                orderListItemResponseDto.productId(),
-                orderListItemResponseDto.deliveryId(),
-                orderListItemResponseDto.quantity(),
-                orderListItemResponseDto.request()
+                orderListItemResult.orderId(),
+                orderListItemResult.startCompanyId(),
+                orderListItemResult.endCompanyId(),
+                orderListItemResult.productId(),
+                orderListItemResult.deliveryId(),
+                orderListItemResult.quantity(),
+                orderListItemResult.request()
         );
     }
 }

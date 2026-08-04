@@ -18,6 +18,7 @@ public record OrderListItemResult(
                 order.getOrderId(),
                 order.getStartCompanyId(),
                 order.getEndCompanyId(),
+                order.getProductId(),
                 order.getDeliveryId(),
                 order.getQuantity(),
                 order.getRequest()

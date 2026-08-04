@@ -73,6 +73,7 @@ public class OrderFacade {
         return orderCommandService.createOrder(
                 orderCreateCommand,
                 orderId,
+                deliveryCreateResponse.deliveryId(),
                 deliveryCreateResponse.deliveryId()
         );
     }

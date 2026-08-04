@@ -58,6 +58,7 @@ class OrderCommandServiceTest {
             OrderCreateResult result = orderCommandService.createOrder(
                     orderCreateCommand,
                     orderId,
+                    deliveryId,
                     deliveryId
             );
 
