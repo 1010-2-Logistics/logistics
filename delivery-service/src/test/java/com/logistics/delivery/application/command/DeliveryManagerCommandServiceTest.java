@@ -153,4 +153,35 @@ class DeliveryManagerCommandServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
     }
+
+    @Test
+    void 존재하지_않는_담당자_삭제시_예외() {
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryManagerCommandService.delete(999L))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
+    }
+
+    @Test
+    void 정상_삭제되면_deletedAt이_채워진다() {
+        DeliveryManager manager = DeliveryManager.create(20L, null, "U20", ManagerType.HUB_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(20L)).thenReturn(Optional.of(manager));
+
+        deliveryManagerCommandService.delete(20L);
+
+        assertThat(manager.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 이미_삭제된_담당자_재삭제시_예외() {
+        // findByIdAndDeletedAtIsNull은 삭제된 담당자를 조회 안 하므로, 이미 삭제된 경우도 결과적으로 동일하게 404
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(21L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryManagerCommandService.delete(21L))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
+    }
 }
