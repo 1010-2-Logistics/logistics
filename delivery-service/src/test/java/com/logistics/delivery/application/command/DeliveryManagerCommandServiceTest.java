@@ -137,18 +137,32 @@ class DeliveryManagerCommandServiceTest {
     }
 
     @Test
-    void 허브_배송담당자인데_hubId가_있으면_예외() {
-        // given
-        UUID hubId = UUID.randomUUID();
-        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(6L)).thenReturn(false);
-        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, hubId))
-                .thenReturn(Optional.empty());
+    void 존재하지_않는_담당자_수정시_예외() {
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
 
-        RegisterDeliveryManagerCommand command =
-                new RegisterDeliveryManagerCommand(6L, hubId, "U06", ManagerType.HUB_DELIVERY_MANAGER);
+        assertThatThrownBy(() -> deliveryManagerCommandService.update(999L, null))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
+    }
 
-        // when & then
-        assertThatThrownBy(() -> deliveryManagerCommandService.register(command))
+    @Test
+    void 업체_담당자_hubId_정상_수정() {
+        UUID newHubId = UUID.randomUUID();
+        DeliveryManager manager = DeliveryManager.create(10L, UUID.randomUUID(), "U10", ManagerType.COMPANY_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(manager));
+
+        DeliveryManager result = deliveryManagerCommandService.update(10L, newHubId);
+
+        assertThat(result.getHubId()).isEqualTo(newHubId);
+    }
+
+    @Test
+    void 허브_담당자에게_hubId_수정_시도하면_예외() {
+        DeliveryManager manager = DeliveryManager.create(11L, null, "U11", ManagerType.HUB_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(11L)).thenReturn(Optional.of(manager));
+
+        assertThatThrownBy(() -> deliveryManagerCommandService.update(11L, UUID.randomUUID()))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
