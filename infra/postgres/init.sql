@@ -6,6 +6,7 @@ CREATE SCHEMA IF NOT EXISTS product_service;
 CREATE SCHEMA IF NOT EXISTS inventory_service;
 CREATE SCHEMA IF NOT EXISTS order_service;
 CREATE SCHEMA IF NOT EXISTS delivery_service;
+CREATE SCHEMA IF NOT EXISTS hubroute_service;
 
 CREATE TABLE IF NOT EXISTS hub_service.p_hub (
     hub_id      UUID           DEFAULT gen_random_uuid() PRIMARY KEY,
