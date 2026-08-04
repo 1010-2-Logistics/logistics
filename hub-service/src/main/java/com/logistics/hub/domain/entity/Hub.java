@@ -38,7 +38,11 @@ public class Hub extends BaseEntity {
     @Column(name = "longitude", precision = 10, scale = 7, nullable = false)
     private BigDecimal longitude;
 
+    // ※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
+    // ※※※※※※※※※임시 코드, 중복인거 앎, 포스트맨에서 테스트 할 경우 유저아이디가 없어서 못하는것 방지하기 위함※※※※※※※※※
+    // ※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
     private Long createdBy;
+
 
     public static Hub create(String hubName, String hubAddress, BigDecimal latitude, BigDecimal longitude, Long createdBy) {
         Hub hub = new Hub();

@@ -16,7 +16,6 @@ class HubTest {
                 "주소",
                 BigDecimal.valueOf(37.1234567),
                 BigDecimal.valueOf(127.1234567),
-
                 1L);
 
         // then

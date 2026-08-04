@@ -2,15 +2,10 @@ package com.logistics.template.sample.application.command;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.logistics.hub.application.dto.command.CreateHubCommand;
-import com.logistics.hub.application.event.HubCreatedEvent;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
-import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubCommandRepository;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

@@ -1,5 +1,6 @@
 package com.logistics.hub.presentation.controller;
 
+import com.logistics.hub.application.dto.command.HubCreateCommand;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.global.response.ApiResponse;
 import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
@@ -7,11 +8,7 @@ import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/hubs")
@@ -23,9 +20,12 @@ public class CommandController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<HubCreateResponseDto> create(@Valid @RequestBody HubCreateRequestDto request) {
+    public ApiResponse<HubCreateResponseDto> createHub(
+            @RequestHeader(name = "X-User-Id", defaultValue = "1") Long userId, //로컬 환경에서 테스트 할 경우 유저아이디를 임시적으로 넣어 주는 코드 - 유저 도메인 생기면 수정할 것
+            @Valid @RequestBody HubCreateRequestDto hubCreateRequestDto) {
 
-        HubCreateResponseDto hubCreateResponseDto = hubCommandService.createHub(request);
+        HubCreateCommand hubCreateCommand = HubCreateCommand.from(hubCreateRequestDto);
+        HubCreateResponseDto hubCreateResponseDto = hubCommandService.createHub(hubCreateCommand);
 
         return ApiResponse.success(201, "허브 생성 성공", hubCreateResponseDto);
     }

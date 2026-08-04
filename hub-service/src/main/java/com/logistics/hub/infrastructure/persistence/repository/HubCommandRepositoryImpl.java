@@ -2,6 +2,8 @@ package com.logistics.hub.infrastructure.persistence.repository;
 
 import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubCommandRepository;
+
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +23,15 @@ public class HubCommandRepositoryImpl implements HubCommandRepository {
     @Override
     public Optional<Hub> findByIdAndDeletedAtIsNull(UUID hubId) {
         return jpaRepository.findByHubIdAndDeletedAtIsNull(hubId);
+    }
+
+    @Override
+    public boolean existsByLatitudeAndLongitudeAndDeletedAtIsNull(BigDecimal latitude, BigDecimal longitude) {
+        return jpaRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(latitude, longitude);
+    }
+
+    @Override
+    public boolean existsByHubAddressAndDeletedAtIsNull(String hubAddress) {
+        return jpaRepository.existsByHubAddressAndDeletedAtIsNull(hubAddress);
     }
 }

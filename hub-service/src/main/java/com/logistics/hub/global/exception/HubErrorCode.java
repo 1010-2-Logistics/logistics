@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum HubErrorCode implements ErrorCode {
 
-    HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브입니다.");
-
+    HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브입니다."),
+    HUB_ALPEADY_EXISTS(HttpStatus.BAD_REQUEST,"이미 존재하는 허브 입니다");
     private final HttpStatus httpStatus;
     private final String message;
 }

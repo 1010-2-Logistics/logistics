@@ -13,12 +13,4 @@ public class HubCreateResponseDto {
 
     private UUID hubId;
 
-//    private String hubName;
-//
-//    private String hubAddress;
-//
-//    private BigDecimal latitude;
-//
-//    private BigDecimal longtitude;
-
 }
