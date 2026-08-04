@@ -125,7 +125,31 @@ class OrderCommandServiceTest {
         @Test
         @DisplayName("수량이 null이면 기존 수량 유지")
         void order_update_null() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
 
+            OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
+                    orderId,
+                    null,
+                    "요청사항만 변경"
+            );
+
+            given(orderCommandRepository.save(order)).willReturn(order);
+
+            orderCommandService.updateOrder(
+                    order,
+                    orderUpdateCommand
+            );
+
+            assertThat(order.getQuantity()).isEqualTo(100);
+            assertThat(order.getRequest()).isEqualTo("요청사항만 변경");
         }
     }
 
