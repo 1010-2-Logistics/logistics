@@ -2,6 +2,7 @@ package com.logistics.inventory.presentation.controller;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
 import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
+import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.facade.InventoryFacade;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.response.ApiResponse;
@@ -10,7 +11,9 @@ import com.logistics.inventory.presentation.dto.request.InventoryUpdateRequestDt
 import com.logistics.inventory.presentation.dto.response.InventoryCreateResponseDto;
 import com.logistics.inventory.presentation.dto.response.InventoryUpdateResponseDto;
 import jakarta.validation.Valid;
+
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,13 +40,14 @@ public class InventoryCommandController {
             @Valid @RequestBody InventoryCreateRequestDto inventoryCreateRequestDto
     ) {
         InventoryCreateCommand createInventoryCommand = new InventoryCreateCommand(
+                inventoryCreateRequestDto.productId(),
+                inventoryCreateRequestDto.hubId(),
+                inventoryCreateRequestDto.stock()
         );
 
-        UUID inventoryId = inventoryFacade.createInventory(
-                createInventoryCommand
-        );
+        InventoryCreateResult inventoryCreateResultDto = inventoryFacade.createInventory(createInventoryCommand);
 
-        InventoryCreateResponseDto inventoryCreateResponseDto = new InventoryCreateResponseDto();
+        InventoryCreateResponseDto inventoryCreateResponseDto = new InventoryCreateResponseDto(inventoryCreateResultDto.inventoryId());
 
         return ApiResponse.success(
                 201,
