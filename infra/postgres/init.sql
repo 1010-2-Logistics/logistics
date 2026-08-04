@@ -16,6 +16,20 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
     role VARCHAR(30) NOT NULL,
     company_id UUID,
     hub_id UUID,
+CREATE TABLE IF NOT EXISTS hub_service.p_hub (
+    hub_id      UUID           DEFAULT gen_random_uuid() PRIMARY KEY,
+    hub_name    VARCHAR(100)   NOT NULL,
+    hub_address VARCHAR(255)   NOT NULL,
+    latitude    DECIMAL(10, 7) NOT NULL,
+    longitude   DECIMAL(10, 7) NOT NULL,
+    created_at  TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by  BIGINT         NOT NULL,
+    updated_at  TIMESTAMP      NULL,
+    updated_by  BIGINT         NULL,
+    deleted_at  TIMESTAMP      NULL,
+    deleted_by  BIGINT         NULL
+);
+
 CREATE TABLE IF NOT EXISTS delivery_service.p_delivery_manager (
     delivery_manager_id BIGINT PRIMARY KEY,
     hub_id UUID,
@@ -47,4 +61,4 @@ CREATE TABLE IF NOT EXISTS delivery_service.p_delivery_manager (
          )
 );
     deleted_by BIGINT
-    );
+);
