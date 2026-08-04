@@ -12,6 +12,7 @@ import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
