@@ -1,0 +1,61 @@
+package com.logistics.company.application.service;
+
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+
+import com.logistics.company.application.dto.query.CompanySearchQuery;
+import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
+import com.logistics.company.domain.OrderedCompanyInfo;
+import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.repository.CompanyQueryRepository;
+import com.logistics.company.global.exception.CompanyErrorCode;
+import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CompanyQueryService {
+
+	private final CompanyQueryRepository companyQueryRepository;
+	
+	public Company findByCompany(UUID companyId) {
+		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId)
+				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
+	}
+	
+	/**
+	 * 주문 시 출발 업체와 도착 업체의 정보를 조회합니다.
+	 * 출발 업체의 경우 생산 업체만 가능하며, 도착 업체의 경우 수령 업체만 가능합니다.
+	 * 
+	 * 업체 타입이 맞지 않는 경우 COMPANY_TYPE_FOR_ORDER 예외가 발생합니다.
+	 * 
+	 * @param startCompanyId: 출발업체 ID
+	 * @param endCompanyId: 도착업체 ID
+	 * @return {
+	 * 		"startCompanyId": "출발업체 - UUID",
+	 * 		"startCompanyName": "출발업체 이름",
+	 * 		"endCompanyId": "도착업체 - UUID",
+	 * 		"endCompanyName": "도착업체 이름"
+	 * }
+	 */
+	public OrderedCompanyInfoResultDto findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId) {
+		OrderedCompanyInfo orderedCompanyInfo = companyQueryRepository.findOrderedCompanyInfo(startCompanyId, endCompanyId)
+				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
+		
+		return OrderedCompanyInfoResultDto.from(orderedCompanyInfo);
+	}
+
+	public Page<Company> searchCompany(CompanySearchQuery query) {
+		return companyQueryRepository.searchCompany(
+				query.companyName(),
+				query.hubId(),
+				query.companyType(),
+				query.pageable()
+		);
+	}
+	
+}

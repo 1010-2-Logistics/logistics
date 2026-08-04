@@ -26,6 +26,14 @@ public class InventoryCommandRepositoryImpl implements InventoryCommandRepositor
     }
 
     @Override
+    public Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(UUID productId, UUID hubId) {
+        return inventoryJpaRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                productId,
+                hubId
+        );
+    }
+
+    @Override
     public Inventory save(Inventory inventory) {
         return inventoryJpaRepository.save(inventory);
     }

@@ -1,8 +1,8 @@
 package com.logistics.inventory.application.service;
 
 import com.logistics.inventory.application.dto.query.SearchInventoryQuery;
-import com.logistics.inventory.application.dto.result.InventoryGetOneResultDto;
-import com.logistics.inventory.application.dto.result.InventorySummaryResultDto;
+import com.logistics.inventory.application.dto.result.InventoryGetOneResult;
+import com.logistics.inventory.application.dto.result.InventorySummaryResult;
 import com.logistics.inventory.domain.repository.InventoryQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,13 +16,13 @@ public class InventoryQueryService {
 
     private final InventoryQueryRepository inventoryQueryRepository;
 
-    public InventoryGetOneResultDto getInventory(
+    public InventoryGetOneResult getInventory(
 //            GetInventoryQuery getInventoryQuery
     ) {
         return null;
     }
 
-    public Page<InventorySummaryResultDto> searchInventory(
+    public Page<InventorySummaryResult> searchInventory(
             SearchInventoryQuery searchInventoryQuery
     ) {
         return null;
