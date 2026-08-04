@@ -114,4 +114,37 @@ public class CompanyCommandServiceTest {
 		
 	}
 	
+	@Nested
+	@DisplayName("업체 삭제")
+	class DeleteCompany {
+		
+		@Test
+		@DisplayName("업체 삭제 성공")
+		void company_delete_success() {
+			UUID companyId = UUID.randomUUID();
+			Long deletedBy = 1L;
+			
+			String companyName = "업체 이름 A";
+			String companyAddress = "업체 주소";
+			CompanyType companyType = CompanyType.PRODUCER;
+			
+			Company company = Company.create(
+					hubId,
+					companyName,
+					companyAddress,
+					companyType
+			);
+			
+			given(companyQueryService.findByCompany(companyId)).willReturn(company);
+			
+			companyCommandService.deleteCompany(deletedBy, companyId);
+			
+			assertThat(company.getDeletedAt()).isNotNull();
+			assertThat(company.getDeletedBy()).isEqualTo(deletedBy);
+			
+			verify(companyQueryService).findByCompany(companyId);
+		}
+		
+	}
+	
 }
