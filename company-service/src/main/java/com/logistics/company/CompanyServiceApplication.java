@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @EnableFeignClients
 @SpringBootApplication
-public class TemplateServiceApplication {
+public class CompanyServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TemplateServiceApplication.class, args);
+        SpringApplication.run(CompanyServiceApplication.class, args);
     }
 }
