@@ -31,12 +31,5 @@ services:
     ports:
       - "9411:9411"
 
-  company-service:
-    build:
-      context: .
-    ports:
-      - "19095:19095"
-
-
 volumes:
   pgdata:
