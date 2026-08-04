@@ -8,6 +8,7 @@ import com.logistics.order.application.port.EventPublisher;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.entity.OrderStatus;
 import com.logistics.order.domain.repository.OrderCommandRepository;
+import com.logistics.order.global.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -156,7 +159,35 @@ class OrderCommandServiceTest {
     @Nested
     @DisplayName("주문 삭제")
     class order_delete {
+        @Test
+        @DisplayName("주문 삭제 성공")
+        void order_delete_success() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
 
+            given(orderCommandRepository.save(order)).willReturn(order);
+
+            orderCommandService.deleteOrder(order);
+
+            verify(orderCommandRepository).save(order);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 주문이면 예외")
+        void order_delete_not_found() {
+            given(orderCommandRepository.findById(orderId))
+                    .willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForDelete(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
 
     }
 }
