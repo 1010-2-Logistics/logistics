@@ -1,6 +1,6 @@
 package com.logistics.inventory.application.dto.result;
 
-public record InventorySummaryResultDto(
+public record InventoryGetOneResult(
 
 ) {
 }

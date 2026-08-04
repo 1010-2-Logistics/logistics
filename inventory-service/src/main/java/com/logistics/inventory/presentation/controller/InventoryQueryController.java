@@ -2,8 +2,8 @@ package com.logistics.inventory.presentation.controller;
 
 import com.logistics.inventory.application.dto.query.GetOneInventoryQuery;
 import com.logistics.inventory.application.dto.query.SearchInventoryQuery;
-import com.logistics.inventory.application.dto.result.InventoryGetOneResultDto;
-import com.logistics.inventory.application.dto.result.InventorySummaryResultDto;
+import com.logistics.inventory.application.dto.result.InventoryGetOneResult;
+import com.logistics.inventory.application.dto.result.InventorySummaryResult;
 import com.logistics.inventory.application.service.InventoryQueryService;
 import com.logistics.inventory.global.response.ApiResponse;
 import com.logistics.inventory.global.response.PageResponse;
@@ -36,7 +36,7 @@ public class InventoryQueryController {
     ) {
         GetOneInventoryQuery getOneInventoryQuery = new GetOneInventoryQuery();
 
-        InventoryGetOneResultDto getOneInventoryResult = inventoryQueryService.getInventory();
+        InventoryGetOneResult getOneInventoryResult = inventoryQueryService.getInventory();
 
         InventoryGetOneResponseDto getOneInventoryResponseDto = new InventoryGetOneResponseDto();
 
@@ -59,7 +59,7 @@ public class InventoryQueryController {
                 pageable
         );
 
-        Page<InventorySummaryResultDto> resultPage = inventoryQueryService.searchInventory(query);
+        Page<InventorySummaryResult> resultPage = inventoryQueryService.searchInventory(query);
 
         Page<InventorySummaryResponseDto> responsePage = null;
 
