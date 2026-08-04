@@ -32,7 +32,6 @@ public class CommandController {
             @Valid @RequestBody OrderCreateRequestDto orderCreateRequestDto
     ) {
         OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
-                orderCreateRequestDto.startCompanyId(),
                 orderCreateRequestDto.endCompanyId(),
                 orderCreateRequestDto.productId(),
                 orderCreateRequestDto.quantity(),
@@ -41,7 +40,8 @@ public class CommandController {
 
         OrderCreateResult orderCreateResult = orderFacade.createOrder(orderCreateCommand);
 
-        OrderCreateResponseDto orderCreateResponseDto = null;
+        OrderCreateResponseDto orderCreateResponseDto =
+                OrderCreateResponseDto.from(orderCreateResult);
 
         return ApiResponse.success(
                 HttpStatus.CREATED.value(),

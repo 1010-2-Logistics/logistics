@@ -16,9 +16,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
-
     private final OrderCommandService orderCommandService;
-
+    //private final ProductClient productClient;
+    //private final CompanyClient companyClient;
+    //private final InventoryClient inventoryClient;
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
     ) {

@@ -7,9 +7,6 @@ import java.util.UUID;
 
 public record OrderCreateRequestDto(
         @NotNull
-        UUID startCompanyId,
-
-        @NotNull
         UUID endCompanyId,
 
         @NotNull
