@@ -1,7 +1,11 @@
 package com.logistics.company.infrastructure.persistence.repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.stereotype.Repository;
 
+import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +15,11 @@ import lombok.RequiredArgsConstructor;
 public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 
   private final CompanyJpaRepository jpaRepository;
+
+	@Override
+	public Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId) {
+		return jpaRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
+	}
   
   
 }
