@@ -7,7 +7,6 @@ import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.infrastructure.feign.client.HubClient;
-import com.logistics.delivery.infrastructure.feign.response.HubValidationResponse;
 import feign.FeignException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -47,10 +46,9 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
         }
         try {
-            HubValidationResponse response = hubClient.getHub(hubId);
-            if (!response.exists()) {
-                throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
-            }
+            hubClient.getHub(hubId);
+        } catch (FeignException.NotFound e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
         } catch (FeignException e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }

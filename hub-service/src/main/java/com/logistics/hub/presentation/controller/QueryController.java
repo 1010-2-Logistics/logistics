@@ -28,7 +28,7 @@ public class QueryController {
     @GetMapping("/{hubId}")
     public ApiResponse<HubResponseDto> get(@PathVariable UUID hubId) {
         Hub hub = hubQueryService.get(new GetHubQuery(hubId));
-        return ApiResponse.success(200, "샘플 조회 성공", HubResponseDto.from(hub));
+        return ApiResponse.success(200, "허브 조회 성공", HubResponseDto.from(hub));
     }
 
     @GetMapping
@@ -37,6 +37,6 @@ public class QueryController {
             Pageable pageable) {
         Page<Hub> page = hubQueryService.search(new SearchHubQuery(hubId, pageable));
         Page<HubSummaryResponseDto> responsePage = page.map(HubSummaryResponseDto::from);
-        return ApiResponse.success(200, "샘플 목록 조회 성공", PageResponse.of(responsePage));
+        return ApiResponse.success(200, "허브 목록 조회 성공", PageResponse.of(responsePage));
     }
 }
