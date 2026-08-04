@@ -77,7 +77,7 @@ public class CommandController {
     public void deleteOrder(
             @PathVariable UUID orderId
     ) {
-        OrderDeleteCommand orderDeleteCommand = null;
+        OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
 
         orderFacade.deleteOrder(orderDeleteCommand);
     }

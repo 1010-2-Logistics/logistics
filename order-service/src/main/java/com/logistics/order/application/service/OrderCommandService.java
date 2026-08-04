@@ -57,9 +57,8 @@ public class OrderCommandService {
                         new CustomException(OrderErrorCode.ORDER_NOT_FOUND)
                 );
 
-        // TODO: errorCode update -> ORDER_ALREADY_CANCELED
         if (order.isCanceled()) {
-            throw new CustomException(OrderErrorCode.ORDER_NOT_FOUND);
+            throw new CustomException(OrderErrorCode.ORDER_ALREADY_CANCELED);
         }
 
         return order;
@@ -80,9 +79,24 @@ public class OrderCommandService {
     }
 
     public void deleteOrder(
-            OrderDeleteCommand orderDeleteCommand
+            Order order
     ) {
+        // TODO : 인증 구현 후 실사용자 ID로 변경
+        order.delete(null);
+        orderCommandRepository.save(order);
+    }
 
+    public Order findOrderForDelete(
+            UUID orderId
+    ) {
+        Order order = orderCommandRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        if (order.isDeleted()) {
+            throw new CustomException(OrderErrorCode.ORDER_DELETE_CONFLICT);
+        }
+
+        return order;
     }
 
     public OrderCancelResult cancelOrder(

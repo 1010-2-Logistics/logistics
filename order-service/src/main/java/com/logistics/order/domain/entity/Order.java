@@ -62,6 +62,15 @@ public class Order extends BaseEntity {
         return order;
     }
 
+    // TODO : baseEntity
+    public void delete(String deletedBy) {
+        markDeleted(deletedBy);
+    }
+
+    public boolean isDeleted() {
+        return getDeletedAt() != null;
+    }
+
     public void update(
             Integer quantity,
             String request

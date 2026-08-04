@@ -27,6 +27,8 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
+    // Facade 구현체는 Repository를 직접 의존하면 안 된다
+
     private final OrderCommandService orderCommandService;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
@@ -111,7 +113,24 @@ public class OrderFacade {
     public void deleteOrder(
             OrderDeleteCommand orderDeleteCommand
     ) {
-        orderCommandService.deleteOrder(orderDeleteCommand);
+        Order order = orderCommandService.findOrderForDelete(
+                orderDeleteCommand.orderId()
+        );
+
+        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+                order.getStartCompanyId(),
+                order.getEndCompanyId()
+        ).getData();
+
+        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                order.getProductId(),
+                companyOrderInfoResponse.startHubId(),
+                order.getQuantity()
+        );
+        // TODO : 보상트랜잭션 순서는 차감 후 주문 실패로 한다
+        inventoryClient.restoreInventory(inventoryRestorationRequest);
+
+        orderCommandService.deleteOrder(order);
     }
 
     public OrderCancelResult cancelOrder(

@@ -10,7 +10,10 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum OrderErrorCode implements ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
-    ORDER_INVALID_REQUEST(HttpStatus.NOT_FOUND, "요청값이 올바르지 않습니다."),
+    ORDER_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다."),
+    ORDER_ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 주문입니다."),
+    ORDER_DELETE_CONFLICT(HttpStatus.CONFLICT, "이미 삭제된 주문입니다."),
+    ORDER_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "연동 서비스 처리에 실패했습니다."),
 
     ;
 
