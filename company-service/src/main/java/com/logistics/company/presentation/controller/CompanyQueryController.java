@@ -2,6 +2,7 @@ package com.logistics.company.presentation.controller;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,8 +48,14 @@ public class CompanyQueryController {
 				companyName, hubId, companyType, pageable
 		);
 		
+		Page<CompanyInfoResponseDto> result = companyQueryService.searchCompany(query)
+				.map(CompanyInfoResponseDto::from);
 		
-		return null;
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"업체 조회 성공",
+				PageResponse.of(result)
+		);
 	}
 	
 }
