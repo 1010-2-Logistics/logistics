@@ -21,7 +21,6 @@ public class CommandController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<HubCreateResponseDto> createHub(
-            @RequestHeader(name = "X-User-Id", defaultValue = "1") Long userId, //로컬 환경에서 테스트 할 경우 유저아이디를 임시적으로 넣어 주는 코드 - 유저 도메인 생기면 수정할 것
             @Valid @RequestBody HubCreateRequestDto hubCreateRequestDto) {
 
         HubCreateCommand hubCreateCommand = HubCreateCommand.from(hubCreateRequestDto);
