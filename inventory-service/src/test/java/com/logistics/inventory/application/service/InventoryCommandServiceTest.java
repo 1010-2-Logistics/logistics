@@ -1,7 +1,9 @@
 package com.logistics.inventory.application.service;
 
+import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
 import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
+import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.port.EventPublisher;
@@ -23,14 +25,14 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
 class InventoryCommandServiceTest {
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
+    UUID inventoryId = UUID.randomUUID();
 
     @Mock
     InventoryCommandRepository inventoryCommandRepository;
@@ -158,16 +160,39 @@ class InventoryCommandServiceTest {
 
     @Nested
     @DisplayName("재고 생성")
-    class create{
+    class create {
         @Test
         @DisplayName("재고 생성 성공")
-        void inventory_create_success(){
+        void inventory_create_success() {
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    productId,
+                    hubId,
+                    100
+            );
+            Inventory savedInventory = mock(Inventory.class);
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            )).willReturn(Optional.empty());
+            given(savedInventory.getInventoryId()).willReturn(inventoryId);
+            given(inventoryCommandRepository.save(any(Inventory.class))).willReturn(savedInventory);
 
+            InventoryCreateResult inventoryCreateResult = inventoryCommandService.createInventory(
+                    inventoryCreateCommand
+            );
+
+            assertThat(inventoryCreateResult.inventoryId()).isEqualTo(inventoryId);
+
+            verify(inventoryCommandRepository).findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            );
+            verify(inventoryCommandRepository).save(any(Inventory.class));
         }
 
         @Test
         @DisplayName("동일한 상품과 허브의 재고가 이미 존재하면 예외 처리")
-        void inventory_create_duplicate_fail(){
+        void inventory_create_duplicate_fail() {
 
         }
     }
