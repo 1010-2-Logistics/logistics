@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,9 +26,13 @@ public class OrderCommandService {
     private final EventPublisher eventPublisher;
 
     public OrderCreateResult createOrder(
-            OrderCreateCommand orderCreateCommand
+            OrderCreateCommand orderCreateCommand,
+            UUID orderId,
+            UUID deliveryId
     ) {
         Order order = Order.create(
+                orderId,
+                deliveryId,
                 orderCreateCommand.endCompanyId(),
                 orderCreateCommand.productId(),
                 orderCreateCommand.quantity(),
