@@ -134,4 +134,22 @@ class DeliveryManagerCommandServiceTest {
         // then
         assertThat(result.getDeliverySequence()).isEqualTo(4);
     }
+
+    @Test
+    void 허브_배송담당자인데_hubId가_있으면_예외() {
+        // given
+        UUID hubId = UUID.randomUUID();
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(6L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, hubId))
+                .thenReturn(Optional.empty());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(6L, hubId, "U06", ManagerType.HUB_DELIVERY_MANAGER);
+
+        // when & then
+        assertThatThrownBy(() -> deliveryManagerCommandService.register(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
+    }
 }
