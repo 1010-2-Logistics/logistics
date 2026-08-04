@@ -19,6 +19,9 @@ public class Order extends BaseEntity {
     @Column(name = "order_id", nullable = false, unique = true)
     private UUID orderId;
 
+    @Column(name = "start_company_id", nullable = false)
+    private UUID startCompanyId;
+
     @Column(name = "end_company_id", nullable = false)
     private UUID endCompanyId;
 
@@ -41,6 +44,7 @@ public class Order extends BaseEntity {
     public static Order create(
             UUID orderId,
             UUID deliveryId,
+            UUID startCompanyId,
             UUID endCompanyId,
             UUID productId,
             Integer quantity,
@@ -49,6 +53,7 @@ public class Order extends BaseEntity {
         Order order = new Order();
         order.orderId = orderId;
         order.deliveryId = deliveryId;
+        order.startCompanyId = startCompanyId;
         order.endCompanyId = endCompanyId;
         order.productId = productId;
         order.quantity = quantity;

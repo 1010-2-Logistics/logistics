@@ -28,11 +28,13 @@ public class OrderCommandService {
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
             UUID orderId,
-            UUID deliveryId
+            UUID deliveryId,
+            UUID startCompanyId
     ) {
         Order order = Order.create(
                 orderId,
                 deliveryId,
+                startCompanyId,
                 orderCreateCommand.endCompanyId(),
                 orderCreateCommand.productId(),
                 orderCreateCommand.quantity(),
@@ -43,6 +45,7 @@ public class OrderCommandService {
 
         return OrderCreateResult.from(savedOrder);
     }
+
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
     ) {
