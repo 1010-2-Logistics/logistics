@@ -3,8 +3,8 @@ package com.logistics.inventory.presentation.controller;
 
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
 import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
-import com.logistics.inventory.application.dto.result.InventoryDeductionResultDto;
-import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
+import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.response.ApiResponse;
 import com.logistics.inventory.presentation.dto.request.InventoryDeductionRequestDto;
@@ -33,7 +33,7 @@ public class InventoryInternalCommandController {
     ) {
         InventoryDeductionCommand inventoryDeductionCommand = inventoryDeductionsRequestDto.toCommand();
 
-        InventoryDeductionResultDto inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
+        InventoryDeductionResult inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
 
         InventoryDeductionResponseDto inventoryDeductionResponseDto = InventoryDeductionResponseDto.from(inventoryDeductionResultDto);
 
@@ -49,7 +49,7 @@ public class InventoryInternalCommandController {
             @Valid @RequestBody InventoryRestorationRequestDto inventoryRestorationRequestDto
     ) {
         InventoryRestorationCommand inventoryRestorationCommand = inventoryRestorationRequestDto.toCommand();
-        InventoryRestorationResultDto inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
+        InventoryRestorationResult inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
 
         InventoryRestorationResponseDto inventoryRestorationResponseDto = InventoryRestorationResponseDto.from(inventoryRestorationResultDto);
 
