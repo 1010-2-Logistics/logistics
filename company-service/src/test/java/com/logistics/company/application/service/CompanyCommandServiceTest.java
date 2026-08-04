@@ -16,7 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.dto.command.CompanyUpdateCommand;
+import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
@@ -28,6 +29,9 @@ public class CompanyCommandServiceTest {
 	
 	@Mock
 	CompanyCommandRepository companyCommandRepository;
+	
+	@Mock
+	CompanyQueryService companyQueryService;
 	
 	@InjectMocks
 	CompanyCommandService companyCommandService;
@@ -67,6 +71,45 @@ public class CompanyCommandServiceTest {
 			assertThat(savedCompany.getCompanyAddress()).isEqualTo(companyAddress);
 			
 			verify(companyCommandRepository).save(any(Company.class));
+		}
+		
+	}
+	
+	@Nested
+	@DisplayName("업체 수정")
+	class UpdateCompany {
+		
+		@Test
+		@DisplayName("업체 수정 성공")
+		void company_update_success() {
+			UUID companyId = UUID.randomUUID();
+			
+			String beforeCompanyName = "업체 이름 A";
+			String companyAddress = "업체 주소";
+			CompanyType companyType = CompanyType.PRODUCER;
+			
+			Company company = Company.create(
+					hubId,
+					beforeCompanyName,
+					companyAddress,
+					companyType
+			);
+			
+			String updatedCompanyName = "업체 이름 B";
+			
+			CompanyUpdateCommand companyUpdateCommand = new CompanyUpdateCommand(updatedCompanyName);
+			
+			given(companyQueryService.findByCompany(companyId)).willReturn(company);
+			
+			CompanyUpdateResultDto result = companyCommandService.updateCompany(companyId, companyUpdateCommand);
+			
+			assertThat(result.companyName()).isEqualTo(updatedCompanyName);
+			assertThat(result.companyAddress()).isEqualTo(companyAddress);
+			assertThat(result.companyType()).isEqualByComparingTo(companyType);
+			
+			assertThat(company.getCompanyName()).isEqualTo(updatedCompanyName);
+			
+			verify(companyQueryService).findByCompany(companyId);
 		}
 		
 	}
