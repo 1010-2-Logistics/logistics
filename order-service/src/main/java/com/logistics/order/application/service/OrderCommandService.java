@@ -101,7 +101,7 @@ public class OrderCommandService {
     public OrderCancelResult cancelOrder(
             Order order
     ) {
-        order.isCanceled();
+        order.cancel();
 
         Order savedOrder = orderCommandRepository.save(order);
 
@@ -113,9 +113,11 @@ public class OrderCommandService {
     ) {
         Order order = orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
         if (order.isCanceled()) {
             throw new CustomException(OrderErrorCode.ORDER_CANCEL_CONFLICT);
         }
+
         return order;
     }
 }

@@ -2,6 +2,7 @@ package com.logistics.order.application.service;
 
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
+import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.EventPublisher;
@@ -188,6 +189,53 @@ class OrderCommandServiceTest {
             assertThatThrownBy(() -> orderCommandService.findOrderForDelete(orderId))
                     .isInstanceOf(CustomException.class);
         }
+    }
 
+    @Nested
+    @DisplayName("주문 취소")
+    class order_cancel {
+        @Test
+        @DisplayName("주문 취소 성공")
+        void order_cancel_success() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+            given(orderCommandRepository.save(order)).willReturn(order);
+
+            OrderCancelResult orderCancelResult = orderCommandService.cancelOrder(order);
+
+            assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+
+            assertThat(orderCancelResult.orderId()).isEqualTo(orderId);
+            assertThat(orderCancelResult.status()).isEqualTo(OrderStatus.CANCELED);
+
+            verify(orderCommandRepository).save(order);
+        }
+
+        @Test
+        @DisplayName("이미 취소된 주문 취소 시 예외")
+        void order_cancel_already() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+            order.cancel();
+
+            given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForCancel(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
     }
 }
