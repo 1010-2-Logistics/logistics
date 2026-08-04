@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
+import com.logistics.company.domain.OrderedCompanyInfo;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 
@@ -19,6 +20,11 @@ public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 	@Override
 	public Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId) {
 		return jpaRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
+	}
+
+	@Override
+	public Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId) {
+		return jpaRepository.findOrderedCompanyInfo(startCompanyId, endCompanyId);
 	}
   
   
