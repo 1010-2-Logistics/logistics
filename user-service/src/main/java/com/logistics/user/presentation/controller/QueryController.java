@@ -6,9 +6,10 @@ import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.global.response.PageResponse;
-import com.logistics.user.presentation.controller.dto.response.UserResponse;
-import com.logistics.user.presentation.controller.dto.response.UserSummaryResponse;
 import java.util.UUID;
+
+import com.logistics.user.presentation.response.UserResponse;
+import com.logistics.user.presentation.response.UserSummaryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

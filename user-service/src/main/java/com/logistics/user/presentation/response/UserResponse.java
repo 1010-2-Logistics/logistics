@@ -1,4 +1,4 @@
-package com.logistics.user.presentation.controller.dto.response;
+package com.logistics.user.presentation.response;
 
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;

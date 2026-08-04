@@ -1,4 +1,4 @@
-package com.logistics.user.presentation.controller.dto.request;
+package com.logistics.user.presentation.request;
 
 import com.logistics.user.application.dto.command.CreateUserCommand;
 import com.logistics.user.domain.entity.UserRole;

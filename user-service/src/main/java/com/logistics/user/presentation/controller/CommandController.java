@@ -4,19 +4,12 @@ import com.logistics.user.application.dto.command.UpdateUserCommand;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.global.response.ApiResponse;
-import com.logistics.user.presentation.controller.dto.request.UserCreateRequest;
-import com.logistics.user.presentation.controller.dto.request.UserUpdateRequest;
+import com.logistics.user.presentation.request.UserCreateRequest;
+import com.logistics.user.presentation.request.UserUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -45,12 +38,14 @@ public class CommandController {
             @PathVariable Long userId,
             @Valid @RequestBody UserUpdateRequest request
     ) {
-        userCommandService.update(
-                new UpdateUserCommand(
-                        userId,
-                        request.name()
-                )
+        // HTTP 요청 객체를 애플리케이션 계층의 Command로 변환한다.
+        UpdateUserCommand command = new UpdateUserCommand(
+                userId,
+                request.slackId()
         );
+
+        // 실제 사용자 수정 비즈니스 로직을 실행한다.
+        userCommandService.update(command);
 
         return ApiResponse.success(
                 200,
