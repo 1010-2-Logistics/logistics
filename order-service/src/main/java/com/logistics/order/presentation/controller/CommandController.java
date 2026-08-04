@@ -31,10 +31,15 @@ public class CommandController {
     public ApiResponse<OrderCreateResponseDto> createOrder(
             @Valid @RequestBody OrderCreateRequestDto orderCreateRequestDto
     ) {
-        OrderCreateCommand orderCreateCommand = null;
+        OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
+                orderCreateRequestDto.startCompanyId(),
+                orderCreateRequestDto.endCompanyId(),
+                orderCreateRequestDto.productId(),
+                orderCreateRequestDto.quantity(),
+                orderCreateRequestDto.request()
+        );
 
-        OrderCreateResult orderCreateResult =
-                orderFacade.createOrder(orderCreateCommand);
+        OrderCreateResult orderCreateResult = orderFacade.createOrder(orderCreateCommand);
 
         OrderCreateResponseDto orderCreateResponseDto = null;
 
