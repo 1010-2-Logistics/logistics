@@ -14,7 +14,7 @@ import java.util.UUID;
         configuration = FeignConfig.class
 )
 public interface ProductClient {
-    @GetMapping("/internal/products/{productId}")
+    @GetMapping("/internal/v1/products/{productId}/exists")
     ProductValidationResponse getProduct(
             @PathVariable("productId") UUID productId
     );
