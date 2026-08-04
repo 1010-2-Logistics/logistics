@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class OrderFacadeTest {
+    // TODO : CRUD 이후 진행 예정
     @Mock
     private OrderCommandService orderCommandService;
 
