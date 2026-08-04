@@ -1,6 +1,9 @@
 package com.logistics.order.application.facade;
 
+import com.logistics.order.application.dto.command.OrderCreateCommand;
+import com.logistics.order.application.dto.command.OrderDeleteCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
+import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.global.response.ApiResponse;
@@ -8,9 +11,12 @@ import com.logistics.order.infrastructure.feign.client.CompanyClient;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.client.ProductClient;
+import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
+import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
-import org.junit.jupiter.api.BeforeEach;
+import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
+import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -62,7 +68,59 @@ class OrderFacadeTest {
         @Test
         @DisplayName("성공")
         void order_create_success() {
+            // 상품 조회 → 업체 조회 → 재고 차감 → 배송 생성 → 주문 저장
+            OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
 
+            ProductGetResponse productGetResponse = mock(ProductGetResponse.class);
+            CompanyOrderInfoResponse companyOrderInfoResponse = mock(CompanyOrderInfoResponse.class);
+            DeliveryCreateResponse deliveryCreateResponse = mock(DeliveryCreateResponse.class);
+            OrderCreateResult orderCreateResult = mock(OrderCreateResult.class);
+
+            ApiResponse<ProductGetResponse> productApiResponse = mock(ApiResponse.class);
+            ApiResponse<CompanyOrderInfoResponse> companyApiResponse = mock(ApiResponse.class);
+            ApiResponse<DeliveryCreateResponse> deliveryApiResponse = mock(ApiResponse.class);
+
+            given(productClient.getProduct(productId)).willReturn(productApiResponse);
+            given(productApiResponse.getData()).willReturn(productGetResponse);
+            given(productGetResponse.companyId()).willReturn(startCompanyId);
+
+            given(companyClient.getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            )).willReturn(companyApiResponse);
+            given(companyApiResponse.getData()).willReturn(companyOrderInfoResponse);
+            given(companyOrderInfoResponse.startHubId()).willReturn(startHubId);
+            given(companyOrderInfoResponse.endHubId()).willReturn(endHubId);
+            given(companyOrderInfoResponse.endCompanyAddress()).willReturn("서울특별시 송파구");
+
+            given(deliveryClient.createDelivery(any(DeliveryCreateRequest.class))).willReturn(deliveryApiResponse);
+            given(deliveryApiResponse.getData()).willReturn(deliveryCreateResponse);
+            given(deliveryCreateResponse.deliveryId()).willReturn(deliveryId);
+
+            given(orderCommandService.createOrder(
+                    any(OrderCreateCommand.class),
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class)
+            )).willReturn(orderCreateResult);
+
+            orderFacade.createOrder(orderCreateCommand);
+
+            verify(inventoryClient).deductInventory(any(InventoryDeductionRequest.class));
+
+            verify(deliveryClient).createDelivery(any(DeliveryCreateRequest.class));
+
+            verify(orderCommandService).createOrder(
+                    any(OrderCreateCommand.class),
+                    any(UUID.class),
+                    any(UUID.class),
+                    any(UUID.class)
+            );
         }
 
         @Test
@@ -133,8 +191,34 @@ class OrderFacadeTest {
     class order_delete {
         @Test
         @DisplayName("주문 삭제 성공")
-        void order_delete_success(){
+        void order_delete_success() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+            OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
+            CompanyOrderInfoResponse companyOrderInfoResponse = mock(CompanyOrderInfoResponse.class);
 
+            given(orderCommandService.findOrderForDelete(orderId)).willReturn(order);
+
+            ApiResponse<CompanyOrderInfoResponse> apiResponse = mock(ApiResponse.class);
+            given(companyClient.getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            )).willReturn(apiResponse);
+            given(apiResponse.getData()).willReturn(companyOrderInfoResponse);
+
+            given(companyOrderInfoResponse.startHubId()).willReturn(startHubId);
+
+            orderFacade.deleteOrder(orderDeleteCommand);
+
+            verify(inventoryClient).restoreInventory(any(InventoryRestorationRequest.class));
+            verify(orderCommandService).deleteOrder(order);
         }
     }
 }

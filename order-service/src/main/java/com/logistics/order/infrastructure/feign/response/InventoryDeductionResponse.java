@@ -1,6 +1,10 @@
 package com.logistics.order.infrastructure.feign.response;
 
-public record InventoryDeductionResponse(
+import java.util.UUID;
 
+public record InventoryDeductionResponse(
+        UUID inventoryId,
+        UUID productId,
+        Integer stock
 ) {
 }
