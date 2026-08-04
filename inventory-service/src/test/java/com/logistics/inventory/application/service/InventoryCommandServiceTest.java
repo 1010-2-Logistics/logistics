@@ -2,8 +2,8 @@ package com.logistics.inventory.application.service;
 
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
 import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
-import com.logistics.inventory.application.dto.result.InventoryDeductionResultDto;
-import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
+import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -63,7 +62,7 @@ class InventoryCommandServiceTest {
 
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-            InventoryDeductionResultDto inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
+            InventoryDeductionResult inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
 
             assertThat(inventoryDeductionResultDto.stock()).isEqualTo(99);
             assertThat(inventory.getStock()).isEqualTo(99);
@@ -121,7 +120,7 @@ class InventoryCommandServiceTest {
             given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-            InventoryRestorationResultDto inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
+            InventoryRestorationResult inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
 
             assertThat(inventoryRestorationResultDto.stock()).isEqualTo(130);
             assertThat(inventory.getStock()).isEqualTo(130);
@@ -154,6 +153,22 @@ class InventoryCommandServiceTest {
             );
 
             verify(inventoryCommandRepository, never()).save(any(Inventory.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 생성")
+    class create{
+        @Test
+        @DisplayName("재고 생성 성공")
+        void inventory_create_success(){
+
+        }
+
+        @Test
+        @DisplayName("동일한 상품과 허브의 재고가 이미 존재하면 예외 처리")
+        void inventory_create_duplicate_fail(){
+
         }
     }
 }

@@ -4,15 +4,15 @@ import com.logistics.inventory.domain.entity.Inventory;
 
 import java.util.UUID;
 
-public record InventoryDeductionResultDto(
+public record InventoryDeductionResult(
         UUID inventoryId,
         UUID productId,
         Integer stock
 ) {
-    public static InventoryDeductionResultDto from(
+    public static InventoryDeductionResult from(
             Inventory inventory
     ) {
-        return new InventoryDeductionResultDto(
+        return new InventoryDeductionResult(
                 inventory.getInventoryId(),
                 inventory.getProductId(),
                 inventory.getStock()

@@ -4,15 +4,15 @@ import com.logistics.inventory.domain.entity.Inventory;
 
 import java.util.UUID;
 
-public record InventoryRestorationResultDto(
+public record InventoryRestorationResult(
         UUID inventoryId,
         UUID productId,
         Integer stock
 ) {
-    public static InventoryRestorationResultDto from(
+    public static InventoryRestorationResult from(
             Inventory inventory
     ) {
-        return new InventoryRestorationResultDto(
+        return new InventoryRestorationResult(
                 inventory.getInventoryId(),
                 inventory.getProductId(),
                 inventory.getStock()
