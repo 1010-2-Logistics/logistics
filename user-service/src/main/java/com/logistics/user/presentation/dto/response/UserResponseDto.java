@@ -1,11 +1,11 @@
-package com.logistics.user.presentation.response;
+package com.logistics.user.presentation.dto.response;
 
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;
 import java.util.UUID;
 
-public record UserResponse(
+public record UserResponseDto(
         Long userId,
         String username,
         String slackId,
@@ -15,8 +15,8 @@ public record UserResponse(
         UUID hubId
 ) {
 
-    public static UserResponse from(User user) {
-        return new UserResponse(
+    public static UserResponseDto from(User user) {
+        return new UserResponseDto(
                 user.getUserId(),
                 user.getUsername(),
                 user.getSlackId(),
