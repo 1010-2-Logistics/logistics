@@ -193,7 +193,29 @@ class InventoryCommandServiceTest {
         @Test
         @DisplayName("동일한 상품과 허브의 재고가 이미 존재하면 예외 처리")
         void inventory_create_duplicate_fail() {
+            Inventory existingInventory = Inventory.create(
+                    productId,
+                    hubId,
+                    100
+            );
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    productId,
+                    hubId,
+                    100
+            );
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(existingInventory));
 
+            assertThatThrownBy(() -> inventoryCommandService.createInventory(inventoryCreateCommand))
+                    .isInstanceOfSatisfying(
+                            CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_EXISTS)
+                    );
+
+            verify(inventoryCommandRepository, never()).save(any(Inventory.class));
         }
     }
 }
