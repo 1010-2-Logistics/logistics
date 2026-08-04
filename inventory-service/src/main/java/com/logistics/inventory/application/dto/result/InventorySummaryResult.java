@@ -1,6 +1,23 @@
 package com.logistics.inventory.application.dto.result;
 
-public record InventorySummaryResult(
+import com.logistics.inventory.domain.entity.Inventory;
 
+import java.util.UUID;
+
+public record InventorySummaryResult(
+        UUID inventoryId,
+        UUID productId,
+        UUID hubId,
+        Integer stock
 ) {
+    public static InventorySummaryResult from(
+            Inventory inventory
+    ) {
+        return new InventorySummaryResult(
+                inventory.getInventoryId(),
+                inventory.getProductId(),
+                inventory.getHubId(),
+                inventory.getStock()
+        );
+    }
 }
