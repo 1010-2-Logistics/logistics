@@ -1,7 +1,15 @@
 package com.logistics.company.infrastructure.persistence.repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import com.logistics.company.domain.OrderedCompanyInfo;
+import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -11,6 +19,28 @@ import lombok.RequiredArgsConstructor;
 public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 
   private final CompanyJpaRepository jpaRepository;
+
+  private final CompanyQueryDslRepository dslRepository;
+  
+	@Override
+	public Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId) {
+		return jpaRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
+	}
+
+	@Override
+	public Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId) {
+		return jpaRepository.findOrderedCompanyInfo(startCompanyId, endCompanyId);
+	}
+
+	@Override
+	public Page<Company> searchCompany(
+			String companyName,
+			UUID hubId,
+			CompanyType companyType,
+			Pageable pageable) {
+		
+		return dslRepository.searchCompany(companyName, hubId, companyType, pageable);
+	}
   
   
 }
