@@ -6,7 +6,7 @@ include 'template-service'
 // (template-service를 복사해서 이름 바꾸고, 아래 해당 줄 주석 해제)
 
 // include 'infra:eureka-server'
-// include 'infra:api-gateway'
+ include 'gateway-service'
 // include 'infra:config-server'
 // include 'user-service'
 // include 'slack-service'
