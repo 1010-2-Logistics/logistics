@@ -1,9 +1,11 @@
 package com.logistics.inventory.application.service;
 
+import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
 import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
 import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
-import com.logistics.inventory.application.dto.result.InventoryDeductionResultDto;
-import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
+import com.logistics.inventory.application.dto.result.InventoryCreateResult;
+import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -17,21 +19,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
 class InventoryCommandServiceTest {
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
+    UUID inventoryId = UUID.randomUUID();
 
     @Mock
     InventoryCommandRepository inventoryCommandRepository;
@@ -63,7 +65,7 @@ class InventoryCommandServiceTest {
 
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-            InventoryDeductionResultDto inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
+            InventoryDeductionResult inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
 
             assertThat(inventoryDeductionResultDto.stock()).isEqualTo(99);
             assertThat(inventory.getStock()).isEqualTo(99);
@@ -121,7 +123,7 @@ class InventoryCommandServiceTest {
             given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-            InventoryRestorationResultDto inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
+            InventoryRestorationResult inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
 
             assertThat(inventoryRestorationResultDto.stock()).isEqualTo(130);
             assertThat(inventory.getStock()).isEqualTo(130);
@@ -154,6 +156,96 @@ class InventoryCommandServiceTest {
             );
 
             verify(inventoryCommandRepository, never()).save(any(Inventory.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 생성")
+    class create {
+        @Test
+        @DisplayName("재고 생성 성공")
+        void inventory_create_success() {
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    productId,
+                    hubId,
+                    100
+            );
+            Inventory savedInventory = mock(Inventory.class);
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            )).willReturn(Optional.empty());
+            given(savedInventory.getInventoryId()).willReturn(inventoryId);
+            given(inventoryCommandRepository.save(any(Inventory.class))).willReturn(savedInventory);
+
+            InventoryCreateResult inventoryCreateResult = inventoryCommandService.createInventory(
+                    inventoryCreateCommand
+            );
+
+            assertThat(inventoryCreateResult.inventoryId()).isEqualTo(inventoryId);
+
+            verify(inventoryCommandRepository).findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            );
+            verify(inventoryCommandRepository).save(any(Inventory.class));
+        }
+
+        @Test
+        @DisplayName("동일한 상품과 허브의 재고가 이미 존재하면 예외 처리")
+        void inventory_create_duplicate_fail() {
+            Inventory existingInventory = Inventory.create(
+                    productId,
+                    hubId,
+                    100
+            );
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    productId,
+                    hubId,
+                    100
+            );
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(existingInventory));
+
+            assertThatThrownBy(() -> inventoryCommandService.createInventory(inventoryCreateCommand))
+                    .isInstanceOfSatisfying(
+                            CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_EXISTS)
+                    );
+
+            verify(inventoryCommandRepository, never()).save(any(Inventory.class));
+        }
+
+        @Test
+        @DisplayName("같은 허브라도 상품이 다르면 재고 생성 성공")
+        void inventory_create_different_product_success() {
+            UUID anotherProductId = UUID.randomUUID();
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    anotherProductId,
+                    hubId,
+                    100
+            );
+            Inventory savedInventory = mock(Inventory.class);
+
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    anotherProductId,
+                    hubId
+            )).willReturn(Optional.empty());
+            given(inventoryCommandRepository.save(any(Inventory.class))).willReturn(savedInventory);
+            given(savedInventory.getInventoryId()).willReturn(inventoryId);
+
+            InventoryCreateResult inventoryCreateResult = inventoryCommandService.createInventory(inventoryCreateCommand);
+
+            assertThat(inventoryCreateResult.inventoryId()).isEqualTo(inventoryId);
+
+            verify(inventoryCommandRepository).findByProductIdAndHubIdAndDeletedAtIsNull(
+                    anotherProductId,
+                    hubId
+            );
+            verify(inventoryCommandRepository).save(any(Inventory.class));
         }
     }
 }
