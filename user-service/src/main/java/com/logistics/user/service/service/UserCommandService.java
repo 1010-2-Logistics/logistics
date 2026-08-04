@@ -1,9 +1,9 @@
-package com.logistics.user.application.service;
+package com.logistics.user.service.service;
 
-import com.logistics.user.application.dto.command.CreateUserCommand;
-import com.logistics.user.application.dto.command.UpdateUserCommand;
-import com.logistics.user.application.event.UserCreatedEvent;
-import com.logistics.user.application.port.EventPublisher;
+import com.logistics.user.service.dto.command.CreateUserCommand;
+import com.logistics.user.service.dto.command.UpdateUserCommand;
+import com.logistics.user.service.event.UserCreatedEvent;
+import com.logistics.user.service.port.EventPublisher;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.repository.UserCommandRepository;
 import com.logistics.user.global.exception.CustomException;

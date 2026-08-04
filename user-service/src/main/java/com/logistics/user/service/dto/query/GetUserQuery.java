@@ -1,4 +1,4 @@
-package com.logistics.user.application.dto.query;
+package com.logistics.user.service.dto.query;
 
 import java.util.UUID;
 

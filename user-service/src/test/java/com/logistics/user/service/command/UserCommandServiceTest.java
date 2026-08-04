@@ -1,14 +1,14 @@
-package com.logistics.user.application.command;
+package com.logistics.user.service.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.logistics.user.application.dto.command.CreateUserCommand;
-import com.logistics.user.application.event.UserCreatedEvent;
-import com.logistics.user.application.port.EventPublisher;
-import com.logistics.user.application.service.UserCommandService;
+import com.logistics.user.service.dto.command.CreateUserCommand;
+import com.logistics.user.service.event.UserCreatedEvent;
+import com.logistics.user.service.port.EventPublisher;
+import com.logistics.user.service.service.UserCommandService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;

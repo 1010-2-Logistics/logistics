@@ -1,4 +1,4 @@
-package com.logistics.user.application.dto.command;
+package com.logistics.user.service.dto.command;
 
 public record UpdateUserCommand(
         Long userId,

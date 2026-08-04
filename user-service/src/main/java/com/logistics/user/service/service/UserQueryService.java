@@ -1,7 +1,7 @@
-package com.logistics.user.application.service;
+package com.logistics.user.service.service;
 
-import com.logistics.user.application.dto.query.GetUserQuery;
-import com.logistics.user.application.dto.query.SearchUserQuery;
+import com.logistics.user.service.dto.query.GetUserQuery;
+import com.logistics.user.service.dto.query.SearchUserQuery;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
