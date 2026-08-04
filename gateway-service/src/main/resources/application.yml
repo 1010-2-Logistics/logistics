@@ -28,6 +28,12 @@ spring:
               predicates:
                 # 이 경로로 들어온 요청만 template-service로 전달
                 - Path=/api/v1/users/**,/api/v1/auth/**
+
+#            - id: user-service                             <-settings.gradle과 동일한 이름
+#              uri: lb://user-service                       <-settings.gradle과 동일한 이름
+#              predicates:
+#                - Path=/api/v1/users/**                    <-각 Controller에 RequestMapping 경로 참고하여 수정.
+
 eureka:
   client:
     service-url:
@@ -37,6 +43,7 @@ eureka:
   instance:
     # 호스트명 대신 IP 주소를 Eureka에 등록
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
 
 management:
   endpoints:
