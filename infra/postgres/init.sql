@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
     role VARCHAR(30) NOT NULL,
     company_id UUID,
     hub_id UUID,
+CREATE TABLE IF NOT EXISTS delivery_service.p_delivery_manager (
+    delivery_manager_id BIGINT PRIMARY KEY,
+    hub_id UUID,
+    slack_id VARCHAR(255) NOT NULL,
+    manager_type VARCHAR(50) NOT NULL,
+    delivery_sequence INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT,
     updated_at TIMESTAMP,
@@ -40,3 +46,5 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
              )
          )
 );
+    deleted_by BIGINT
+    );

@@ -1,6 +1,6 @@
 package com.logistics.inventory.presentation.dto.response;
 
-import com.logistics.inventory.application.dto.result.InventoryRestorationResultDto;
+import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 
 import java.util.UUID;
 
@@ -10,7 +10,7 @@ public record InventoryRestorationResponseDto(
         Integer stock
 ) {
     public static InventoryRestorationResponseDto from(
-            InventoryRestorationResultDto inventoryRestorationResultDto
+            InventoryRestorationResult inventoryRestorationResultDto
     ) {
         return new InventoryRestorationResponseDto(
                 inventoryRestorationResultDto.inventoryId(),

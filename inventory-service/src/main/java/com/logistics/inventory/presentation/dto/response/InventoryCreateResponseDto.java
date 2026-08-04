@@ -1,6 +1,8 @@
 package com.logistics.inventory.presentation.dto.response;
 
-public record InventoryCreateResponseDto(
+import java.util.UUID;
 
+public record InventoryCreateResponseDto(
+        UUID inventoryId
 ) {
 }
