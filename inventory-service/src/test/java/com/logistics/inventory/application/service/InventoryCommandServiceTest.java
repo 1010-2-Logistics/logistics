@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -216,6 +217,35 @@ class InventoryCommandServiceTest {
                     );
 
             verify(inventoryCommandRepository, never()).save(any(Inventory.class));
+        }
+
+        @Test
+        @DisplayName("같은 허브라도 상품이 다르면 재고 생성 성공")
+        void inventory_create_different_product_success() {
+            UUID anotherProductId = UUID.randomUUID();
+            InventoryCreateCommand inventoryCreateCommand = new InventoryCreateCommand(
+                    anotherProductId,
+                    hubId,
+                    100
+            );
+            Inventory savedInventory = mock(Inventory.class);
+
+            given(inventoryCommandRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                    anotherProductId,
+                    hubId
+            )).willReturn(Optional.empty());
+            given(inventoryCommandRepository.save(any(Inventory.class))).willReturn(savedInventory);
+            given(savedInventory.getInventoryId()).willReturn(inventoryId);
+
+            InventoryCreateResult inventoryCreateResult = inventoryCommandService.createInventory(inventoryCreateCommand);
+
+            assertThat(inventoryCreateResult.inventoryId()).isEqualTo(inventoryId);
+
+            verify(inventoryCommandRepository).findByProductIdAndHubIdAndDeletedAtIsNull(
+                    anotherProductId,
+                    hubId
+            );
+            verify(inventoryCommandRepository).save(any(Inventory.class));
         }
     }
 }
