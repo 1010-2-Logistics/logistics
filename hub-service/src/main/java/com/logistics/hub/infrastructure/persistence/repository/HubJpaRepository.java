@@ -31,5 +31,6 @@ interface HubJpaRepository extends JpaRepository<Hub, UUID> {
     // 4. 주소 중복 체크 (자기 자신 제외)
     boolean existsByHubAddressAndHubIdNotAndDeletedAtIsNull(String hubAddress, UUID hubId);
 
+    //허브 존재 여부 체크
     boolean existsByhubIdAndDeletedAtIsNull(UUID hubId);
 }
