@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserQueryRepository {
 
-    Optional<User> findByIdAndDeletedAtIsNull(Long UserId);
+    Optional<User> findByIdAndDeletedAtIsNull(Long userId);
 
     Page<User> search(String keyword, Pageable pageable);
 }

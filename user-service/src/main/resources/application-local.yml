@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=user_service # 스키마명 바꾸세요
+    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=user_service
     username: ${DB_USERNAME:logistics}
     password: ${DB_PASSWORD:logistics}
   jpa:

@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 사용자 계정, 가입 승인 상태, 권한, 소속 정보를 관리하는 도메인 엔티티다.
+ * 사용자 계정, 가입 승인 상태, 권한, 소속 정보를 관리하는 엔티티
  *
  * 주요 책임:
  * - 사용자 계정 정보 보유
@@ -32,10 +32,7 @@ import lombok.NoArgsConstructor;
 public class User extends BaseEntity {
 
     /**
-     * 사용자 내부 식별자.
-     *
-     * PostgreSQL BIGINT IDENTITY 컬럼과 매핑되므로
-     * Java에서는 Long을 사용한다.
+     * 사용자 내부 식별자
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,7 +46,7 @@ public class User extends BaseEntity {
      * - 4자 이상 10자 이하
      * - 영문 소문자와 숫자로 구성
      *
-     * 형식 검증은 요청 DTO와 애플리케이션 계층에서 수행한다.
+     * 형식 검증은 요청 DTO와 애플리케이션 계층에서 수행
      */
     @Column(
             name = "username",
@@ -61,8 +58,6 @@ public class User extends BaseEntity {
 
     /**
      * BCrypt로 암호화된 비밀번호 해시값.
-     *
-     * 평문 비밀번호를 저장하면 안 된다.
      */
     @Column(name = "password", nullable = false, length = 255)
     private String password;
@@ -79,7 +74,7 @@ public class User extends BaseEntity {
     private String slackId;
 
     /**
-     * 회원가입 승인 상태.
+     * 승인 상태.
      *
      * Enum의 순서가 아닌 문자열 이름을 DB에 저장한다.
      */
@@ -98,7 +93,7 @@ public class User extends BaseEntity {
      * 업체 소속 사용자가 참조하는 업체 ID.
      *
      * Company Service와 물리 FK를 연결하지 않고
-     * UUID 값만 논리적으로 보관한다.
+     * UUID 값만 논리적으로
      */
     @Column(name = "company_id")
     private UUID companyId;
@@ -150,9 +145,9 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 사용자의 Slack ID를 변경한다.
+     * 사용자의 Slack ID를 변경
      *
-     * username은 로그인 식별자이므로 일반 수정 대상에서 제외하는 편이 안전하다.
+     * username은 로그인 식별자이므로 일반 수정 대상에서 제외
      */
     public void updateSlackId(String slackId) {
         if (slackId == null || slackId.isBlank()) {
@@ -167,7 +162,7 @@ public class User extends BaseEntity {
     /**
      * 암호화된 새 비밀번호로 변경한다.
      *
-     * 이 메서드에는 평문이 아닌 BCrypt 처리된 값을 전달해야 한다.
+     * 이 메서드에는 평문이 아닌 BCrypt 처리된 값을 전달
      */
     public void changePassword(String encodedPassword) {
         if (encodedPassword == null || encodedPassword.isBlank()) {
@@ -180,7 +175,7 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 가입 요청을 승인한다.
+     * 가입 요청 승인
      */
     public void approve() {
         validateNotSameStatus(UserStatus.APPROVED);
@@ -188,7 +183,7 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 가입 요청을 거절한다.
+     * 가입 요청 거절
      */
     public void reject() {
         validateNotSameStatus(UserStatus.REJECTED);
@@ -253,7 +248,7 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 역할과 소속 정보가 일치하는지 검증한다.
+     * 역할과 소속 정보가 일치하는지 검증
      *
      * MASTER:
      * - companyId 없음

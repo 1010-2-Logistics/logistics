@@ -7,10 +7,11 @@ import static org.mockito.Mockito.when;
 import com.logistics.user.application.dto.query.GetUserQuery;
 import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,34 +22,61 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserQueryServiceTest {
 
     @Mock
-    private UserQueryRepository UserQueryRepository;
+    private UserQueryRepository userQueryRepository;
 
     @InjectMocks
-    private UserQueryService UserQueryService;
+    private UserQueryService userQueryService;
 
     @Test
-    void 존재하지_않으면_예외를_던진다() {
-        // given
-        UUID UserId = UUID.randomUUID();
-        when(UserQueryRepository.findByIdAndDeletedAtIsNull(UserId)).thenReturn(Optional.empty());
+    void 존재하지_않으면_예외() {
+        Long userId = 1L;
+
+        when(userQueryRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> UserQueryService.get(new GetUserQuery(UserId)))
-                .isInstanceOf(CustomException.class);
+        assertThatThrownBy(
+                () -> userQueryService.get(new GetUserQuery(userId))
+        ).isInstanceOf(CustomException.class);
     }
 
     @Test
     void 존재하면_조회된다() {
         // given
-        // User.UserId는 @GeneratedValue라 실제 DB insert 전까진 null이라, 조회 키는 별도 UUID로 지정합니다.
-        UUID UserId = UUID.randomUUID();
-        User User = User.create("샘플");
-        when(UserQueryRepository.findByIdAndDeletedAtIsNull(UserId)).thenReturn(Optional.of(User));
+        Long userId = 1L;
+
+        /*
+         * MASTER는 companyId와 hubId가 필요하지 않으므로
+         * 테스트 데이터를 가장 단순하게 만들 수 있다.
+         *
+         * encodedPassword에는 실제 BCrypt 값이 아니라
+         * 도메인 생성 테스트를 위한 임시 문자열을 전달한다.
+         */
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        when(userQueryRepository.findByIdAndDeletedAtIsNull(userId))
+                .thenReturn(Optional.of(user));
 
         // when
-        User result = UserQueryService.get(new GetUserQuery(UserId));
+        User result = userQueryService.get(
+                new GetUserQuery(userId)
+        );
 
         // then
-        assertThat(result.getName()).isEqualTo("샘플");
+        assertThat(result.getUsername())
+                .isEqualTo("sample01");
+
+        assertThat(result.getStatus())
+                .isEqualTo(UserStatus.PENDING);
+
+        assertThat(result.getRole())
+                .isEqualTo(UserRole.MASTER);
     }
 }

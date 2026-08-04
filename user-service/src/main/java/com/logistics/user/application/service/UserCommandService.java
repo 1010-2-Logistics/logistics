@@ -21,9 +21,8 @@ public class UserCommandService {
     private final EventPublisher eventPublisher;
 
     /**
-     * 사용자를 생성한다.
-     *
-     * 현재 command.encodedPassword()는 이름상 암호화된 값을 의미한다.
+     * 사용자 생성
+     * 현재 command.encodedPassword()는 이름상 암호화된 값
      * 실제 회원가입 구현 시 반드시 BCrypt 처리된 값이 전달되어야 한다.
      */
     public Long create(CreateUserCommand command) {
@@ -51,7 +50,7 @@ public class UserCommandService {
     }
 
     /**
-     * 현재 구조에서는 Slack ID만 수정한다.
+     * 현재 구조에서는 Slack ID만 수정
      */
     public void update(UpdateUserCommand command) {
         User user = userCommandRepository
@@ -66,9 +65,8 @@ public class UserCommandService {
     }
 
     /**
-     * 사용자를 논리 삭제한다.
-     *
-     * deletedBy는 삭제를 수행한 사용자의 내부 PK다.
+     * 사용자를 논리 삭제
+     * deletedBy는 삭제를 수행한 사용자의 내부 PK다
      */
     public void delete(Long userId, Long deletedBy) {
         User user = userCommandRepository
