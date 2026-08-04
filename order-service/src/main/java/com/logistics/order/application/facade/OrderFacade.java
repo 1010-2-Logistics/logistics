@@ -13,7 +13,7 @@ import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.client.ProductClient;
 import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryReserveRequest;
+import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
@@ -50,7 +50,7 @@ public class OrderFacade {
         ).getData();
 
         // 재고
-        InventoryReserveRequest inventoryReserveRequest = new InventoryReserveRequest(
+        InventoryRestorationRequest inventoryReserveRequest = new InventoryRestorationRequest(
                 orderCreateCommand.productId(),
                 companyOrderInfoResponse.startHubId(),
                 orderCreateCommand.quantity()

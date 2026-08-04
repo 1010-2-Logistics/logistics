@@ -55,12 +55,15 @@ public class CommandController {
             @PathVariable UUID orderId,
             @Valid @RequestBody OrderUpdateRequestDto orderUpdateRequestDto
     ) {
-        OrderUpdateCommand orderUpdateCommand = null;
+        OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
+                orderId,
+                orderUpdateRequestDto.quantity(),
+                orderUpdateRequestDto.request()
+        );
 
-        OrderUpdateResult orderUpdateResult =
-                orderFacade.updateOrder(orderUpdateCommand);
+        OrderUpdateResult orderUpdateResult = orderFacade.updateOrder(orderUpdateCommand);
 
-        OrderUpdateResponseDto orderUpdateResponseDto = null;
+        OrderUpdateResponseDto orderUpdateResponseDto = OrderUpdateResponseDto.from(orderUpdateResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),

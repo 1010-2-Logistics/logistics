@@ -21,10 +21,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OrderQueryService {
-
     private final OrderQueryRepository orderQueryRepository;
 
-    // TODO : update ErrorCode
     public OrderDetailResult getOrder(UUID orderId) {
         Order order = orderQueryRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));

@@ -61,4 +61,21 @@ public class Order extends BaseEntity {
         order.status = OrderStatus.CREATED;
         return order;
     }
+
+    public void update(
+            Integer quantity,
+            String request
+    ) {
+        if (quantity != null) {
+            this.quantity = quantity;
+        }
+
+        if (request != null && !request.isBlank()) {
+            this.request = request;
+        }
+    }
+
+    public boolean inCanceled() {
+        return this.status == OrderStatus.CANCELED;
+    }
 }
