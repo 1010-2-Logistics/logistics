@@ -27,8 +27,7 @@ spring:
 
               predicates:
                 # 이 경로로 들어온 요청만 template-service로 전달
-                - Path=/api/v1/users/**
-                - Path=/api/v1/auth/**
+                - Path=/api/v1/users/**,/api/v1/auth/**
 eureka:
   client:
     service-url:
