@@ -24,19 +24,19 @@ public abstract class BaseEntity {
 
     @CreatedBy
     @Column(updatable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
     @LastModifiedBy
-    private String updatedBy;
+    private Long updatedBy;
 
     private LocalDateTime deletedAt;
 
-    private String deletedBy;
+    private Long deletedBy;
 
-    public void markDeleted(String deletedBy) {
+    public void markDeleted(Long deletedBy) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = deletedBy;
     }
