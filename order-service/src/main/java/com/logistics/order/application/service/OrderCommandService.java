@@ -9,6 +9,7 @@ import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.EventPublisher;
+import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderCommandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,16 @@ public class OrderCommandService {
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
     ) {
-        return null;
+        Order order = Order.create(
+                orderCreateCommand.endCompanyId(),
+                orderCreateCommand.productId(),
+                orderCreateCommand.quantity(),
+                orderCreateCommand.request()
+        );
+
+        Order savedOrder = orderCommandRepository.save(order);
+
+        return OrderCreateResult.from(savedOrder);
     }
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
