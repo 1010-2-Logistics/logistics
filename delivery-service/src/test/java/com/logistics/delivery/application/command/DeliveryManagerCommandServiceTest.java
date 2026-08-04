@@ -3,6 +3,7 @@ package com.logistics.delivery.application.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
@@ -87,7 +88,7 @@ class DeliveryManagerCommandServiceTest {
         // given
         UUID hubId = UUID.randomUUID();
         when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(3L)).thenReturn(false);
-        when(hubClient.getHub(hubId)).thenReturn(new HubValidationResponse(hubId, false));
+        when(hubClient.getHub(hubId)).thenThrow(mock(FeignException.NotFound.class));
 
         RegisterDeliveryManagerCommand command =
                 new RegisterDeliveryManagerCommand(3L, hubId, "U03", ManagerType.COMPANY_DELIVERY_MANAGER);
