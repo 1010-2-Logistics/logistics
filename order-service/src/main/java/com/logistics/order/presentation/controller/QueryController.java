@@ -22,7 +22,7 @@ public class QueryController {
 
     @GetMapping("/{orderId}")
     public ApiResponse<OrderDetailResponseDto> getOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
         OrderDetailResult orderDetailResult = orderQueryService.getOrder(orderId);
 

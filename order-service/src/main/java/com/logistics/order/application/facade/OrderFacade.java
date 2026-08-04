@@ -136,7 +136,31 @@ public class OrderFacade {
     public OrderCancelResult cancelOrder(
             OrderCancelCommand orderCancelCommand
     ) {
-        return orderCommandService.cancelOrder(orderCancelCommand);
+        Order order = orderCommandService.findOrderForCancel(
+                orderCancelCommand.orderId()
+        );
+
+        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+                order.getStartCompanyId(),
+                order.getEndCompanyId()
+        ).getData();
+
+        deliveryClient.cancelDelivery(
+                order.getOrderId()
+        );
+
+        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                order.getProductId(),
+                companyOrderInfoResponse.startHubId(),
+                order.getQuantity()
+        );
+
+        // 실패 시
+        inventoryClient.restoreInventory(
+                inventoryRestorationRequest
+        );
+
+        return orderCommandService.cancelOrder(order);
     }
 
     private void adjustInventory(

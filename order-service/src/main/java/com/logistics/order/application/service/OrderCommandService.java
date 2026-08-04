@@ -3,7 +3,6 @@ package com.logistics.order.application.service;
 
 import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
-import com.logistics.order.application.dto.command.OrderDeleteCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
@@ -100,8 +99,23 @@ public class OrderCommandService {
     }
 
     public OrderCancelResult cancelOrder(
-            OrderCancelCommand orderCancelCommand
+            Order order
     ) {
-        return null;
+        order.isCanceled();
+
+        Order savedOrder = orderCommandRepository.save(order);
+
+        return OrderCancelResult.from(savedOrder);
+    }
+
+    public Order findOrderForCancel(
+            UUID orderId
+    ) {
+        Order order = orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+        if (order.isCanceled()) {
+            throw new CustomException(OrderErrorCode.ORDER_CANCEL_CONFLICT);
+        }
+        return order;
     }
 }

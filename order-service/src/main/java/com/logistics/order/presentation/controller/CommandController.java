@@ -52,7 +52,7 @@ public class CommandController {
 
     @PatchMapping("/{orderId}")
     public ApiResponse<OrderUpdateResponseDto> updateOrder(
-            @PathVariable UUID orderId,
+            @PathVariable("orderId") UUID orderId,
             @Valid @RequestBody OrderUpdateRequestDto orderUpdateRequestDto
     ) {
         OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
@@ -75,7 +75,7 @@ public class CommandController {
     @DeleteMapping("/{orderId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
         OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
 
@@ -84,14 +84,14 @@ public class CommandController {
 
     @PatchMapping("/{orderId}/cancel")
     public ApiResponse<OrderCancelResponseDto> cancelOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
-        OrderCancelCommand orderCancelCommand = null;
+        OrderCancelCommand orderCancelCommand = new OrderCancelCommand(orderId);
 
         OrderCancelResult orderCancelResult =
                 orderFacade.cancelOrder(orderCancelCommand);
 
-        OrderCancelResponseDto orderCancelResponseDto = null;
+        OrderCancelResponseDto orderCancelResponseDto = OrderCancelResponseDto.from(orderCancelResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),
