@@ -1,6 +1,13 @@
 package com.logistics.inventory.application.dto.result;
 
-public record InventoryGetOneResult(
+import java.time.LocalDateTime;
+import java.util.UUID;
 
+public record InventoryGetOneResult(
+        UUID inventoryId,
+        UUID productId,
+        UUID hubId,
+        Integer stock,
+        LocalDateTime createdAt
 ) {
 }
