@@ -22,12 +22,11 @@ public class QueryController {
 
     @GetMapping("/{orderId}")
     public ApiResponse<OrderDetailResponseDto> getOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
-        OrderDetailResult orderDetailResult =
-                orderQueryService.getOrder(orderId);
+        OrderDetailResult orderDetailResult = orderQueryService.getOrder(orderId);
 
-        OrderDetailResponseDto orderDetailResponseDto = null;
+        OrderDetailResponseDto orderDetailResponseDto = OrderDetailResponseDto.from(orderDetailResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),
@@ -44,12 +43,17 @@ public class QueryController {
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        OrderSearchQuery orderSearchQuery = null;
+        OrderSearchQuery orderSearchQuery = new OrderSearchQuery(
+                productId,
+                endCompanyId,
+                sort,
+                page,
+                size
+        );
 
-        OrderListResult orderListResult =
-                orderQueryService.getOrders(orderSearchQuery);
+        OrderListResult orderListResult = orderQueryService.getOrders(orderSearchQuery);
 
-        OrderListResponseDto orderListResponseDto = null;
+        OrderListResponseDto orderListResponseDto = OrderListResponseDto.from(orderListResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),

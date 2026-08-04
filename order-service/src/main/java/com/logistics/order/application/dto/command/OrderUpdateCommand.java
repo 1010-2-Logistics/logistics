@@ -1,6 +1,10 @@
 package com.logistics.order.application.dto.command;
 
-public record OrderUpdateCommand(
+import java.util.UUID;
 
+public record OrderUpdateCommand(
+        UUID orderId,
+        Integer quantity,
+        String request
 ) {
 }
