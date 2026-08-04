@@ -1,8 +1,8 @@
-package com.logistics.user.service.facade;
+package com.logistics.user.application.facade;
 
-import com.logistics.user.service.dto.command.CreateUserCommand;
-import com.logistics.user.service.service.UserCommandService;
-import com.logistics.user.service.service.UserQueryService;
+import com.logistics.user.application.dto.command.CreateUserCommand;
+import com.logistics.user.application.service.UserCommandService;
+import com.logistics.user.application.service.UserQueryService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

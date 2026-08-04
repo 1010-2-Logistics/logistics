@@ -1,4 +1,4 @@
-package com.logistics.user.service.event;
+package com.logistics.user.application.event;
 
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;

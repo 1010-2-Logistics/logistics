@@ -1,8 +1,8 @@
 package com.logistics.user.presentation.controller;
 
-import com.logistics.user.service.dto.command.UpdateUserCommand;
-import com.logistics.user.service.facade.UserFacade;
-import com.logistics.user.service.service.UserCommandService;
+import com.logistics.user.application.dto.command.UpdateUserCommand;
+import com.logistics.user.application.facade.UserFacade;
+import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.presentation.request.UserCreateRequest;
 import com.logistics.user.presentation.request.UserUpdateRequest;

@@ -1,11 +1,11 @@
-package com.logistics.user.service.query;
+package com.logistics.user.application.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.logistics.user.service.dto.query.GetUserQuery;
-import com.logistics.user.service.service.UserQueryService;
+import com.logistics.user.application.dto.query.GetUserQuery;
+import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;

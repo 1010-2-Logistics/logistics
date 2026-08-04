@@ -1,8 +1,8 @@
 package com.logistics.user.presentation.controller;
 
-import com.logistics.user.service.dto.query.GetUserQuery;
-import com.logistics.user.service.dto.query.SearchUserQuery;
-import com.logistics.user.service.service.UserQueryService;
+import com.logistics.user.application.dto.query.GetUserQuery;
+import com.logistics.user.application.dto.query.SearchUserQuery;
+import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.global.response.PageResponse;
