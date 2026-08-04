@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "hub-service", configuration = FeignConfig.class)
 public interface HubClient {
 
-    @GetMapping("/internal/hubs/{hubId}")
+    @GetMapping("/internal/v1/hubs/{hubId}")
     HubValidationResponse getHub(@PathVariable("hubId") UUID hubId);
 }
