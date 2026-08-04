@@ -8,11 +8,13 @@ import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.service.OrderCommandService;
+import com.logistics.order.domain.entity.Order;
 import com.logistics.order.infrastructure.feign.client.CompanyClient;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.client.ProductClient;
 import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
+import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
@@ -50,13 +52,13 @@ public class OrderFacade {
         ).getData();
 
         // 재고
-        InventoryRestorationRequest inventoryReserveRequest = new InventoryRestorationRequest(
+        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
                 orderCreateCommand.productId(),
                 companyOrderInfoResponse.startHubId(),
                 orderCreateCommand.quantity()
         );
 
-        inventoryClient.reserveInventory(inventoryReserveRequest);
+        inventoryClient.deductInventory(inventoryDeductionRequest);
 
         // 배달
         DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
@@ -74,14 +76,36 @@ public class OrderFacade {
                 orderCreateCommand,
                 orderId,
                 deliveryCreateResponse.deliveryId(),
-                deliveryCreateResponse.deliveryId()
+                productGetResponse.companyId()
         );
     }
 
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
     ) {
-        return orderCommandService.updateOrder(orderUpdateCommand);
+        Order order = orderCommandService.findOrderForUpdate(
+                orderUpdateCommand.orderId()
+        );
+
+        Integer changeQuantity = orderUpdateCommand.quantity();
+
+        if (changeQuantity != null) {
+            CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+                    order.getStartCompanyId(),
+                    order.getEndCompanyId()
+            ).getData();
+
+            adjustInventory(
+                    order,
+                    companyOrderInfoResponse.startHubId(),
+                    changeQuantity
+            );
+        }
+
+        return orderCommandService.updateOrder(
+                order,
+                orderUpdateCommand
+        );
     }
 
     public void deleteOrder(
@@ -95,4 +119,50 @@ public class OrderFacade {
     ) {
         return orderCommandService.cancelOrder(orderCancelCommand);
     }
+
+    private void adjustInventory(
+            Order order,
+            UUID hubId,
+            int newQuantity
+    ) {
+        int quantityDifference = newQuantity - order.getQuantity();
+
+        if (quantityDifference > 0) {
+            deductInventory(order, hubId, quantityDifference);
+            return;
+        }
+
+        if (quantityDifference < 0) {
+            restoreInventory(order, hubId, -quantityDifference);
+        }
+    }
+
+    private void deductInventory(
+            Order order,
+            UUID hubId,
+            int quantity
+    ) {
+        InventoryDeductionRequest request = new InventoryDeductionRequest(
+                order.getProductId(),
+                hubId,
+                quantity
+        );
+
+        inventoryClient.deductInventory(request);
+    }
+
+    private void restoreInventory(
+            Order order,
+            UUID hubId,
+            int quantity
+    ) {
+        InventoryRestorationRequest request = new InventoryRestorationRequest(
+                order.getProductId(),
+                hubId,
+                quantity
+        );
+
+        inventoryClient.restoreInventory(request);
+    }
+
 }

@@ -75,7 +75,7 @@ public class Order extends BaseEntity {
         }
     }
 
-    public boolean inCanceled() {
+    public boolean isCanceled() {
         return this.status == OrderStatus.CANCELED;
     }
 }

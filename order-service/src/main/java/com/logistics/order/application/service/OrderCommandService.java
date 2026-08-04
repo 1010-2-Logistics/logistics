@@ -11,6 +11,8 @@ import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.EventPublisher;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderCommandRepository;
+import com.logistics.order.global.exception.CustomException;
+import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +48,35 @@ public class OrderCommandService {
         return OrderCreateResult.from(savedOrder);
     }
 
+    public Order findOrderForUpdate(
+            UUID orderId
+    ) {
+        Order order = orderCommandRepository
+                .findByIdAndDeletedAtIsNull(orderId)
+                .orElseThrow(() ->
+                        new CustomException(OrderErrorCode.ORDER_NOT_FOUND)
+                );
+
+        // TODO: errorCode update -> ORDER_ALREADY_CANCELED
+        if (order.isCanceled()) {
+            throw new CustomException(OrderErrorCode.ORDER_NOT_FOUND);
+        }
+
+        return order;
+    }
+
     public OrderUpdateResult updateOrder(
+            Order order,
             OrderUpdateCommand orderUpdateCommand
     ) {
-        return null;
+        order.update(
+                orderUpdateCommand.quantity(),
+                orderUpdateCommand.request()
+        );
+
+        Order savedOrder = orderCommandRepository.save(order);
+
+        return OrderUpdateResult.from(savedOrder);
     }
 
     public void deleteOrder(
