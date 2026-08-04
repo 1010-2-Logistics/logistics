@@ -22,6 +22,14 @@ public record CompanySearchQuery(
 	
 	public CompanySearchQuery {
 		
+		boolean hasName = companyName != null && !companyName.isBlank();
+		boolean hasHubId = hubId != null;
+		boolean hasType = companyType != null;
+		
+		if(!hasName && !hasHubId && !hasType) {
+			throw new IllegalArgumentException("검색 조건(업체명, 허브 ID, 업체 타입)중 최소 하나는 필수입니다.");
+		}
+		
 		if(pageable == null) {
 			pageable = PageRequest.of(0, 10, DEFAULT_SORT);
 		} else {
