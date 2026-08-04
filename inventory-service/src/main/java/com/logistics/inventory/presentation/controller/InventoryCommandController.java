@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 public class InventoryCommandController {
-
+// fdfsf
     private final InventoryFacade inventoryFacade;
     private final InventoryCommandService inventoryCommandService;
 
