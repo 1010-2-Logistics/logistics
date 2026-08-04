@@ -1,6 +1,8 @@
 package com.logistics.delivery.domain.entity;
 
 import com.logistics.delivery.global.entity.BaseEntity;
+import com.logistics.delivery.global.exception.CustomException;
+import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import jakarta.persistence.*;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -32,6 +34,7 @@ public class DeliveryManager extends BaseEntity {
 
     public static DeliveryManager create(Long deliveryManagerId, UUID hubId, String slackId,
                                          ManagerType managerType, int deliverySequence) {
+        validateHubId(managerType, hubId);
         DeliveryManager manager = new DeliveryManager();
         manager.deliveryManagerId = deliveryManagerId;
         manager.hubId = hubId;
@@ -39,5 +42,19 @@ public class DeliveryManager extends BaseEntity {
         manager.managerType = managerType;
         manager.deliverySequence = deliverySequence;
         return manager;
+    }
+
+    public void updateHub(UUID hubId) {
+        validateHubId(this.managerType, hubId);
+        this.hubId = hubId;
+    }
+
+    private static void validateHubId(ManagerType managerType, UUID hubId) {
+        if (managerType == ManagerType.COMPANY_DELIVERY_MANAGER && hubId == null) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
+        }
+        if (managerType == ManagerType.HUB_DELIVERY_MANAGER && hubId != null) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
+        }
     }
 }
