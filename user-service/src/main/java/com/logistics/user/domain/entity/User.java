@@ -76,7 +76,7 @@ public class User extends BaseEntity {
     /**
      * 승인 상태.
      *
-     * Enum의 순서가 아닌 문자열 이름을 DB에 저장한다.
+     * Enum의 순서가 아닌 문자열 이름을 DB에 저장
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -109,7 +109,7 @@ public class User extends BaseEntity {
     /**
      * 회원가입 요청을 기반으로 사용자를 생성한다.
      *
-     * 신규 사용자는 관리자 승인 전이므로 PENDING 상태로 시작한다.
+     * 신규 사용자는 관리자 승인 전이므로 PENDING
      */
     public static User create(
             String username,
