@@ -2,14 +2,17 @@ package com.logistics.company.application.service;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import com.logistics.company.application.dto.query.CompanySearchQuery;
 import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
 import com.logistics.company.domain.OrderedCompanyInfo;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,6 +47,15 @@ public class CompanyQueryService {
 				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
 		
 		return OrderedCompanyInfoResultDto.from(orderedCompanyInfo);
+	}
+
+	public Page<Company> searchCompany(CompanySearchQuery query) {
+		return companyQueryRepository.searchCompany(
+				query.companyName(),
+				query.hubId(),
+				query.companyType(),
+				query.pageable()
+		);
 	}
 	
 }
