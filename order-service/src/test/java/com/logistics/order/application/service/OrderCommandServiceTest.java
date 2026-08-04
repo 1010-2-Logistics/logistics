@@ -1,7 +1,9 @@
 package com.logistics.order.application.service;
 
 import com.logistics.order.application.dto.command.OrderCreateCommand;
+import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCreateResult;
+import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.EventPublisher;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.entity.OrderStatus;
@@ -18,13 +20,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class OrderCommandServiceTest {
+    UUID orderId = UUID.randomUUID();
+    UUID deliveryId = UUID.randomUUID();
+    UUID startCompanyId = UUID.randomUUID();
+    UUID endCompanyId = UUID.randomUUID();
+    UUID productId = UUID.randomUUID();
 
     @Mock
     private OrderCommandRepository orderCommandRepository;
@@ -78,5 +84,55 @@ class OrderCommandServiceTest {
 
             assertThat(result.orderId()).isEqualTo(orderId);
         }
+    }
+
+    @Nested
+    @DisplayName("주문 수정")
+    class order_update {
+        @Test
+        @DisplayName("주문 수정 성공")
+        void order_update_success() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+
+            OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
+                    orderId,
+                    70,
+                    "오전까지 납품"
+            );
+
+            given(orderCommandRepository.save(order)).willReturn(order);
+
+            OrderUpdateResult orderUpdateResult = orderCommandService.updateOrder(
+                    order,
+                    orderUpdateCommand
+            );
+
+            assertThat(order.getQuantity()).isEqualTo(70);
+            assertThat(order.getRequest()).isEqualTo("오전까지 납품");
+            assertThat(orderUpdateResult.orderId()).isEqualTo(orderId);
+
+            verify(orderCommandRepository).save(order);
+        }
+
+        @Test
+        @DisplayName("수량이 null이면 기존 수량 유지")
+        void order_update_null() {
+
+        }
+    }
+
+    @Nested
+    @DisplayName("주문 삭제")
+    class order_delete {
+
+
     }
 }

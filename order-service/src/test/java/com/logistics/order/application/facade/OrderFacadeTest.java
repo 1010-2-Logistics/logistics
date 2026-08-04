@@ -62,4 +62,16 @@ class OrderFacadeTest {
 
         }
     }
+
+    @Nested
+    @DisplayName("주문 수정")
+    class order_update{
+
+    }
+
+    @Nested
+    @DisplayName("주문 삭제")
+    class order_delete{
+
+    }
 }
