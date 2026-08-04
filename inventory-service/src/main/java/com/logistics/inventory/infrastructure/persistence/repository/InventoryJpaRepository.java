@@ -29,4 +29,6 @@ interface InventoryJpaRepository extends JpaRepository<Inventory, UUID> {
             @Param("hubId") UUID hubId,
             Pageable pageable
     );
+
+
 }
