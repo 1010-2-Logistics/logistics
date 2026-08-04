@@ -6,6 +6,8 @@ import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -27,5 +29,15 @@ public class DeliveryManagerRepositoryImpl implements DeliveryManagerRepository 
     @Override
     public Optional<Integer> findMaxSequence(ManagerType managerType, UUID hubId) {
         return jpaRepository.findMaxSequence(managerType, hubId);
+    }
+
+    @Override
+    public Optional<DeliveryManager> findByIdAndDeletedAtIsNull(Long deliveryManagerId) {
+        return jpaRepository.findByDeliveryManagerIdAndDeletedAtIsNull(deliveryManagerId);
+    }
+
+    @Override
+    public Page<DeliveryManager> search(ManagerType managerType, UUID hubId, Pageable pageable) {
+        return jpaRepository.search(managerType, hubId, pageable);
     }
 }

@@ -1,6 +1,12 @@
 package com.logistics.hub.application.dto.command;
 
-import java.util.UUID;
+import java.math.BigDecimal;
 
-public record HubUpdateCommand(UUID hubId, String name) {
+public record HubUpdateCommand(
+                               String hubName,
+                               String hubAddress,
+                               BigDecimal latitude,
+                               BigDecimal longitude) {
+
+
 }

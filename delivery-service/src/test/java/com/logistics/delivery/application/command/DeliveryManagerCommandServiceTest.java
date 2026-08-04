@@ -3,6 +3,7 @@ package com.logistics.delivery.application.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
@@ -87,7 +88,7 @@ class DeliveryManagerCommandServiceTest {
         // given
         UUID hubId = UUID.randomUUID();
         when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(3L)).thenReturn(false);
-        when(hubClient.getHub(hubId)).thenReturn(new HubValidationResponse(hubId, false));
+        when(hubClient.getHub(hubId)).thenThrow(mock(FeignException.NotFound.class));
 
         RegisterDeliveryManagerCommand command =
                 new RegisterDeliveryManagerCommand(3L, hubId, "U03", ManagerType.COMPANY_DELIVERY_MANAGER);
@@ -133,5 +134,23 @@ class DeliveryManagerCommandServiceTest {
 
         // then
         assertThat(result.getDeliverySequence()).isEqualTo(4);
+    }
+
+    @Test
+    void 허브_배송담당자인데_hubId가_있으면_예외() {
+        // given
+        UUID hubId = UUID.randomUUID();
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(6L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, hubId))
+                .thenReturn(Optional.empty());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(6L, hubId, "U06", ManagerType.HUB_DELIVERY_MANAGER);
+
+        // when & then
+        assertThatThrownBy(() -> deliveryManagerCommandService.register(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
     }
 }
