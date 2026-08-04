@@ -5,7 +5,7 @@ include 'template-service'
 // 각자 서비스 폴더를 만들 때 본인 PR에서 아래처럼 한 줄씩 추가해주세요.
 // (template-service를 복사해서 이름 바꾸고, 아래 해당 줄 주석 해제)
 
-// include 'infra:eureka-server'
+ include 'eureka-server'
 // include 'infra:api-gateway'
 // include 'infra:config-server'
 // include 'user-service'
