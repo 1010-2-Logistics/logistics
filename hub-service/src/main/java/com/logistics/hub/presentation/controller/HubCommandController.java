@@ -39,12 +39,12 @@ public class HubCommandController {
     }
 
     @PutMapping("/{hubId}")
-    public ApiResponse<Void> updateHub(@PathVariable UUID hubId,
+    public ApiResponse<HubResponseDto> updateHub(@PathVariable UUID hubId,
                                     @Valid @RequestBody HubUpdateRequestDto request) {
 
         HubResponseDto hubResponseDto = hubCommandService.updateHub(hubId, request.toCommand());
 
-        return ApiResponse.success(200, "허브 수정 성공", null);
+        return ApiResponse.success(200, "허브 수정 성공", hubResponseDto);
     }
 
     @DeleteMapping("/{hubId}")

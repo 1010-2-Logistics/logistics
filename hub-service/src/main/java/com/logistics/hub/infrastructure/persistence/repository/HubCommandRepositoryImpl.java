@@ -49,4 +49,9 @@ public class HubCommandRepositoryImpl implements HubCommandRepository {
     public boolean findByhubIdAndDeletedAtIsNull(UUID hubId) {
         return jpaRepository.existsByhubIdAndDeletedAtIsNull(hubId);
     }
+
+    @Override
+    public boolean existsDuplicateHubForUpdate(UUID hubId, BigDecimal latitude, BigDecimal longitude, String hubAddress) {
+        return jpaRepository.existsDuplicateHubForUpdate(hubId, latitude, longitude, hubAddress);
+    }
 }

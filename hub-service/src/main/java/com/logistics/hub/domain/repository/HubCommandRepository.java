@@ -23,4 +23,6 @@ public interface HubCommandRepository {
     boolean existsByHubAddressAndHubIdNotAndDeletedAtIsNull(String hubAddress, UUID hubId);
 
     boolean findByhubIdAndDeletedAtIsNull(UUID hubId);
+
+    boolean existsDuplicateHubForUpdate(UUID hubId, BigDecimal latitude, BigDecimal longitude, String hubAddress);
 }
