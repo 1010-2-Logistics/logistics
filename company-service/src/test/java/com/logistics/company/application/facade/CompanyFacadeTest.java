@@ -15,13 +15,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
+import com.logistics.company.application.dto.internal.HubInfoResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
-import com.logistics.company.application.facade.CompanyFacade;
+import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.service.CompanyCommandService;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyType;
-import com.logistics.company.infrastructure.feign.client.HubClient;
-import com.logistics.company.infrastructure.feign.response.HubValidationResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class CompanyFacadeTest {
@@ -35,7 +34,7 @@ public class CompanyFacadeTest {
 	CompanyCommandService companyCommandService;
 	
 	@Mock
-	HubClient hubClient;
+	HubPort hubPort;
 	
 	@Nested
 	@DisplayName("Facade: 업체 생성 테스트")
@@ -59,10 +58,8 @@ public class CompanyFacadeTest {
 					companyType
 			);
 			
-			HubValidationResponse hubInfo = new HubValidationResponse(
-					hubId, hubName, null, null, null
-			);
-			given(hubClient.getHub(hubId)).willReturn(hubInfo);
+			HubInfoResponseDto hubInfo = new HubInfoResponseDto(hubId, hubName);
+			given(hubPort.getHubInfo(hubId)).willReturn(hubInfo);
 			
 			Company company = Company.create(hubId, companyName, companyAddress, companyType);
 			given(companyCommandService.createCompany(companyCreateCommand)).willReturn(company);
@@ -76,7 +73,7 @@ public class CompanyFacadeTest {
 			assertThat(result.companyType()).isEqualTo(companyType);
 			assertThat(result.companyAddress()).isEqualTo(companyAddress);
 			
-			verify(hubClient).getHub(hubId);
+			verify(hubPort).getHubInfo(hubId);
 			verify(companyCommandService).createCompany(companyCreateCommand);
 		}
 		

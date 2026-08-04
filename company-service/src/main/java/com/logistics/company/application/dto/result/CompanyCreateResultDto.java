@@ -2,9 +2,9 @@ package com.logistics.company.application.dto.result;
 
 import java.util.UUID;
 
+import com.logistics.company.application.dto.internal.HubInfoResponseDto;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyType;
-import com.logistics.company.infrastructure.feign.response.HubValidationResponse;
 
 public record CompanyCreateResultDto(
 		UUID companyId,
@@ -14,7 +14,7 @@ public record CompanyCreateResultDto(
 		UUID hubId,
 		String hubName
 ) {
-	public static CompanyCreateResultDto from(HubValidationResponse hubInfo, Company company) {
+	public static CompanyCreateResultDto from(HubInfoResponseDto hubInfo, Company company) {
 		return new CompanyCreateResultDto(
 				company.getCompanyId(),
 				company.getCompanyName(),

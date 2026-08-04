@@ -9,6 +9,6 @@ public record HubValidationResponse(
 		String hubName,
 		String hubAddress,
 		BigDecimal latitude,
-		BigDecimal longtitude
+		BigDecimal longitude
 ) {
 }
