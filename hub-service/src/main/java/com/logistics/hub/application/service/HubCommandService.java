@@ -24,9 +24,8 @@ public class HubCommandService {
     private final HubCommandRepository hubCommandRepository;
     private final EventPublisher eventPublisher;
 
+    //허브 등록
     public HubCreateResponseDto createHub(@Valid HubCreateCommand hubCreateCommand) {
-
-
         //위도 경도 중복 검사
         if(hubCommandRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(hubCreateCommand.latitude(),hubCreateCommand.longitude()))
         {
@@ -51,6 +50,7 @@ public class HubCommandService {
         return new HubCreateResponseDto(hub.getHubId());
     }
 
+    //허브 수정
     public HubResponseDto updateHub(UUID hubId, HubUpdateCommand hubUpdateCommand) {
 
         //허브가 존재하는지 체크
@@ -88,12 +88,16 @@ public class HubCommandService {
         return new HubResponseDto(hub.getHubId(), hub.getHubName(), hub.getHubAddress());
     }
 
-    public void delete(UUID hubId, Long deletedBy) {
+    //허브 삭제
+    public void deleteHub(UUID hubId, long deletedBy) {
+        //이미 삭제 되었는지 체크
+        if(!hubCommandRepository.findByhubIdAndDeletedAtIsNull(hubId))
+        {
+            throw new CustomException(HubErrorCode.HUB_DELETE_CONFLICT);
+        }
+
         Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new CustomException(HubErrorCode.HUB_NOT_FOUND));
         hub.markDeleted(deletedBy);
     }
-
-
-
 }

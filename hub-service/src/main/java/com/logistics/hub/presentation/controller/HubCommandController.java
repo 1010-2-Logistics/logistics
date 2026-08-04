@@ -2,6 +2,7 @@ package com.logistics.hub.presentation.controller;
 
 import com.logistics.hub.application.dto.command.HubCreateCommand;
 import com.logistics.hub.application.dto.command.HubUpdateCommand;
+import com.logistics.hub.application.facade.HubFacade;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.global.response.ApiResponse;
 import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
@@ -20,8 +21,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class HubCommandController {
 
+    //TODO 유저 기능이 생기면 권한 설정 및 Entity에 임시로 넣은 createdBy 삭제 할 것
 
     private final HubCommandService hubCommandService;
+
+    private final HubFacade hubFacade;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -43,10 +47,10 @@ public class HubCommandController {
         return ApiResponse.success(200, "허브 수정 성공", null);
     }
 
-//    @DeleteMapping("/{hubId}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void delete(@PathVariable UUID hubId) {
-//        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-//        hubCommandService.delete(hubId, "system");
-//    }
+    @DeleteMapping("/{hubId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID hubId) {
+        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
+        hubFacade.deleteHub(hubId, 1L);
+    }
 }
