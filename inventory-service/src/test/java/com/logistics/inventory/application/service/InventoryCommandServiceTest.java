@@ -18,11 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -33,6 +33,7 @@ class InventoryCommandServiceTest {
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
     UUID inventoryId = UUID.randomUUID();
+    Long deletedBy = 1L;
 
     @Mock
     InventoryCommandRepository inventoryCommandRepository;
@@ -273,36 +274,66 @@ class InventoryCommandServiceTest {
             verify(inventoryCommandRepository).save(inventory);
         }
 
-        @Nested
-        @DisplayName("재고 삭제")
-        class delete {
-            @Test
-            @DisplayName("재고 삭세 성공")
-            void inventory_delete_success() {
-                Long deletedBy = 1L;
+        @Test
+        @DisplayName("존재하지 않는 재고 수정 시 예외")
+        void inventory_update_not_found() {
+            InventoryUpdateCommand command = new InventoryUpdateCommand(
+                    inventoryId,
+                    70
+            );
+            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.empty());
 
-                InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+            assertThatThrownBy(() -> inventoryCommandService.updateInventory(command))
+                    .isInstanceOfSatisfying(
+                            CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-                Inventory inventory = Inventory.create(
-                        UUID.randomUUID(),
-                        UUID.randomUUID(),
-                        50
-                );
+            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+        }
+    }
 
-                given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
-                given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
+    @Nested
+    @DisplayName("재고 삭제")
+    class delete {
+        @Test
+        @DisplayName("재고 삭세 성공")
+        void inventory_delete_success() {
+            InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+            Inventory inventory = Inventory.create(
+                    UUID.randomUUID(),
+                    UUID.randomUUID(),
+                    50
+            );
+            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
+            given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-                inventoryCommandService.deleteInventory(
-                        inventoryDeleteCommand,
-                        deletedBy
-                );
+            inventoryCommandService.deleteInventory(
+                    inventoryDeleteCommand,
+                    deletedBy
+            );
 
-                assertThat(inventory.getDeletedAt()).isNotNull();
-                assertThat(inventory.getDeletedBy()).isEqualTo(deletedBy);
+            assertThat(inventory.getDeletedAt()).isNotNull();
+            assertThat(inventory.getDeletedBy()).isEqualTo(deletedBy);
 
-                verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
-                verify(inventoryCommandRepository).save(inventory);
-            }
+            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+            verify(inventoryCommandRepository).save(inventory);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 재고 삭제 시 예외")
+        void inventory_delete_not_found() {
+            InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+
+            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> inventoryCommandService.deleteInventory(inventoryDeleteCommand, 1L))
+                    .isInstanceOfSatisfying(
+                            CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
         }
     }
 }
