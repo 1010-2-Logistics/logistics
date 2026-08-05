@@ -1,11 +1,11 @@
 package com.logistics.inventory.presentation.controller;
 
-import com.logistics.inventory.application.dto.query.SearchInventoryQuery;
-import com.logistics.inventory.application.dto.result.InventoryGetOneResult;
+import com.logistics.inventory.application.dto.query.InventorySearchQuery;
+import com.logistics.inventory.application.dto.result.InventoryDetailResult;
 import com.logistics.inventory.application.dto.result.InventoryListResult;
 import com.logistics.inventory.application.service.InventoryQueryService;
 import com.logistics.inventory.global.response.ApiResponse;
-import com.logistics.inventory.presentation.dto.response.InventoryGetOneResponseDto;
+import com.logistics.inventory.presentation.dto.response.InventoryDetailResponseDto;
 import com.logistics.inventory.presentation.dto.response.InventoryListResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +21,12 @@ public class InventoryQueryController {
     private final InventoryQueryService inventoryQueryService;
 
     @GetMapping("/{inventoryId}")
-    public ResponseEntity<ApiResponse<InventoryGetOneResponseDto>> getInventory(
+    public ResponseEntity<ApiResponse<InventoryDetailResponseDto>> getInventory(
             @PathVariable("inventoryId") UUID inventoryId
     ) {
-        InventoryGetOneResult getOneInventoryResult = inventoryQueryService.getInventory(inventoryId);
+        InventoryDetailResult getOneInventoryResult = inventoryQueryService.getInventory(inventoryId);
 
-        InventoryGetOneResponseDto getOneInventoryResponseDto = InventoryGetOneResponseDto.from(getOneInventoryResult);
+        InventoryDetailResponseDto getOneInventoryResponseDto = InventoryDetailResponseDto.from(getOneInventoryResult);
 
         return ResponseEntity.ok(ApiResponse.success(
                 200,
@@ -43,7 +43,7 @@ public class InventoryQueryController {
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        SearchInventoryQuery searchInventoryQuery = new SearchInventoryQuery(
+        InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
                 productId,
                 hubId,
                 sort,
@@ -51,7 +51,7 @@ public class InventoryQueryController {
                 size
         );
 
-        InventoryListResult inventoryListResult = inventoryQueryService.searchInventory(searchInventoryQuery);
+        InventoryListResult inventoryListResult = inventoryQueryService.searchInventory(inventorySearchQuery);
 
         InventoryListResponseDto inventoryListResponseDto = InventoryListResponseDto.from(inventoryListResult);
 
