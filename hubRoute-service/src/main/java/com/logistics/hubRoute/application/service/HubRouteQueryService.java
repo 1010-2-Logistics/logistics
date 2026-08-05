@@ -22,7 +22,7 @@ public class HubRouteQueryService {
 
     public HubRoute get(GetHubRouteQuery query) {
         return hubRouteQueryRepository.findByIdAndDeletedAtIsNull(query.hubRouteId())
-                .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
     }
 
     public Page<HubRoute> search(SearchHubRouteQuery query) {
