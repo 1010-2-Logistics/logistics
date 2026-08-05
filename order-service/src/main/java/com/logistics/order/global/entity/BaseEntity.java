@@ -3,11 +3,12 @@ package com.logistics.order.global.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
-import java.time.LocalDateTime;
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
@@ -19,18 +20,18 @@ public abstract class BaseEntity {
     private LocalDateTime createdAt;
 
     @Column(updatable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    private String updatedBy;
+    private Long updatedBy;
 
     private LocalDateTime deletedAt;
 
-    private String deletedBy;
+    private Long deletedBy;
 
-    public void markDeleted(String deletedBy) {
+    public void markDeleted(Long deletedBy) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = deletedBy;
     }
