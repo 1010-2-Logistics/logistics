@@ -1,7 +1,7 @@
 package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.command.UpdateUserCommandDto;
-import com.logistics.user.application.dto.result.ChangeApprovalResult;
+import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
@@ -91,7 +91,7 @@ public class CommandController {
         Long processedBy =
                 extractAuthenticatedUserId(authentication);
 
-        ChangeApprovalResult result =
+        ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(
                         request.toCommand(
                                 userId,
