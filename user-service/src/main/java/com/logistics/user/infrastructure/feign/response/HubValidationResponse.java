@@ -1,4 +1,4 @@
-package com.logistics.order.infrastructure.feign.response;
+package com.logistics.user.infrastructure.feign.response;
 
 import java.util.UUID;
 

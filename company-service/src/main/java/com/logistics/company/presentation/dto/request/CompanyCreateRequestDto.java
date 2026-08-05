@@ -6,15 +6,16 @@ import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.domain.entity.CompanyType;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record CompanyCreateRequestDto(
 		@NotBlank(message = "업체명은 필수 항목입니다.")
 		String companyName,
 		
-		@NotBlank(message = "업체 타입은 필수 항목입니다.")
+		@NotNull(message = "업체 타입은 필수 항목입니다.")
 		CompanyType companyType,
 		
-		@NotBlank(message = "소속 허브 ID는 필수 항목입니다.")
+		@NotNull(message = "소속 허브 ID는 필수 항목입니다.")
 		UUID hubId,
 		
 		@NotBlank(message = "업체 주소는 필수 항목입니다.")
