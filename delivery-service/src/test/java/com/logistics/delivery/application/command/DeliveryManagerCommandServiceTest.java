@@ -11,6 +11,7 @@ import com.logistics.delivery.application.service.DeliveryManagerCommandService;
 import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.domain.entity.ManagerType;
 import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
+import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.infrastructure.feign.client.HubClient;
@@ -29,6 +30,9 @@ class DeliveryManagerCommandServiceTest {
 
     @Mock
     private DeliveryManagerRepository deliveryManagerRepository;
+
+    @Mock
+    private DeliveryManagerAssignmentStateRepository assignmentStateRepository;
 
     @Mock
     private HubClient hubClient;
