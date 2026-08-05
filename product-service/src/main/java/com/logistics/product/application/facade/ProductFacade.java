@@ -13,6 +13,7 @@ import com.logistics.product.application.service.ProductPolicy;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.exception.CommonErrorCode;
+import com.logistics.product.global.exception.ProductErrorCode;
 import com.logistics.product.global.exception.ProductException;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,10 @@ public class ProductFacade {
 		
 		// 업체 존재 여부 확인
 		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(command.companyId());
+		
+		if(companyInfo.exists() == false) {
+			throw new ProductException(ProductErrorCode.PRODUCT_COMPANY_NOT_FOUND);
+		}
 		
 		// 요청자의 Role에 따라 user-service 에 요청을 보낼지 말지 결정.
 		if(command.role() == Role.HUB_MANAGER) {

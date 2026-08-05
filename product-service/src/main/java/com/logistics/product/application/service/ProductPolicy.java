@@ -1,5 +1,7 @@
 package com.logistics.product.application.service;
 
+import java.util.Objects;
+
 import org.springframework.stereotype.Component;
 
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
@@ -16,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductPolicy {
 
-	
-	
 	/*
 	 * HUB_MANAGER
 	 *  - 담당 허브 소속 업체의 상품 등록만 가능
@@ -39,7 +39,7 @@ public class ProductPolicy {
 		// 요청자의 Role이 COMPANY_MANAGER 인 경우
 		// command에 포함된 userId(요청자 ID) 와 조회한 업체 정보의 companyManagerId 와 다른 경우
 		// 본인 업체가 아니므로 Forbidden 응답
-		if(command.userId() != company.companyManagerId()) {				
+		if(!Objects.equals(command.userId(), company.companyManagerId())) {				
 			throw new ProductException(CommonErrorCode.AUTH_FORBIDDEN);
 		}
 		

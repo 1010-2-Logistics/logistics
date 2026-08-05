@@ -23,7 +23,7 @@ public class ProductCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public Product createProduct(ProductCreateCommand command) {
-		if(!productQueryService.existsProductName(command.companyId(), command.productName())) {
+		if(productQueryService.existsProductName(command.companyId(), command.productName())) {
 			throw new ProductException(ProductErrorCode.PRODUCT_EXISTS_PRODUCT_NAME);
 		}
 		
