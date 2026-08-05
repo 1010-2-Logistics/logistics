@@ -20,8 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.boot.autoconfigure.container.ContainerImageMetadata.isPresent;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -54,19 +52,17 @@ public class InventoryCommandService {
     }
 
     public InventoryUpdateResult updateInventory(
-            Inventory inventory,
-            InventoryUpdateCommand updateInventoryCommand
+            InventoryUpdateCommand command
     ) {
-        inventory.updateStock(updateInventoryCommand.stock());
+        Inventory inventory = inventoryCommandRepository
+                .findByIdAndDeletedAtIsNull(command.inventoryId())
+                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+        inventory.updateStock(command.stock());
 
         Inventory savedInventory = inventoryCommandRepository.save(inventory);
 
         return InventoryUpdateResult.from(savedInventory);
-    }
-
-    public Inventory getInventoryForUpdate(UUID inventoryId) {
-        return inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)
-                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
     }
 
     public void deleteInventory(
