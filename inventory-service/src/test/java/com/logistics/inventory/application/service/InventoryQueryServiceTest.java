@@ -152,7 +152,31 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("페이지 크기가 null이면 기본값 10")
         void inventory_search_default_size() {
+            InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
+                    null,
+                    null,
+                    "createdAt",
+                    0,
+                    null
+            );
 
+            given(inventoryQueryRepository.search(
+                    any(),
+                    any(),
+                    any(Pageable.class)
+            )).willReturn(Page.empty());
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+            inventoryQueryService.searchInventory(inventorySearchQuery);
+
+            verify(inventoryQueryRepository).search(
+                    any(),
+                    any(),
+                    pageableCaptor.capture()
+            );
+
+            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(10);
         }
 
         @Test
