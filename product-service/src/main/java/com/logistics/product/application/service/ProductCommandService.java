@@ -13,9 +13,9 @@ public class ProductCommandService {
 
 	private final ProductCommandRepository productCommandRepository;
 
+	private final ProductPolicy policy;
+	
 	public void createProduct(ProductCreateCommand command) {
-		// 여기서 권한 검사
-		
 		
 	}
 	
