@@ -31,7 +31,15 @@ public class SlackQueryService {
     public Page<SlackListResult> getSlacks(
             SlackSearchQuery slackSearchQuery
     ) {
-        Page<Slack> slackPage = slackQueryRepository.search(slackSearchQuery);
+        Page<Slack> slackPage = slackQueryRepository.search(
+                slackSearchQuery.status(),
+                slackSearchQuery.senderId(),
+                slackSearchQuery.receiverId(),
+                slackSearchQuery.referenceId(),
+                slackSearchQuery.createdFrom(),
+                slackSearchQuery.createdTo(),
+                slackSearchQuery.pageable()
+        );
 
         return slackPage.map(SlackListResult::from);
     }

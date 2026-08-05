@@ -1,9 +1,13 @@
 package com.logistics.slack.infrastructure.persistence.repository;
 
 import com.logistics.slack.domain.entity.Slack;
+import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.domain.repository.SlackQueryRepository;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +25,15 @@ public class SampleQueryRepositoryImpl implements SlackQueryRepository {
     }
 
     @Override
-    public Page<Slack> search(String keyword, Pageable pageable) {
-        return jpaRepository.search(keyword, pageable);
+    public Page<Slack> search(
+            SlackStatus status,
+            UUID senderId,
+            UUID receiverId,
+            UUID referenceId,
+            LocalDateTime createdFrom,
+            LocalDateTime createdTo,
+            Pageable pageable
+    ) {
+        return null;
     }
 }
