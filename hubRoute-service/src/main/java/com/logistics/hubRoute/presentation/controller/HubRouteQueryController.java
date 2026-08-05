@@ -28,8 +28,8 @@ public class HubRouteQueryController {
 
     @GetMapping("/{hubRouteId}")
     public ApiResponse<HubRouteResponseDto> get(@PathVariable UUID hubRouteId) {
-        HubRoute hub = hubRouteQueryService.get(new GetHubRouteQuery(hubRouteId));
-        return ApiResponse.success(200, "허브 경로 조회 성공", HubRouteResponseDto.from(hub));
+        HubRouteResponseDto hubRouteResponseDto = hubRouteQueryService.getCachedDto(new GetHubRouteQuery(hubRouteId));
+        return ApiResponse.success(200, "허브 경로 조회 성공", hubRouteResponseDto);
     }
 
     @GetMapping
