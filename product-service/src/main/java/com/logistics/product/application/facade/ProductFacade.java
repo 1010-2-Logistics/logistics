@@ -20,9 +20,13 @@ public class ProductFacade {
 	private final ProductPolicy policy;
 
 	public void createProduct(ProductCreateCommand command) {
+		// API 1
 		policy.createPolicyCheck(command.userId(), command.role());
 		
+		// T 1
 		Product savedProduct = productCommandService.createProduct(command);
+		
+		
 	}
 	
 	public void updateProduct(ProductUpdateCommand command) {
