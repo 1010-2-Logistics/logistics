@@ -77,7 +77,7 @@ public class SignupService {
     ) {
         boolean duplicated =
                 userQueryRepository
-                        .existsByUsernameAndDeletedAtIsNull(
+                        .existsByUsername(
                                 username
                         );
 
@@ -93,7 +93,7 @@ public class SignupService {
     ) {
         boolean duplicated =
                 userQueryRepository
-                        .existsBySlackIdAndDeletedAtIsNull(
+                        .existsBySlackId(
                                 slackId
                         );
 

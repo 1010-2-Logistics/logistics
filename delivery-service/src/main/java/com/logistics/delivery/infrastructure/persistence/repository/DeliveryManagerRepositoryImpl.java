@@ -40,4 +40,16 @@ public class DeliveryManagerRepositoryImpl implements DeliveryManagerRepository 
     public Page<DeliveryManager> search(ManagerType managerType, UUID hubId, Pageable pageable) {
         return jpaRepository.search(managerType, hubId, pageable);
     }
+
+    @Override
+    public Optional<DeliveryManager> findNextCandidate(ManagerType managerType, UUID hubId, int afterSequence) {
+        return jpaRepository.findFirstByManagerTypeAndHubIdAndDeletedAtIsNullAndDeliverySequenceGreaterThanOrderByDeliverySequenceAsc(
+                managerType, hubId, afterSequence);
+    }
+
+    @Override
+    public Optional<DeliveryManager> findFirstCandidate(ManagerType managerType, UUID hubId) {
+        return jpaRepository.findFirstByManagerTypeAndHubIdAndDeletedAtIsNullOrderByDeliverySequenceAsc(
+                managerType, hubId);
+    }
 }

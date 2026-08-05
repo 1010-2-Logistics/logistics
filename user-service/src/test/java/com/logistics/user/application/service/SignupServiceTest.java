@@ -86,12 +86,12 @@ class SignupServiceTest {
          */
         given(
                 userQueryRepository
-                        .existsByUsernameAndDeletedAtIsNull("user01")
+                        .existsByUsername("user01")
         ).willReturn(false);
 
         given(
                 userQueryRepository
-                        .existsBySlackIdAndDeletedAtIsNull("U12345678")
+                        .existsBySlackId("U12345678")
         ).willReturn(false);
 
         /*
@@ -158,14 +158,14 @@ class SignupServiceTest {
 
         given(
                 userQueryRepository
-                        .existsByUsernameAndDeletedAtIsNull(
+                        .existsByUsername(
                                 command.username()
                         )
         ).willReturn(false);
 
         given(
                 userQueryRepository
-                        .existsBySlackIdAndDeletedAtIsNull(
+                        .existsBySlackId(
                                 command.slackId()
                         )
         ).willReturn(false);
@@ -250,7 +250,7 @@ class SignupServiceTest {
 
         given(
                 userQueryRepository
-                        .existsByUsernameAndDeletedAtIsNull(
+                        .existsByUsername(
                                 command.username()
                         )
         ).willReturn(true);
@@ -277,7 +277,7 @@ class SignupServiceTest {
          */
         then(userQueryRepository)
                 .should()
-                .existsByUsernameAndDeletedAtIsNull(
+                .existsByUsername(
                         command.username()
                 );
 
@@ -296,14 +296,14 @@ class SignupServiceTest {
 
         given(
                 userQueryRepository
-                        .existsByUsernameAndDeletedAtIsNull(
+                        .existsByUsername(
                                 command.username()
                         )
         ).willReturn(false);
 
         given(
                 userQueryRepository
-                        .existsBySlackIdAndDeletedAtIsNull(
+                        .existsBySlackId(
                                 command.slackId()
                         )
         ).willReturn(true);
