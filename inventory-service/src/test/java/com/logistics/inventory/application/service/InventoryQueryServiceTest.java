@@ -5,6 +5,8 @@ import com.logistics.inventory.application.dto.result.InventoryDetailResult;
 import com.logistics.inventory.application.dto.result.InventoryListResult;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryQueryRepository;
+import com.logistics.inventory.global.exception.CustomException;
+import com.logistics.inventory.global.exception.InventoryErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,9 +24,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 
@@ -251,7 +255,22 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("페이지 번호가 음수이면 예외")
         void inventory_search_negative_page() {
+            InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
+                    null,
+                    null,
+                    "createdAt",
+                    -1,
+                    10
+            );
 
+            assertThatThrownBy(() -> inventoryQueryService.searchInventory(inventorySearchQuery))
+                    .isInstanceOfSatisfying(
+                            CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_INVALID_REQUEST
+                                    ));
+
+            verify(inventoryQueryRepository, never()).search(any(), any(), any(Pageable.class));
         }
     }
 }
