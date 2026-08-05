@@ -44,7 +44,7 @@ public class CompanyInternalQueryController {
 	public ApiResponse<CompanyExistsResponseDto> existsCompany(
 			@PathVariable("companyId") UUID companyId) {
 		
-		CompanyExistsResponseDto response = CompanyExistsResponseDto.from(companyQueryService.findByCompany(companyId));
+		CompanyExistsResponseDto response = CompanyExistsResponseDto.from(companyQueryService.findOptionalByCompany(companyId));
 		
 		return ApiResponse.success(
 				HttpStatus.OK.value(),
