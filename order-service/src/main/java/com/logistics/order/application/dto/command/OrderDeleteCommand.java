@@ -1,6 +1,8 @@
 package com.logistics.order.application.dto.command;
 
-public record OrderDeleteCommand(
+import java.util.UUID;
 
+public record OrderDeleteCommand(
+        UUID orderId
 ) {
 }

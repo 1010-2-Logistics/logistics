@@ -2,8 +2,10 @@ package com.logistics.order.infrastructure.persistence.repository;
 
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderCommandRepository;
+
 import java.util.Optional;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -16,6 +18,11 @@ public class OrderCommandRepositoryImpl implements OrderCommandRepository {
     @Override
     public Order save(Order sample) {
         return jpaRepository.save(sample);
+    }
+
+    @Override
+    public Optional<Order> findById(UUID orderId) {
+        return jpaRepository.findById(orderId);
     }
 
     @Override
