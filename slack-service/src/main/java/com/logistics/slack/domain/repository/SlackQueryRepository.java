@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface SlackQueryRepository {
 
-    Optional<Slack> findByIdAndDeletedAtIsNull(UUID sampleId);
+    Optional<Slack> findByIdAndDeletedAtIsNull(UUID slackId);
 
     Page<Slack> search(String keyword, Pageable pageable);
 }

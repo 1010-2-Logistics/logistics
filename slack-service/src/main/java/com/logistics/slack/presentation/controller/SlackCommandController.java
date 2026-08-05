@@ -1,13 +1,13 @@
 package com.logistics.slack.presentation.controller;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
-import com.logistics.slack.application.dto.command.UpdateSampleCommand;
 import com.logistics.slack.application.dto.result.SlackCreatResult;
 import com.logistics.slack.application.facade.SlackFacade;
-import com.logistics.slack.application.service.SampleCommandService;
+import com.logistics.slack.application.service.SlackCommandService;
 import com.logistics.slack.global.response.ApiResponse;
 import com.logistics.slack.presentation.dto.request.SlackCreateRequestDto;
 import com.logistics.slack.presentation.dto.response.SlackCreateResponseDto;
+import com.logistics.slack.presentation.dto.response.SlackRetryResponseDto;
 import jakarta.validation.Valid;
 
 import java.util.UUID;
@@ -26,13 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/slack/messages")
 @RequiredArgsConstructor
-public class CommandController {
+public class SlackCommandController {
     private final SlackFacade slackFacade;
-    private final SampleCommandService sampleCommandService;
+    private final SlackCommandService sampleCommandService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<SlackCreateResponseDto> create(
+    public ApiResponse<SlackCreateResponseDto> createSlack(
             @Valid @RequestBody SlackCreateRequestDto slackCreateRequestDto
     ) {
         SlackCreateCommand slackCreateCommand = SlackCreateCommand.toCommand(slackCreateRequestDto);
@@ -48,25 +48,25 @@ public class CommandController {
         );
     }
 
-    @PutMapping("/{sampleId}")
-    public ApiResponse<Void> update(
-            @PathVariable UUID sampleId,
-            @Valid @RequestBody SampleUpdateRequest request
+    @PutMapping("/{slackMessageId}/retry")
+    public ApiResponse<SlackRetryResponseDto> updateSlack(
+            @PathVariable("slackMessageId") UUID slackMessageId
     ) {
-        sampleCommandService.updateSlack(new UpdateSampleCommand(sampleId, request.name()));
+        SlackRetryResponseDto slackRetryResponseDto = slackFacade.retrySlackMessage(slackMessageId);
+
         return ApiResponse.success(
-                200,
-                "샘플 수정 성공",
-                null
+                HttpStatus.OK.value(),
+                "Slack 메시지 재발송 요청 성공",
+                slackRetryResponseDto
         );
     }
 
-    @DeleteMapping("/{sampleId}")
+    @DeleteMapping("/{slackMessageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable UUID sampleId
+            @PathVariable("slackMessageId") UUID slackMessageId
     ) {
         // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-        sampleCommandService.deleteSlack(sampleId, "system");
+        sampleCommandService.deleteSlack(slackMessageId, "system");
     }
 }

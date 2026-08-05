@@ -1,11 +1,13 @@
 package com.logistics.slack.application.facade;
 
-import com.logistics.slack.application.dto.command.CreateSampleCommand;
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackCreatResult;
-import com.logistics.slack.application.service.SampleCommandService;
-import com.logistics.slack.application.service.SampleQueryService;
+import com.logistics.slack.application.service.SlackCommandService;
+import com.logistics.slack.application.service.SlackQueryService;
+
 import java.util.UUID;
+
+import com.logistics.slack.presentation.dto.response.SlackRetryResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +17,15 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SlackFacade {
 
-    private final SampleCommandService sampleCommandService;
-    private final SampleQueryService sampleQueryService;
+    private final SlackCommandService sampleCommandService;
+    private final SlackQueryService sampleQueryService;
 
     public SlackCreatResult createSlack(SlackCreateCommand slackCreateCommand) {
         // 예: 생성 전에 다른 서비스(Feign) 검증이 필요하다면 여기서 조합
         return sampleCommandService.createSlack(slackCreateCommand);
+    }
+
+    public SlackRetryResponseDto retrySlackMessage(UUID slackMessageId) {
+        return null;
     }
 }
