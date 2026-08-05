@@ -1,12 +1,10 @@
 package com.logistics.inventory.application.service;
 
-import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
-import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
-import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
-import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
+import com.logistics.inventory.application.dto.command.*;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
+import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -19,8 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.boot.autoconfigure.container.ContainerImageMetadata.isPresent;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -28,7 +24,6 @@ public class InventoryCommandService {
     private final InventoryCommandRepository inventoryCommandRepository;
     private final EventPublisher eventPublisher;
 
-    @Transactional
     public InventoryCreateResult createInventory(
             InventoryCreateCommand createInventoryCommand
     ) {
@@ -53,14 +48,30 @@ public class InventoryCommandService {
         return new InventoryCreateResult(savedInventory.getInventoryId());
     }
 
-    public void updateInventory(InventoryUpdateCommand updateInventoryCommand) {
+    public InventoryUpdateResult updateInventory(
+            InventoryUpdateCommand command
+    ) {
+        Inventory inventory = inventoryCommandRepository
+                .findByIdAndDeletedAtIsNull(command.inventoryId())
+                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+        inventory.updateStock(command.stock());
+
+        Inventory savedInventory = inventoryCommandRepository.save(inventory);
+
+        return InventoryUpdateResult.from(savedInventory);
     }
 
     public void deleteInventory(
-            UUID inventoryId,
-            String deletedBy
+            InventoryDeleteCommand inventoryDeleteCommand,
+            Long deletedBy
     ) {
+        Inventory inventory = inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryDeleteCommand.inventoryId())
+                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
+        inventory.delete(deletedBy);
+
+        inventoryCommandRepository.save(inventory);
     }
 
     public InventoryDeductionResult deductInventory(
