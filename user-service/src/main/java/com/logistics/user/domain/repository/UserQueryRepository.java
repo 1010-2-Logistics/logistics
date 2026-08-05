@@ -11,4 +11,14 @@ public interface UserQueryRepository {
     Optional<User> findByIdAndDeletedAtIsNull(Long userId);
 
     Page<User> search(String keyword, Pageable pageable);
+
+    /**
+     * 삭제되지 않은 사용자 중 username 중복 여부 확인
+     */
+    boolean existsByUsername(String username);
+
+    /**
+     * 삭제되지 않은 사용자 중 Slack ID 중복 여부 확인
+     */
+    boolean existsBySlackId(String slackId);
 }
