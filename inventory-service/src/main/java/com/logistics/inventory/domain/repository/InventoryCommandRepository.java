@@ -15,6 +15,8 @@ public interface InventoryCommandRepository {
             UUID hubId
     );
 
+    Optional<Inventory> findById(UUID inventoryId);
+
     Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(
             UUID productId,
             UUID hubId

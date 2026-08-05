@@ -1,6 +1,7 @@
 package com.logistics.inventory.presentation.controller;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
+import com.logistics.inventory.application.dto.command.InventoryDeleteCommand;
 import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
@@ -66,8 +67,17 @@ public class InventoryCommandController {
 
     @DeleteMapping("/{inventoryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("inventoryId") UUID inventoryId) {
-        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-        inventoryCommandService.deleteInventory(inventoryId, "system");
+    public void delete(
+            @PathVariable("inventoryId") UUID inventoryId
+    ) {
+        InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+
+        // TODO: 인증 적용 후 실제 로그인 사용자 ID로 교체
+        Long deletedBy = 1L;
+
+        inventoryCommandService.deleteInventory(
+                inventoryDeleteCommand,
+                deletedBy
+        );
     }
 }
