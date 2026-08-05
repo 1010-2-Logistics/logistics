@@ -29,9 +29,9 @@ public class InventoryInternalCommandController {
     // TODO : 동시 재고/복원 시 어떻게 처리할 건지에 대해 구상하기 -> 동일 재고에 대한 동시 수정 충돌이 빈번하지 않을 것으로 판단하여 낙관적 락 적용 예정
     @PostMapping("/deductions")
     public ResponseEntity<ApiResponse<InventoryDeductionResponseDto>> deductInventory(
-            @Valid @RequestBody InventoryDeductionRequestDto inventoryDeductionsRequestDto
+            @Valid @RequestBody InventoryDeductionRequestDto inventoryDeductionRequestDto
     ) {
-        InventoryDeductionCommand inventoryDeductionCommand = inventoryDeductionsRequestDto.toCommand();
+        InventoryDeductionCommand inventoryDeductionCommand = inventoryDeductionRequestDto.toCommand();
 
         InventoryDeductionResult inventoryDeductionResultDto = inventoryCommandService.deductInventory(inventoryDeductionCommand);
 

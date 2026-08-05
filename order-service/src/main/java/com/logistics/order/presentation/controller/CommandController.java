@@ -31,12 +31,17 @@ public class CommandController {
     public ApiResponse<OrderCreateResponseDto> createOrder(
             @Valid @RequestBody OrderCreateRequestDto orderCreateRequestDto
     ) {
-        OrderCreateCommand orderCreateCommand = null;
+        OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
+                orderCreateRequestDto.endCompanyId(),
+                orderCreateRequestDto.productId(),
+                orderCreateRequestDto.quantity(),
+                orderCreateRequestDto.request()
+        );
 
-        OrderCreateResult orderCreateResult =
-                orderFacade.createOrder(orderCreateCommand);
+        OrderCreateResult orderCreateResult = orderFacade.createOrder(orderCreateCommand);
 
-        OrderCreateResponseDto orderCreateResponseDto = null;
+        OrderCreateResponseDto orderCreateResponseDto =
+                OrderCreateResponseDto.from(orderCreateResult);
 
         return ApiResponse.success(
                 HttpStatus.CREATED.value(),
@@ -47,15 +52,18 @@ public class CommandController {
 
     @PatchMapping("/{orderId}")
     public ApiResponse<OrderUpdateResponseDto> updateOrder(
-            @PathVariable UUID orderId,
+            @PathVariable("orderId") UUID orderId,
             @Valid @RequestBody OrderUpdateRequestDto orderUpdateRequestDto
     ) {
-        OrderUpdateCommand orderUpdateCommand = null;
+        OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
+                orderId,
+                orderUpdateRequestDto.quantity(),
+                orderUpdateRequestDto.request()
+        );
 
-        OrderUpdateResult orderUpdateResult =
-                orderFacade.updateOrder(orderUpdateCommand);
+        OrderUpdateResult orderUpdateResult = orderFacade.updateOrder(orderUpdateCommand);
 
-        OrderUpdateResponseDto orderUpdateResponseDto = null;
+        OrderUpdateResponseDto orderUpdateResponseDto = OrderUpdateResponseDto.from(orderUpdateResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),
@@ -67,23 +75,23 @@ public class CommandController {
     @DeleteMapping("/{orderId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
-        OrderDeleteCommand orderDeleteCommand = null;
+        OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
 
         orderFacade.deleteOrder(orderDeleteCommand);
     }
 
     @PatchMapping("/{orderId}/cancel")
     public ApiResponse<OrderCancelResponseDto> cancelOrder(
-            @PathVariable UUID orderId
+            @PathVariable("orderId") UUID orderId
     ) {
-        OrderCancelCommand orderCancelCommand = null;
+        OrderCancelCommand orderCancelCommand = new OrderCancelCommand(orderId);
 
         OrderCancelResult orderCancelResult =
                 orderFacade.cancelOrder(orderCancelCommand);
 
-        OrderCancelResponseDto orderCancelResponseDto = null;
+        OrderCancelResponseDto orderCancelResponseDto = OrderCancelResponseDto.from(orderCancelResult);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),
