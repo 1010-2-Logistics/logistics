@@ -5,4 +5,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'org.postgresql:postgresql'
+
+    // 비밀번호 BCrypt 암호화와 이후 Spring Security 인증 구현에 사용
+    //PasswordEncoder를 통한 단방향 해시값 변환
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }
