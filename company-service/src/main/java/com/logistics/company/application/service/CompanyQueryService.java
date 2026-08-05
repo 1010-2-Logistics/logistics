@@ -1,5 +1,6 @@
 package com.logistics.company.application.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -25,6 +26,10 @@ public class CompanyQueryService {
 	public Company findByCompany(UUID companyId) {
 		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId)
 				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
+	}
+	
+	public Optional<Company> findOptionalByCompany(UUID companyId) {
+		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
 	}
 	
 	/**
