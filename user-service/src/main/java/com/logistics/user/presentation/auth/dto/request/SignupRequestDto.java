@@ -1,6 +1,6 @@
 package com.logistics.user.presentation.auth.dto.request;
 
-import com.logistics.user.application.dto.command.SignupCommand;
+import com.logistics.user.application.dto.command.SignupCommandDto;
 import com.logistics.user.domain.entity.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -70,8 +70,8 @@ public record SignupRequestDto(
 
         UUID hubId
 ) {
-        public SignupCommand toCommand() {
-                return new SignupCommand(
+        public SignupCommandDto toCommand() {
+                return new SignupCommandDto(
                         username,
                         password,
                         passwordConfirm,

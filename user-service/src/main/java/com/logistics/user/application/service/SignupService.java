@@ -1,6 +1,6 @@
 package com.logistics.user.application.service;
 
-import com.logistics.user.application.dto.command.SignupCommand;
+import com.logistics.user.application.dto.command.SignupCommandDto;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.repository.UserCommandRepository;
 import com.logistics.user.domain.repository.UserQueryRepository;
@@ -30,7 +30,7 @@ public class SignupService {
     private final UserQueryRepository userQueryRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User signup(SignupCommand command) {
+    public User signup(SignupCommandDto command) {
         // 1. 비밀번호 확인값이 같은지 검증
         validatePasswordConfirmation(command);
 
@@ -60,7 +60,7 @@ public class SignupService {
 
     //비밀번호 충돌 검증
     private void validatePasswordConfirmation(
-            SignupCommand command
+            SignupCommandDto command
     ) {
         if (!command.password().equals(
                 command.passwordConfirm()
