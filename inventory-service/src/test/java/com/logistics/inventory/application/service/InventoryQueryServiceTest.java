@@ -122,7 +122,31 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("페이지 번호가 null이면 기본값 0")
         void inventory_search_default_page() {
+            InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
+                    null,
+                    null,
+                    "createdAt",
+                    null,
+                    10
+            );
 
+            given(inventoryQueryRepository.search(
+                    any(),
+                    any(),
+                    any(Pageable.class)
+            )).willReturn(Page.empty());
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+            inventoryQueryService.searchInventory(inventorySearchQuery);
+
+            verify(inventoryQueryRepository).search(
+                    any(),
+                    any(),
+                    pageableCaptor.capture()
+            );
+
+            assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
         }
 
         @Test
