@@ -6,15 +6,15 @@ import com.logistics.inventory.global.response.PageInfo;
 import java.util.List;
 
 public record InventoryListResponseDto(
-        List<InventorySummaryResponseDto> content,
+        List<InventoryListItemResponseDto> content,
         PageInfo pageInfo
 ) {
     public static InventoryListResponseDto from(
             InventoryListResult result
     ) {
-        List<InventorySummaryResponseDto> content =
+        List<InventoryListItemResponseDto> content =
                 result.content().stream()
-                        .map(InventorySummaryResponseDto::from)
+                        .map(InventoryListItemResponseDto::from)
                         .toList();
 
         return new InventoryListResponseDto(

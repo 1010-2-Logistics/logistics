@@ -4,16 +4,16 @@ import com.logistics.inventory.domain.entity.Inventory;
 
 import java.util.UUID;
 
-public record InventorySummaryResult(
+public record InventoryListItemResult(
         UUID inventoryId,
         UUID productId,
         UUID hubId,
         Integer stock
 ) {
-    public static InventorySummaryResult from(
+    public static InventoryListItemResult from(
             Inventory inventory
     ) {
-        return new InventorySummaryResult(
+        return new InventoryListItemResult(
                 inventory.getInventoryId(),
                 inventory.getProductId(),
                 inventory.getHubId(),

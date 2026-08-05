@@ -7,15 +7,15 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public record InventoryListResult(
-        List<InventorySummaryResult> content,
+        List<InventoryListItemResult> content,
         PageInfo pageInfo
 ) {
     public static InventoryListResult from(
             Page<Inventory> inventories
     ) {
-        List<InventorySummaryResult> content =
+        List<InventoryListItemResult> content =
                 inventories.getContent().stream()
-                        .map(InventorySummaryResult::from)
+                        .map(InventoryListItemResult::from)
                         .toList();
 
         return new InventoryListResult(

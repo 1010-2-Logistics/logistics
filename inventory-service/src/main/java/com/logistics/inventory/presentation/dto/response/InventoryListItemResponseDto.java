@@ -1,19 +1,19 @@
 package com.logistics.inventory.presentation.dto.response;
 
-import com.logistics.inventory.application.dto.result.InventorySummaryResult;
+import com.logistics.inventory.application.dto.result.InventoryListItemResult;
 
 import java.util.UUID;
 
-public record InventorySummaryResponseDto(
+public record InventoryListItemResponseDto(
         UUID inventoryId,
         UUID productId,
         UUID hubId,
         Integer stock
 ) {
-    public static InventorySummaryResponseDto from(
-            InventorySummaryResult inventorySummaryResult
+    public static InventoryListItemResponseDto from(
+            InventoryListItemResult inventorySummaryResult
     ) {
-        return new InventorySummaryResponseDto(
+        return new InventoryListItemResponseDto(
                 inventorySummaryResult.inventoryId(),
                 inventorySummaryResult.productId(),
                 inventorySummaryResult.hubId(),
