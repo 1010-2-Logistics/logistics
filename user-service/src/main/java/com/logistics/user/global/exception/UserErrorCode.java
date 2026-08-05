@@ -46,10 +46,6 @@ public enum UserErrorCode implements ErrorCode {
             HttpStatus.CONFLICT,
             "이미 처리된 가입 신청입니다."
     ),
-    AUTH_UNAUTHORIZED(
-            HttpStatus.UNAUTHORIZED,
-            "인증 토큰이 없거나 유효하지 않습니다."
-    ),
     USER_DELETED_CONFLICT(
             HttpStatus.CONFLICT,
             "삭제된 사용자는 가입 승인 또는 거절할 수 없습니다."
