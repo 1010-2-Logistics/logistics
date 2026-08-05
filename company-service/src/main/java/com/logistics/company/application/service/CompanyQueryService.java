@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.logistics.company.application.dto.query.CompanySearchQuery;
 import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CompanyQueryService {
 
 	private final CompanyQueryRepository companyQueryRepository;
