@@ -182,7 +182,31 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("허용되지 않은 페이지 크기면 기본값 10")
         void inventory_search_invalid_size() {
+            InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
+                    null,
+                    null,
+                    "createdAt",
+                    0,
+                    20
+            );
 
+            given(inventoryQueryRepository.search(
+                    any(),
+                    any(),
+                    any(Pageable.class)
+            )).willReturn(Page.empty());
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+            inventoryQueryService.searchInventory(inventorySearchQuery);
+
+            verify(inventoryQueryRepository).search(
+                    any(),
+                    any(),
+                    pageableCaptor.capture()
+            );
+
+            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(10);
         }
 
         @Test
