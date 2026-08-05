@@ -22,8 +22,10 @@ public class SlackQueryService {
     private final SlackQueryRepository slackQueryRepository;
 
     public SlackDetailResult getSlack(UUID slackMessageId) {
-        return slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)
-                .orElseThrow(() -> new CustomException(SlackErrorCode.SAMPLE_NOT_FOUND));
+        Slack slack = slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
+
+        return SlackDetailResult.from(slack);
     }
 
     public Page<SlackListResult> getSlacks(
