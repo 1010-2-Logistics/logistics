@@ -1,22 +1,22 @@
 package com.logistics.inventory.presentation.dto.response;
 
 
-import com.logistics.inventory.application.dto.result.InventoryGetOneResult;
+import com.logistics.inventory.application.dto.result.InventoryDetailResult;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record InventoryGetOneResponseDto(
+public record InventoryDetailResponseDto(
         UUID inventoryId,
         UUID productId,
         UUID hubId,
         Integer stock,
         LocalDateTime createdAt
 ) {
-    public static InventoryGetOneResponseDto from(
-            InventoryGetOneResult inventoryGetOneResult
+    public static InventoryDetailResponseDto from(
+            InventoryDetailResult inventoryGetOneResult
     ) {
-        return new InventoryGetOneResponseDto(
+        return new InventoryDetailResponseDto(
                 inventoryGetOneResult.inventoryId(),
                 inventoryGetOneResult.productId(),
                 inventoryGetOneResult.hubId(),
