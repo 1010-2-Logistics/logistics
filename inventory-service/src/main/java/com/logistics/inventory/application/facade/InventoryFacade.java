@@ -5,6 +5,7 @@ import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.service.InventoryCommandService;
+import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.global.exception.CustomException;
 import com.logistics.inventory.global.exception.InventoryErrorCode;
 import com.logistics.inventory.infrastructure.feign.client.HubClient;
@@ -42,6 +43,13 @@ public class InventoryFacade {
     public InventoryUpdateResult updateInventory(
             InventoryUpdateCommand updateInventoryCommand
     ) {
-        return null;
+        Inventory inventory = inventoryCommandService.getInventoryForUpdate(
+                updateInventoryCommand.inventoryId()
+        );
+
+        return inventoryCommandService.updateInventory(
+                inventory,
+                updateInventoryCommand
+        );
     }
 }
