@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CompanyException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CompanyException e) {
+    @ExceptionHandler(ProductException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(ProductException e) {
         ErrorCode errorCode = e.getErrorCode();
         log.error("[CustomException] code = {}, message = {}", errorCode.name(), e.getMessage());
         return ResponseEntity

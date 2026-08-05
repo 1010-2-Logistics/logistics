@@ -9,12 +9,11 @@ import lombok.RequiredArgsConstructor;
 // 네이밍 컨벤션({도메인명}_{에러타입})에 맞춰 항목을 채우세요. (예: HUB_NOT_FOUND)
 @Getter
 @RequiredArgsConstructor
-public enum CompanyErrorCode implements ErrorCode {
+public enum ProductErrorCode implements ErrorCode {
 
-  COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 업체입니다."),
-
-	COMPANY_TYPE_FOR_ORDER(HttpStatus.CONFLICT, "출발 업체는 생산 업체여야 하며, 도착 업체는 수령 업체여야 합니다."),
-	
+  PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다."),
+  
+  PRODUCT_DELETED_CONFLICT(HttpStatus.CONFLICT, "삭제된 상품입니다."),
 	;
 	
   private final HttpStatus httpStatus;

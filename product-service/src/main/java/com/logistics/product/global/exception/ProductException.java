@@ -3,11 +3,11 @@ package com.logistics.product.global.exception;
 import lombok.Getter;
 
 @Getter
-public class CompanyException extends RuntimeException {
+public class ProductException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    public CompanyException(ErrorCode errorCode) {
+    public ProductException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
