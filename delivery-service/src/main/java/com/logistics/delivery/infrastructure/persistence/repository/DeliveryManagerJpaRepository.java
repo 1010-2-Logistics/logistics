@@ -16,6 +16,12 @@ interface DeliveryManagerJpaRepository extends JpaRepository<DeliveryManager, Lo
 
     Optional<DeliveryManager> findByDeliveryManagerIdAndDeletedAtIsNull(Long deliveryManagerId);
 
+    Optional<DeliveryManager> findFirstByManagerTypeAndHubIdAndDeletedAtIsNullAndDeliverySequenceGreaterThanOrderByDeliverySequenceAsc(
+            ManagerType managerType, UUID hubId, Integer afterSequence);
+
+    Optional<DeliveryManager> findFirstByManagerTypeAndHubIdAndDeletedAtIsNullOrderByDeliverySequenceAsc(
+            ManagerType managerType, UUID hubId);
+
     @Query("SELECT MAX(m.deliverySequence) FROM DeliveryManager m "
             + "WHERE m.managerType = :managerType "
             + "AND (:hubId IS NULL OR m.hubId = :hubId) "

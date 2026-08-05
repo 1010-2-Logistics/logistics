@@ -3,6 +3,8 @@ package com.logistics.delivery.application.service;
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
 import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.domain.entity.ManagerType;
+import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRepository;
+import com.logistics.delivery.domain.entity.DeliveryManagerAssignmentState;
 import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeliveryManagerCommandService {
 
     private final DeliveryManagerRepository deliveryManagerRepository;
+    private final DeliveryManagerAssignmentStateRepository assignmentStateRepository;
     private final HubClient hubClient;
 
     public DeliveryManager register(RegisterDeliveryManagerCommand command) {
@@ -37,8 +40,11 @@ public class DeliveryManagerCommandService {
 
         DeliveryManager manager = DeliveryManager.create(
                 command.userId(), command.hubId(), command.slackId(), command.managerType(), nextSequence);
+        DeliveryManager saved = deliveryManagerRepository.save(manager);
 
-        return deliveryManagerRepository.save(manager);
+        ensureAssignmentStateExists(command.managerType(), command.hubId());
+
+        return saved;
     }
 
     private void validateHub(UUID hubId) {
@@ -53,6 +59,13 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
     }
+
+    private void ensureAssignmentStateExists(ManagerType managerType, UUID hubId) {
+        if (assignmentStateRepository.findForUpdate(managerType, hubId).isEmpty()) {
+            assignmentStateRepository.save(DeliveryManagerAssignmentState.init(managerType, hubId));
+        }
+    }
+
 
     public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
