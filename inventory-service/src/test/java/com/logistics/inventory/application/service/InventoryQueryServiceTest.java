@@ -69,7 +69,14 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("존재하지 않는 재고 조회 시 예외")
         void inventory_detail_not_found() {
+            given(inventoryQueryRepository.findByInventoryIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.empty());
 
+            assertThatThrownBy(() -> inventoryQueryService.getInventory(inventoryId))
+                    .isInstanceOfSatisfying(CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+            verify(inventoryQueryRepository).findByInventoryIdAndDeletedAtIsNull(inventoryId);
         }
     }
 
