@@ -2,9 +2,9 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 COPY . .
-RUN ./gradlew :hub-service:bootJar
+RUN ./gradlew :hubRoute-service:bootJar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/hub-service/build/libs/*.jar app.jar
+COPY --from=build /app/hubRoute-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
