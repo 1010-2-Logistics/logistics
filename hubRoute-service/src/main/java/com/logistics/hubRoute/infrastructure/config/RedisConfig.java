@@ -17,10 +17,13 @@ import java.time.Duration;
 public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // RedisSerializer.json()을 활용하여 4.0 Deprecated 경고 회피
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))
+                .entryTtl(Duration.ofHours(1))  //유효 시간 1시간
+
+                //레디스 key 직렬화 방식 설정
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+
+                //레디스 직렬화 방식 설정
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json()));
 
         return RedisCacheManager.builder(connectionFactory)
