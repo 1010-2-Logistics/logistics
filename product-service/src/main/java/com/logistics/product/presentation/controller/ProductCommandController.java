@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
 import com.logistics.product.application.service.ProductCommandService;
+import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
 
@@ -29,7 +30,7 @@ public class ProductCommandController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public ApiResponse<?> createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
 		Long exampleUserId = 1L;
-		String exampleRole = "HUB_MASTER";
+		Role exampleRole = Role.HUB_MANAGER;
 		
 		ProductCreateCommand command = request.toCommand(exampleUserId, exampleRole);
 		

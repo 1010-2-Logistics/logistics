@@ -1,8 +1,5 @@
 package com.logistics.product.domain.entity;
 
-import java.util.Arrays;
-import java.util.List;
-
 public enum Role {
 	MASTER,
 
@@ -16,10 +13,16 @@ public enum Role {
 
   ;
 	
-  public static final List<String> roleList() {
-		return Arrays.stream(Role.values())
-				.map(role -> role.name())
-				.toList();
-	}
+  public boolean isMaster() {
+  	return this == MASTER;
+  }
+  
+  public boolean isHubManager() {
+  	return this == HUB_MANAGER;
+  }
+  
+  public boolean isCompanyManager() {
+  	return this == COMPANY_MANAGER;
+  }
   
 }

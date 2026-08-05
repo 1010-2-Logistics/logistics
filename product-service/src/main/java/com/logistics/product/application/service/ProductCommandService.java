@@ -19,11 +19,8 @@ public class ProductCommandService {
 
 	private final ProductQueryService productQueryService;
 	
-	private final ProductPolicy policy;
-	
 	@Transactional(rollbackFor = Exception.class)
 	public Product createProduct(ProductCreateCommand command) {
-		policy.createPolicyCheck(command.userId(), command.role());
 		
 		Product product = Product.create(
 				command.companyId(),
@@ -35,8 +32,6 @@ public class ProductCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public Product updateProduct(ProductUpdateCommand command) {
-		policy.updatePolicyCheck(command.userId(), command.role());
-		
 		Product product = productQueryService.findProduct(command.productId());
 		
 		product.updateProductName(command.productName());
@@ -46,8 +41,6 @@ public class ProductCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public void deleteProduct(ProductDeleteCommand command) {
-		policy.deletePolicyCheck(command.userId(), command.role());
-		
 		Product product = productQueryService.findProduct(command.productId());
 		
 		product.markDeleted(command.userId());

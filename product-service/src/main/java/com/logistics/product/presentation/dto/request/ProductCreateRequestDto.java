@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.logistics.product.application.dto.command.ProductCommand;
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
+import com.logistics.product.domain.entity.Role;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -15,7 +16,7 @@ public record ProductCreateRequestDto(
 		String productName
 ) {
 	
-	public ProductCreateCommand toCommand(Long userId, String role) {
+	public ProductCreateCommand toCommand(Long userId, Role role) {
 		return new ProductCommand.ProductCreateCommand(
 				companyId,
 				productName,
