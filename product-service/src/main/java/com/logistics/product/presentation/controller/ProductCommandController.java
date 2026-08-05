@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
+import com.logistics.product.application.dto.result.ProductCreateResultDto;
 import com.logistics.product.application.facade.ProductFacade;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
+import com.logistics.product.presentation.dto.response.ProductCreateResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,15 +30,21 @@ public class ProductCommandController {
 	// 상품 생성
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ApiResponse<?> createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
+	public ApiResponse<ProductCreateResponseDto> createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
 		Long exampleUserId = 1L;
 		Role exampleRole = Role.HUB_MANAGER;
 		
-		ProductCreateCommand command = request.toCommand(exampleUserId, exampleRole);
+		ProductCreateResultDto result = productFacade.createProduct(
+				request.toCommand(exampleUserId, exampleRole)
+		);
 		
-		productFacade.createProduct(command);
+		ProductCreateResponseDto response = ProductCreateResponseDto.from(result);
 		
-		return null;
+		return ApiResponse.success(
+				HttpStatus.CREATED.value(),
+				"상품 등록 성공",
+				response
+		);
 	}
 	
 	// 상품 수정
