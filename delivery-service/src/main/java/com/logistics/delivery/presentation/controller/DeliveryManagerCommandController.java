@@ -34,4 +34,10 @@ public class DeliveryManagerCommandController {
         DeliveryManager manager = deliveryManagerCommandService.update(deliveryManagerId, request.hubId());
         return ApiResponse.success(200, "배송 담당자 수정 성공", DeliveryManagerUpdateResponse.from(manager));
     }
+
+    @DeleteMapping("/{deliveryManagerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long deliveryManagerId) {
+        deliveryManagerCommandService.delete(deliveryManagerId);
+    }
 }

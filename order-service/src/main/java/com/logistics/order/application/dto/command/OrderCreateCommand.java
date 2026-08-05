@@ -1,6 +1,12 @@
 package com.logistics.order.application.dto.command;
 
-public record OrderCreateCommand(
 
+import java.util.UUID;
+
+public record OrderCreateCommand(
+        UUID endCompanyId,
+        UUID productId,
+        Integer quantity,
+        String request
 ) {
 }
