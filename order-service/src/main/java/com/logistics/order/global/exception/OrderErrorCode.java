@@ -4,13 +4,17 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
-// 실제 서비스로 복사할 때 SampleErrorCode -> {Domain}ErrorCode 로 이름 바꾸고,
-// 네이밍 컨벤션({도메인명}_{에러타입})에 맞춰 항목을 채우세요. (예: HUB_NOT_FOUND)
 @Getter
 @RequiredArgsConstructor
 public enum OrderErrorCode implements ErrorCode {
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
+    ORDER_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다."),
+    ORDER_ALREADY_CANCELED(HttpStatus.CONFLICT, "이미 취소된 주문입니다."),
+    ORDER_DELETE_CONFLICT(HttpStatus.CONFLICT, "이미 삭제된 주문입니다."),
+    ORDER_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "연동 서비스 처리에 실패했습니다."),
+    ORDER_CANCEL_CONFLICT(HttpStatus.CONFLICT, "이미 취소됐거나 배송이 시작되어 취소할 수 없습니다."),
 
-    SAMPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 샘플입니다.");
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;
