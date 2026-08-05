@@ -65,4 +65,9 @@ public class DeliveryManagerCommandService {
         manager.updateHub(hubId);
         return manager;
     }
+    public void delete(Long deliveryManagerId) {
+        DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
+        manager.markDeleted(null);
+    }
 }
