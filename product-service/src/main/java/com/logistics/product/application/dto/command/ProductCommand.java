@@ -8,11 +8,11 @@ public class ProductCommand {
 		
 	}
 	
-	public record ProductUpdateCommand(UUID companyId, String productName, Long userId, String role) {
+	public record ProductUpdateCommand(UUID productId, String productName, Long userId, String role) {
 		
 	}
 	
-	public record ProductDeleteCommand(UUID companyId, Long userId, String role) {
+	public record ProductDeleteCommand(UUID productId, Long userId, String role) {
 		
 	}
 	
