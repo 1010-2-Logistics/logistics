@@ -29,7 +29,6 @@ public class InventoryCommandService {
     private final InventoryCommandRepository inventoryCommandRepository;
     private final EventPublisher eventPublisher;
 
-    @Transactional
     public InventoryCreateResult createInventory(
             InventoryCreateCommand createInventoryCommand
     ) {
@@ -54,8 +53,20 @@ public class InventoryCommandService {
         return new InventoryCreateResult(savedInventory.getInventoryId());
     }
 
-    public InventoryUpdateResult updateInventory(InventoryUpdateCommand updateInventoryCommand) {
-        return null;
+    public InventoryUpdateResult updateInventory(
+            Inventory inventory,
+            InventoryUpdateCommand updateInventoryCommand
+    ) {
+        inventory.updateStock(updateInventoryCommand.stock());
+
+        Inventory savedInventory = inventoryCommandRepository.save(inventory);
+
+        return InventoryUpdateResult.from(savedInventory);
+    }
+
+    public Inventory getInventoryForUpdate(UUID inventoryId) {
+        return inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)
+                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
     }
 
     public void deleteInventory(

@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/inventories")
-
 @RequiredArgsConstructor
 public class InventoryCommandController {
     private final InventoryFacade inventoryFacade;
@@ -57,7 +56,10 @@ public class InventoryCommandController {
             @PathVariable("inventoryId") UUID inventoryId,
             @Valid @RequestBody InventoryUpdateRequestDto inventoryUpdateRequestDto
     ) {
-        InventoryUpdateCommand updateInventoryCommand = InventoryUpdateCommand.toCommand(inventoryUpdateRequestDto);
+        InventoryUpdateCommand updateInventoryCommand = InventoryUpdateCommand.from(
+                inventoryId,
+                inventoryUpdateRequestDto
+        );
 
         InventoryUpdateResult inventoryUpdateResult = inventoryFacade.updateInventory(updateInventoryCommand);
 

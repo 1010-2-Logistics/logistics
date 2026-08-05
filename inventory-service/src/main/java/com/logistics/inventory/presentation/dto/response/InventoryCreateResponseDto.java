@@ -8,10 +8,10 @@ public record InventoryCreateResponseDto(
         UUID inventoryId
 ) {
     public static InventoryCreateResponseDto from(
-            InventoryCreateResult inventoryCreateResultDto
+            InventoryCreateResult inventoryCreateResult
     ) {
         return new InventoryCreateResponseDto(
-                inventoryCreateResultDto.inventoryId()
+                inventoryCreateResult.inventoryId()
         );
     }
 }
