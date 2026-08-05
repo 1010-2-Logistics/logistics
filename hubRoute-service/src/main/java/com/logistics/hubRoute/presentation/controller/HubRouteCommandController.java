@@ -5,11 +5,16 @@ import com.logistics.hubRoute.application.facade.HubRouteFacade;
 import com.logistics.hubRoute.application.service.HubRouteCommandService;
 import com.logistics.hubRoute.global.response.ApiResponse;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteCreateRequestDto;
+import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteUpdateRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateResponseDto;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/hubRoute")
@@ -33,14 +38,14 @@ public class HubRouteCommandController {
         return ApiResponse.success(201, "허브 경로 생성 성공", hubRouteCreateResponseDto);
     }
 
-//    @PutMapping("/{hubRouteId}")
-//    public ApiResponse<HubRouteResponseDto> updateHub(@PathVariable UUID hubId,
-//                                                      @Valid @RequestBody HubRouteUpdateRequestDto request) {
-//
-//        HubRouteResponseDto hubRouteResponseDto = hubRouteCommandService.updateHub(hubId, request.toCommand());
-//
-//        return ApiResponse.success(200, "허브 수정 성공", hubRouteResponseDto);
-//    }
+    @PutMapping("/{hubRouteId}")
+    public ApiResponse<HubRouteUpdateResponseDto> updateHubRoute(@PathVariable UUID hubRouteId,
+                                                                 @Valid @RequestBody HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
+
+        HubRouteUpdateResponseDto hubRouteUpdateResponseDto = hubRouteCommandService.updateHubRoute(hubRouteId, hubRouteUpdateRequestDto);
+
+        return ApiResponse.success(200, "허브 경로 수정 성공", hubRouteUpdateResponseDto);
+    }
 
 //    @DeleteMapping("/{hubRouteId}")
 //    @ResponseStatus(HttpStatus.NO_CONTENT)

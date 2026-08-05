@@ -12,7 +12,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
+import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteUpdateRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateResponseDto;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,7 @@ public class HubRouteCommandService {
     private final HubClient hubClient;
 
     //허브 경로 등록
-    public HubRouteCreateResponseDto createHubRoute(@Valid HubRouteCreateCommand hubRouteCreateCommand) {
+    public HubRouteCreateResponseDto createHubRoute(HubRouteCreateCommand hubRouteCreateCommand) {
         UUID startHubId = hubRouteCreateCommand.startHubId();
         UUID endHubId = hubRouteCreateCommand.endHubId();
 
@@ -65,6 +68,45 @@ public class HubRouteCommandService {
         hubRouteCommandRepository.save(hubRoute);
 
         return new HubRouteCreateResponseDto(hubRoute.getHubRouteId());
+    }
+
+    public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
+
+        UUID startHubId = hubRouteUpdateRequestDto.startHubId();
+        UUID endHubId = hubRouteUpdateRequestDto.endHubId();
+
+        //출발허브와 도착허브가 같은 허브로 받는지 확인
+        if (startHubId.equals(endHubId)) {
+            throw new CustomException(HubRouteErrorCode.HUB_START_END_SAME);
+        }
+
+        //출발허브 도착허브 존재하는지 체크
+        List<UUID> targetHubIds = List.of(startHubId, endHubId);
+        Set<UUID> existingHubIds = hubClient.validateHubIds(targetHubIds);
+
+        if (!existingHubIds.contains(startHubId)) {
+            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+        }
+
+        if (!existingHubIds.contains(endHubId)) {
+            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+        }
+
+        //중복 경로 탐색
+        if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(startHubId, endHubId,hubRouteId)) {
+            throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
+        }
+
+        HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId).get();
+        hubRoute.update(
+                hubRouteUpdateRequestDto.startHubId(),
+                hubRouteUpdateRequestDto.endHubId(),
+                hubRouteUpdateRequestDto.duration(),
+                hubRouteUpdateRequestDto.distance()
+        );
+
+
+        return new HubRouteUpdateResponseDto(hubRoute.getHubRouteId());
     }
 
 //    //허브 수정

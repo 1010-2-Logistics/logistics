@@ -20,4 +20,6 @@ interface HubRouteJpaRepository extends JpaRepository<HubRoute, UUID> {
     Page<HubRoute> search(@Param("hubRouteId") UUID hubRouteId, Pageable pageable);
 
     boolean existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
+
+    boolean existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(UUID startHubId, UUID endHubId, UUID hubRouteId);
 }
