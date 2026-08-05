@@ -53,4 +53,21 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
     }
+
+    public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
+        DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
+
+        if (manager.getManagerType() == ManagerType.COMPANY_DELIVERY_MANAGER) {
+            validateHub(hubId);
+        }
+
+        manager.updateHub(hubId);
+        return manager;
+    }
+    public void delete(Long deliveryManagerId) {
+        DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
+        manager.markDeleted(null);
+    }
 }

@@ -44,6 +44,11 @@ public class DeliveryManager extends BaseEntity {
         return manager;
     }
 
+    public void updateHub(UUID hubId) {
+        validateHubId(this.managerType, hubId);
+        this.hubId = hubId;
+    }
+
     private static void validateHubId(ManagerType managerType, UUID hubId) {
         if (managerType == ManagerType.COMPANY_DELIVERY_MANAGER && hubId == null) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);

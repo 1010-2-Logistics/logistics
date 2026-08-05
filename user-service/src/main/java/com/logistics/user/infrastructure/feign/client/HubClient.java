@@ -1,9 +1,8 @@
-package com.logistics.order.infrastructure.feign.client;
+package com.logistics.user.infrastructure.feign.client;
 
+import com.logistics.user.infrastructure.config.FeignConfig;
+import com.logistics.user.infrastructure.feign.response.HubValidationResponse;
 import java.util.UUID;
-
-import com.logistics.order.infrastructure.config.FeignConfig;
-import com.logistics.order.infrastructure.feign.response.HubValidationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

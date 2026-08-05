@@ -1,6 +1,8 @@
 package com.logistics.order.application.dto.command;
 
-public record OrderCancelCommand(
+import java.util.UUID;
 
+public record OrderCancelCommand(
+        UUID orderId
 ) {
 }
