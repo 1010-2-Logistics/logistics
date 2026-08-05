@@ -25,18 +25,18 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     }
 
     @Override
-    public boolean existsByUsernameAndDeletedAtIsNull(
+    public boolean existsByUsername(
             String username
     ) {
         return jpaRepository
-                .existsByUsernameAndDeletedAtIsNull(username);
+                .existsByUsername(username);
     }
 
     @Override
-    public boolean existsBySlackIdAndDeletedAtIsNull(
+    public boolean existsBySlackId(
             String slackId
     ) {
         return jpaRepository
-                .existsBySlackIdAndDeletedAtIsNull(slackId);
+                .existsBySlackId(slackId);
     }
 }

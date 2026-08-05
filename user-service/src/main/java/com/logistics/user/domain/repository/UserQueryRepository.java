@@ -15,10 +15,10 @@ public interface UserQueryRepository {
     /**
      * 삭제되지 않은 사용자 중 username 중복 여부 확인
      */
-    boolean existsByUsernameAndDeletedAtIsNull(String username);
+    boolean existsByUsername(String username);
 
     /**
      * 삭제되지 않은 사용자 중 Slack ID 중복 여부 확인
      */
-    boolean existsBySlackIdAndDeletedAtIsNull(String slackId);
+    boolean existsBySlackId(String slackId);
 }
