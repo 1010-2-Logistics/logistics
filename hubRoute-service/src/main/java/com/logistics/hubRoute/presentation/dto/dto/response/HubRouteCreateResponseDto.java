@@ -10,6 +10,6 @@ import java.util.UUID;
 public class HubRouteCreateResponseDto {
 
 
-    private UUID hubId;
+    private UUID hubRouteId;
 
 }
