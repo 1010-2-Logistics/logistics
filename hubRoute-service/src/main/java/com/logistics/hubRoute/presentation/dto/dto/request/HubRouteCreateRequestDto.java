@@ -14,13 +14,13 @@ import java.util.UUID;
 @Setter
 public class HubRouteCreateRequestDto {
 
-    @NotBlank(message="시작허브를 입력해 주세요")
+    @NotNull(message="시작허브를 입력해 주세요")
     private UUID startHubId;
 
-    @NotBlank(message="도착 허브를 입력해 주세요")
+    @NotNull(message="도착 허브를 입력해 주세요")
     private UUID endHubId;
 
-    @NotBlank(message="시간(분단위)을 입력해 주세요")
+    @NotNull(message="시간(분단위)을 입력해 주세요")
     private Integer duration;
 
     @NotNull(message = "거리(Km)를 입력해 주세요")

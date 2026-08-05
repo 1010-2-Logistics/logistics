@@ -17,7 +17,7 @@ interface HubRouteJpaRepository extends JpaRepository<HubRoute, UUID> {
 
     @Query("SELECT h FROM HubRoute h WHERE h.deletedAt IS NULL "
             + "AND (:hubRouteId IS NULL OR h.hubRouteId = :hubRouteId)")
-    Page<HubRoute> search(@Param("hubRoute") UUID hubRouteId, Pageable pageable);
+    Page<HubRoute> search(@Param("hubRouteId") UUID hubRouteId, Pageable pageable);
 
-
+    boolean existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
 }

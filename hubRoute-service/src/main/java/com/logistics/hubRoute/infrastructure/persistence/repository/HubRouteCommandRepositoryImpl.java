@@ -25,5 +25,10 @@ public class HubRouteCommandRepositoryImpl implements HubRouteCommandRepository 
         return jpaRepository.findByHubRouteIdAndDeletedAtIsNull(hubRouteId);
     }
 
+    //동일한 경로가 존재하는지 확인
+    @Override
+    public boolean existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId) {
+        return jpaRepository.existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId, endHubId);
+    }
 
 }

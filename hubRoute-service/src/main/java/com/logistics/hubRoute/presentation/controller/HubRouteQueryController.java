@@ -6,6 +6,7 @@ import com.logistics.hubRoute.application.service.HubRouteQueryService;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.global.response.ApiResponse;
 import com.logistics.hubRoute.global.response.PageResponse;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponse;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteSummaryResponseDto;
 import java.util.UUID;
@@ -28,7 +29,7 @@ public class HubRouteQueryController {
     @GetMapping("/{hubRouteId}")
     public ApiResponse<HubRouteResponseDto> get(@PathVariable UUID hubRouteId) {
         HubRoute hub = hubRouteQueryService.get(new GetHubRouteQuery(hubRouteId));
-        return ApiResponse.success(200, "허브 조회 성공", HubRouteResponseDto.from(hub));
+        return ApiResponse.success(200, "허브 경로 조회 성공", HubRouteResponseDto.from(hub));
     }
 
     @GetMapping
@@ -37,6 +38,6 @@ public class HubRouteQueryController {
             Pageable pageable) {
         Page<HubRoute> page = hubRouteQueryService.search(new SearchHubRouteQuery(hubRouteId, pageable));
         Page<HubRouteSummaryResponseDto> responsePage = page.map(HubRouteSummaryResponseDto::from);
-        return ApiResponse.success(200, "허브 목록 조회 성공", PageResponse.of(responsePage));
+        return ApiResponse.success(200, "허브 경로 목록 조회 성공", PageResponse.of(responsePage));
     }
 }

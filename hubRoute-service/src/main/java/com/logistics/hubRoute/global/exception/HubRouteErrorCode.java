@@ -11,8 +11,9 @@ import org.springframework.http.HttpStatus;
 public enum HubRouteErrorCode implements ErrorCode {
 
     HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브입니다."),
-    HUB_ALPEADY_EXIST(HttpStatus.BAD_REQUEST,"이미 존재하는 허브 입니다"),
-    HUB_DELETE_CONFLICT(HttpStatus.BAD_REQUEST, "이미 삭제된 허브 입니다.");
+    HUB_START_END_SAME(HttpStatus.BAD_REQUEST,"출발 허브와 도착허브가 동일합니다."),
+    HUB_ROUTE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST,  "이미 존재하는 허브 경로 입니다");
+
     private final HttpStatus httpStatus;
     private final String message;
 }
