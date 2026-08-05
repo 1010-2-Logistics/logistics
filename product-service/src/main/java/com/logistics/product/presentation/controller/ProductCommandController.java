@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
-import com.logistics.product.application.service.ProductCommandService;
+import com.logistics.product.application.facade.ProductFacade;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductCommandController {
 
-	private final ProductCommandService productCommandService;
+	private final ProductFacade productFacade;
 	
 	// 상품 생성
 	@PostMapping
@@ -34,7 +34,7 @@ public class ProductCommandController {
 		
 		ProductCreateCommand command = request.toCommand(exampleUserId, exampleRole);
 		
-		productCommandService.createProduct(command);
+		productFacade.createProduct(command);
 		
 		return null;
 	}

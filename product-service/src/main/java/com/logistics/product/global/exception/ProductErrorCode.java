@@ -14,6 +14,13 @@ public enum ProductErrorCode implements ErrorCode {
   PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다."),
   
   PRODUCT_DELETED_CONFLICT(HttpStatus.CONFLICT, "삭제된 상품입니다."),
+  
+  PRODUCT_COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "업체 정보가 존재하지 않습니다."),
+  
+  PRODUCT_INVALID_PRODUCER_COMPANY_TYPE(HttpStatus.CONFLICT, "생산 업체만 상품 등록이 가능합니다."),
+  
+  
+  PRODUCT_EXISTS_PRODUCT_NAME(HttpStatus.CONFLICT, "해당 업체에 이미 존재하는 상품입니다."),
 	;
 	
   private final HttpStatus httpStatus;

@@ -30,4 +30,8 @@ public class ProductQueryService {
 				.orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
 	}
 	
+	public boolean existsProductName(UUID companyId, String productName) {
+		return productQueryRepository.existsCompanyIdAndProductName(companyId, productName);
+	}
+	
 }
