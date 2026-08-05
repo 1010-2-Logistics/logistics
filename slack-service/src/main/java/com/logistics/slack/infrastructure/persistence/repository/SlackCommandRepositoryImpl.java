@@ -11,15 +11,15 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class SlackCommandRepositoryImpl implements SlackCommandRepository {
 
-    private final SampleJpaRepository jpaRepository;
+    private final SlackJpaRepository jpaRepository;
 
     @Override
-    public Slack save(Slack sample) {
-        return jpaRepository.save(sample);
+    public Slack save(Slack slack) {
+        return jpaRepository.save(slack);
     }
 
     @Override
-    public Optional<Slack> findByIdAndDeletedAtIsNull(UUID sampleId) {
-        return jpaRepository.findBySampleIdAndDeletedAtIsNull(sampleId);
+    public Optional<Slack> findByIdAndDeletedAtIsNull(UUID slackMessageId) {
+        return jpaRepository.findBySlackMessageIdAndDeletedAtIsNull(slackMessageId);
     }
 }

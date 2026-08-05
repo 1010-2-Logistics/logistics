@@ -1,7 +1,7 @@
 package com.logistics.slack.presentation.controller;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
-import com.logistics.slack.application.dto.result.SlackCreatResult;
+import com.logistics.slack.application.dto.result.SlackCreateResult;
 import com.logistics.slack.application.facade.SlackFacade;
 import com.logistics.slack.application.service.SlackCommandService;
 import com.logistics.slack.global.response.ApiResponse;
@@ -35,9 +35,12 @@ public class SlackCommandController {
     public ApiResponse<SlackCreateResponseDto> createSlack(
             @Valid @RequestBody SlackCreateRequestDto slackCreateRequestDto
     ) {
-        SlackCreateCommand slackCreateCommand = SlackCreateCommand.toCommand(slackCreateRequestDto);
+        SlackCreateCommand slackCreateCommand = SlackCreateCommand.toCommand(
+//                senderId,
+                slackCreateRequestDto
+        );
 
-        SlackCreatResult slackCreatResult = slackFacade.createSlack(slackCreateCommand);
+        SlackCreateResult slackCreatResult = slackFacade.createSlack(slackCreateCommand);
 
         SlackCreateResponseDto slackCreateResponseDto = SlackCreateResponseDto.from(slackCreatResult);
 

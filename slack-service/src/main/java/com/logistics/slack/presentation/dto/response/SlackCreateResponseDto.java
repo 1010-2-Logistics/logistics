@@ -1,6 +1,6 @@
 package com.logistics.slack.presentation.dto.response;
 
-import com.logistics.slack.application.dto.result.SlackCreatResult;
+import com.logistics.slack.application.dto.result.SlackCreateResult;
 import com.logistics.slack.domain.entity.SlackStatus;
 
 import java.time.LocalDateTime;
@@ -17,7 +17,7 @@ public record SlackCreateResponseDto(
         LocalDateTime createdAt
 ) {
     public static SlackCreateResponseDto from(
-            SlackCreatResult slackCreatResult
+            SlackCreateResult slackCreatResult
     ) {
         return new SlackCreateResponseDto(
                 slackCreatResult.slackMessageId(),

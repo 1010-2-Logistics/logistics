@@ -1,8 +1,7 @@
 package com.logistics.slack.application.service;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
-import com.logistics.slack.application.dto.result.SlackCreatResult;
-import com.logistics.slack.application.port.EventPublisher;
+import com.logistics.slack.application.dto.result.SlackCreateResult;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
 
 import java.util.UUID;
@@ -18,7 +17,7 @@ public class SlackCommandService {
     private final SlackCommandRepository slackCommandRepository;
     private final EventPublisher eventPublisher;
 
-    public SlackCreatResult createSlack(SlackCreateCommand slackCreateCommand) {
+    public SlackCreateResult createSlack(SlackCreateCommand slackCreateCommand) {
         return null;
     }
 

@@ -1,7 +1,7 @@
 package com.logistics.slack.application.facade;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
-import com.logistics.slack.application.dto.result.SlackCreatResult;
+import com.logistics.slack.application.dto.result.SlackCreateResult;
 import com.logistics.slack.application.service.SlackCommandService;
 import com.logistics.slack.application.service.SlackQueryService;
 
@@ -20,7 +20,7 @@ public class SlackFacade {
     private final SlackCommandService sampleCommandService;
     private final SlackQueryService sampleQueryService;
 
-    public SlackCreatResult createSlack(SlackCreateCommand slackCreateCommand) {
+    public SlackCreateResult createSlack(SlackCreateCommand slackCreateCommand) {
         // 예: 생성 전에 다른 서비스(Feign) 검증이 필요하다면 여기서 조합
         return sampleCommandService.createSlack(slackCreateCommand);
     }

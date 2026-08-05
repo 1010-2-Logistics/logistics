@@ -5,7 +5,8 @@ import com.logistics.slack.presentation.dto.request.SlackCreateRequestDto;
 import java.util.UUID;
 
 public record SlackCreateCommand(
-        String receiverId,
+//        UUID senderId,
+        UUID receiverId,
         String message,
         UUID referenceId
 ) {
@@ -13,6 +14,7 @@ public record SlackCreateCommand(
             SlackCreateRequestDto slackCreateRequestDto
     ) {
         return new SlackCreateCommand(
+//                slackCreateRequestDto.senderId(),
                 slackCreateRequestDto.receiverId(),
                 slackCreateRequestDto.message(),
                 slackCreateRequestDto.referenceId()

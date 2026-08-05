@@ -29,10 +29,10 @@ public class Slack extends BaseEntity {
     private UUID slackMessageId;
 
     @Column(name = "sender_id", nullable = false)
-    private String senderId; // 발신자 식별자
+    private UUID senderId; // 발신자 식별자
 
     @Column(name = "receiver_id", nullable = false)
-    private String receiverId; // 수신자 식별자
+    private UUID receiverId; // 수신자 식별자
 
     @Column(name = "message", nullable = false)
     private String message; // 메시지 내용
@@ -41,17 +41,17 @@ public class Slack extends BaseEntity {
     private String errorMessage; // 오류 메시지
 
     @Column(name = "retry_count", nullable = false)
-    private String retryCount; // 재시도 횟수
+    private Integer retryCount; // 재시도 횟수
 
     @Column(name = "sent_at")
     private String sentAt; // 실제 발송 완료 시간
 
     @Column(name = "reference_id")
-    private String referenceId; // 관련 업무 식별자
+    private UUID referenceId; // 관련 업무 식별자
 
-    // ERD에는 있고 테이블 명세서에는 없다
-    @Column(name = "send_time", nullable = false)
-    private Instant send_time;
+//    // ERD에는 있고 테이블 명세서에는 없다 -> 근데 sendAt 같음
+//    @Column(name = "send_time", nullable = false)
+//    private Instant send_time;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

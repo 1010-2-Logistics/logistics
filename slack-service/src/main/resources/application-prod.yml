@@ -7,3 +7,5 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+slack:
+  webhook-url: ${SLACK_WEBHOOK_URL}
