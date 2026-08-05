@@ -6,7 +6,9 @@ import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteQueryRepository;
 import com.logistics.hubRoute.global.exception.CustomException;
 import com.logistics.hubRoute.global.exception.HubRouteErrorCode;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,4 +28,11 @@ public class HubRouteQueryService {
     public Page<HubRoute> search(SearchHubRouteQuery query) {
         return hubRouteQueryRepository.search(query.hubRouteId(), query.pageable());
     }
+
+    @Cacheable(value = "hubRouteCache", key = "#query.hubRouteId()")
+    public HubRouteResponseDto getCachedDto(GetHubRouteQuery query) {
+        HubRoute hubRoute = get(query);
+        return HubRouteResponseDto.from(hubRoute);
+    }
+
 }
