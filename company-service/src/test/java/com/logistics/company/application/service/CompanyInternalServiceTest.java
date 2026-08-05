@@ -51,7 +51,7 @@ UUID hubId = UUID.randomUUID();
 			
 			given(companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId)).willReturn(Optional.of(company));
 			
-			CompanyExistsResponseDto result = CompanyExistsResponseDto.from(companyQueryService.findByCompany(companyId));
+			CompanyExistsResponseDto result = CompanyExistsResponseDto.from(companyQueryService.findOptionalByCompany(companyId));
 			
 			assertThat(result.companyType()).isEqualTo(type);
 			assertThat(result.exists()).isTrue();

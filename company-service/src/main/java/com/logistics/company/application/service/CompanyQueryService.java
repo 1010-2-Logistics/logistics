@@ -1,5 +1,6 @@
 package com.logistics.company.application.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +28,10 @@ public class CompanyQueryService {
 	public Company findByCompany(UUID companyId) {
 		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId)
 				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
+	}
+	
+	public Optional<Company> findOptionalByCompany(UUID companyId) {
+		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
 	}
 	
 	/**
