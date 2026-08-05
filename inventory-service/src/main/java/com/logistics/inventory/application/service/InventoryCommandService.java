@@ -7,6 +7,7 @@ import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
+import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -53,7 +54,8 @@ public class InventoryCommandService {
         return new InventoryCreateResult(savedInventory.getInventoryId());
     }
 
-    public void updateInventory(InventoryUpdateCommand updateInventoryCommand) {
+    public InventoryUpdateResult updateInventory(InventoryUpdateCommand updateInventoryCommand) {
+        return null;
     }
 
     public void deleteInventory(

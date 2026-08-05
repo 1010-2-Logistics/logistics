@@ -1,7 +1,9 @@
 package com.logistics.inventory.application.facade;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
+import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
+import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.exception.CustomException;
 import com.logistics.inventory.global.exception.InventoryErrorCode;
@@ -35,5 +37,11 @@ public class InventoryFacade {
         }
 
         return inventoryCommandService.createInventory(createInventoryCommand);
+    }
+
+    public InventoryUpdateResult updateInventory(
+            InventoryUpdateCommand updateInventoryCommand
+    ) {
+        return null;
     }
 }
