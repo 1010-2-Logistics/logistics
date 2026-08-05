@@ -1,4 +1,4 @@
-package com.logistics.user.presentation.request;
+package com.logistics.user.presentation.dto.request;
 
 import com.logistics.user.application.dto.command.CreateUserCommand;
 import com.logistics.user.domain.entity.UserRole;
@@ -13,7 +13,7 @@ import java.util.UUID;
  * 현재 구조에서는 password가 아직 암호화하지 않음.
  * 실제 회원가입 구현 시 Service 또는 Facade에서 암호화
  */
-public record UserCreateRequest(
+public record UserCreateRequestDto(
 
         @NotBlank(message = "username은 필수입니다.")
         @Size(min = 4, max = 10, message = "username은 4자 이상 10자 이하여야 합니다.")

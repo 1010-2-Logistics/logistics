@@ -4,8 +4,8 @@ import com.logistics.user.application.dto.command.UpdateUserCommand;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.global.response.ApiResponse;
-import com.logistics.user.presentation.request.UserCreateRequest;
-import com.logistics.user.presentation.request.UserUpdateRequest;
+import com.logistics.user.presentation.dto.request.UserCreateRequestDto;
+import com.logistics.user.presentation.dto.request.UserUpdateRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class CommandController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<Long> create(
-            @Valid @RequestBody UserCreateRequest request
+            @Valid @RequestBody UserCreateRequestDto request
     ) {
         Long userId = userFacade.createUser(request.toCommand());
 
@@ -36,7 +36,7 @@ public class CommandController {
     @PutMapping("/{userId}")
     public ApiResponse<Void> update(
             @PathVariable Long userId,
-            @Valid @RequestBody UserUpdateRequest request
+            @Valid @RequestBody UserUpdateRequestDto request
     ) {
         // HTTP 요청 객체를 애플리케이션 계층의 Command로 변환한다.
         UpdateUserCommand command = new UpdateUserCommand(
