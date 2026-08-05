@@ -212,7 +212,40 @@ class InventoryQueryServiceTest {
         @Test
         @DisplayName("정렬 조건이 null이면 createdAt 적용")
         void inventory_search_default_sort() {
+            InventorySearchQuery inventorySearchQuery = new InventorySearchQuery(
+                    null,
+                    null,
+                    null,
+                    0,
+                    10
+            );
 
+            given(inventoryQueryRepository.search(
+                    any(),
+                    any(),
+                    any(Pageable.class)
+            )).willReturn(Page.empty());
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+            inventoryQueryService.searchInventory(inventorySearchQuery);
+
+            verify(inventoryQueryRepository).search(
+                    any(),
+                    any(),
+                    pageableCaptor.capture()
+            );
+
+            assertThat(pageableCaptor.getValue()
+                    .getSort()
+                    .getOrderFor("createdAt")
+            ).isNotNull();
+
+            assertThat(pageableCaptor.getValue()
+                    .getSort()
+                    .getOrderFor("createdAt")
+                    .isDescending()
+            ).isTrue();
         }
 
         @Test
