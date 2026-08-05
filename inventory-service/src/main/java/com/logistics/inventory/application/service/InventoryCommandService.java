@@ -1,9 +1,6 @@
 package com.logistics.inventory.application.service;
 
-import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
-import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
-import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
-import com.logistics.inventory.application.dto.command.InventoryUpdateCommand;
+import com.logistics.inventory.application.dto.command.*;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
@@ -66,10 +63,15 @@ public class InventoryCommandService {
     }
 
     public void deleteInventory(
-            UUID inventoryId,
-            String deletedBy
+            InventoryDeleteCommand inventoryDeleteCommand,
+            Long deletedBy
     ) {
+        Inventory inventory = inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryDeleteCommand.inventoryId())
+                .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
+        inventory.delete(deletedBy);
+
+        inventoryCommandRepository.save(inventory);
     }
 
     public InventoryDeductionResult deductInventory(

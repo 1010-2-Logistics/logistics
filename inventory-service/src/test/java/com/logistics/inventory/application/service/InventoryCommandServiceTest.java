@@ -1,11 +1,10 @@
 package com.logistics.inventory.application.service;
 
-import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
-import com.logistics.inventory.application.dto.command.InventoryDeductionCommand;
-import com.logistics.inventory.application.dto.command.InventoryRestorationCommand;
+import com.logistics.inventory.application.dto.command.*;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
+import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
@@ -246,6 +245,64 @@ class InventoryCommandServiceTest {
                     hubId
             );
             verify(inventoryCommandRepository).save(any(Inventory.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 수정")
+    class update {
+        @Test
+        @DisplayName("재고 수정 성공")
+        void inventory_update_success() {
+            InventoryUpdateCommand inventoryUpdateCommand = new InventoryUpdateCommand(inventoryId, 100);
+            Inventory inventory = Inventory.create(
+                    productId,
+                    hubId,
+                    50
+            );
+
+            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
+            given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
+
+            InventoryUpdateResult inventoryUpdateResult = inventoryCommandService.updateInventory(inventoryUpdateCommand);
+
+            assertThat(inventoryUpdateResult).isNotNull();
+            assertThat(inventory.getStock()).isEqualTo(100);
+
+            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+            verify(inventoryCommandRepository).save(inventory);
+        }
+
+        @Nested
+        @DisplayName("재고 삭제")
+        class delete {
+            @Test
+            @DisplayName("재고 삭세 성공")
+            void inventory_delete_success() {
+                Long deletedBy = 1L;
+
+                InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+
+                Inventory inventory = Inventory.create(
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        50
+                );
+
+                given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
+                given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
+
+                inventoryCommandService.deleteInventory(
+                        inventoryDeleteCommand,
+                        deletedBy
+                );
+
+                assertThat(inventory.getDeletedAt()).isNotNull();
+                assertThat(inventory.getDeletedBy()).isEqualTo(deletedBy);
+
+                verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+                verify(inventoryCommandRepository).save(inventory);
+            }
         }
     }
 }
