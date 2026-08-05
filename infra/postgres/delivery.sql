@@ -31,3 +31,42 @@ CREATE UNIQUE INDEX uk_assignment_state_pool
 CREATE UNIQUE INDEX uk_assignment_state_pool_global
     ON delivery_service.p_delivery_manager_assignment_state (manager_type)
     WHERE hub_id IS NULL;
+
+
+CREATE TABLE IF NOT EXISTS delivery_service.p_delivery (
+                                                           delivery_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_id UUID NOT NULL,
+    start_hub_id UUID NOT NULL,
+    end_hub_id UUID NOT NULL,
+    company_delivery_manager_id BIGINT,
+    status VARCHAR(20) NOT NULL,
+    delivery_address VARCHAR(255) NOT NULL,
+    receiver_name VARCHAR(100) NOT NULL,
+    slack_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    updated_at TIMESTAMP,
+    updated_by BIGINT,
+    deleted_at TIMESTAMP,
+    deleted_by BIGINT
+    );
+
+CREATE TABLE IF NOT EXISTS delivery_service.p_delivery_route (
+                                                                 delivery_route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    delivery_id UUID NOT NULL,
+    sequence INTEGER NOT NULL,
+    start_hub_id UUID NOT NULL,
+    end_hub_id UUID NOT NULL,
+    delivery_manager_id BIGINT NOT NULL,
+    expected_distance DECIMAL(10,2) NOT NULL CHECK (expected_distance > 0),
+    expected_duration INTEGER NOT NULL,
+    actual_distance DECIMAL(10,2),
+    actual_duration INTEGER,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT NOT NULL,
+    updated_at TIMESTAMP,
+    updated_by BIGINT,
+    deleted_at TIMESTAMP,
+    deleted_by BIGINT
+    );
