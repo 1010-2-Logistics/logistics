@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
 import com.logistics.company.application.service.CompanyQueryService;
 import com.logistics.company.global.response.ApiResponse;
+import com.logistics.company.presentation.dto.response.CompanyExistsResponseDto;
 import com.logistics.company.presentation.dto.response.OrderedCompanyInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,19 @@ public class CompanyInternalQueryController {
 		return ApiResponse.success(
 				HttpStatus.OK.value(),
 				"주문시 업체 정보 조회 성공",
+				response
+		);
+	}
+	
+	@GetMapping("/{companyId}/exists")
+	public ApiResponse<CompanyExistsResponseDto> existsCompany(
+			@PathVariable("companyId") UUID companyId) {
+		
+		CompanyExistsResponseDto response = CompanyExistsResponseDto.from(companyQueryService.findOptionalByCompany(companyId));
+		
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"업체 존재 여부 확인",
 				response
 		);
 	}
