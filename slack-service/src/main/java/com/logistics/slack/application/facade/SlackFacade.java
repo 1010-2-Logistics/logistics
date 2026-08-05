@@ -1,31 +1,10 @@
 package com.logistics.slack.application.facade;
 
-import com.logistics.slack.application.dto.command.SlackCreateCommand;
-import com.logistics.slack.application.dto.result.SlackCreateResult;
-import com.logistics.slack.application.service.SlackCommandService;
-import com.logistics.slack.application.service.SlackQueryService;
-
-import java.util.UUID;
-
-import com.logistics.slack.presentation.dto.response.SlackRetryResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-// Controller가 바라보는 단일 진입점. 여러 서비스를 조합해야 하는 복잡한 유스케이스에서만 쓰고,
-// 단순 CRUD는 Controller가 SampleCommandService/SampleQueryService를 바로 호출해도 됩니다.
 @Component
 @RequiredArgsConstructor
 public class SlackFacade {
-
-    private final SlackCommandService sampleCommandService;
-    private final SlackQueryService sampleQueryService;
-
-    public SlackCreateResult createSlack(SlackCreateCommand slackCreateCommand) {
-        // 예: 생성 전에 다른 서비스(Feign) 검증이 필요하다면 여기서 조합
-        return sampleCommandService.createSlack(slackCreateCommand);
-    }
-
-    public SlackRetryResponseDto retrySlackMessage(UUID slackMessageId) {
-        return null;
-    }
+    // userClient 조립
 }
