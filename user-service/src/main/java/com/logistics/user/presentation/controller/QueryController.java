@@ -6,10 +6,9 @@ import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.global.response.PageResponse;
-import java.util.UUID;
 
-import com.logistics.user.presentation.response.UserResponse;
-import com.logistics.user.presentation.response.UserSummaryResponse;
+import com.logistics.user.presentation.dto.response.UserResponseDto;
+import com.logistics.user.presentation.dto.response.UserSummaryResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,17 +26,17 @@ public class QueryController {
     private final UserQueryService UserQueryService;
 
     @GetMapping("/{UserId}")
-    public ApiResponse<UserResponse> get(@PathVariable Long UserId) {
+    public ApiResponse<UserResponseDto> get(@PathVariable Long UserId) {
         User User = UserQueryService.get(new GetUserQuery(UserId));
-        return ApiResponse.success(200, "샘플 조회 성공", UserResponse.from(User));
+        return ApiResponse.success(200, "샘플 조회 성공", UserResponseDto.from(User));
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<UserSummaryResponse>> search(
+    public ApiResponse<PageResponse<UserSummaryResponseDto>> search(
             @RequestParam(required = false) String keyword,
             Pageable pageable) {
         Page<User> page = UserQueryService.search(new SearchUserQuery(keyword, pageable));
-        Page<UserSummaryResponse> responsePage = page.map(UserSummaryResponse::from);
+        Page<UserSummaryResponseDto> responsePage = page.map(UserSummaryResponseDto::from);
         return ApiResponse.success(200, "샘플 목록 조회 성공", PageResponse.of(responsePage));
     }
 }
