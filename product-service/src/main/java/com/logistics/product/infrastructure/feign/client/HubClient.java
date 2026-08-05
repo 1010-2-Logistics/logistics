@@ -13,6 +13,6 @@ import com.logistics.product.infrastructure.feign.response.HubValidationResponse
 @FeignClient(name = "hub-service", configuration = FeignConfig.class)
 public interface HubClient {
 
-    @GetMapping("/internal/hubs/{hubId}")
+    @GetMapping("/internal/v1/hubs/{hubId}")
     HubValidationResponse getHub(@PathVariable("hubId") UUID hubId);
 }

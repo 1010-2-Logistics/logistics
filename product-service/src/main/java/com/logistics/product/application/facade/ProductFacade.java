@@ -34,7 +34,7 @@ public class ProductFacade {
 		}
 		
 		// 업체 존재 여부 확인
-		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(command.companyId()).getData();
+		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(command.companyId());
 		
 		// 요청자의 Role에 따라 user-service 에 요청을 보낼지 말지 결정.
 		if(command.role() == Role.HUB_MANAGER) {
