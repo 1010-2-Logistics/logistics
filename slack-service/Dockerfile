@@ -2,7 +2,7 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 COPY . .
-RUN ./gradlew :template-service:bootJar
+RUN ./gradlew :slack-service:bootJar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app

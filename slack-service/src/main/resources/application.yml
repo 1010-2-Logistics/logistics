@@ -1,11 +1,11 @@
 spring:
   application:
-    name: template-service # 서비스명 컨벤션대로 바꾸세요 (예: order-service)
+    name: slack-service # 서비스명 컨벤션대로 바꾸세요 (예: order-service)
   profiles:
     active: local
 
 server:
-  port: 19100 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
+  port: 19101 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
 
 eureka:
   client:
