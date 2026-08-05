@@ -63,7 +63,7 @@ public class Order extends BaseEntity {
     }
 
     // TODO : baseEntity
-    public void delete(String deletedBy) {
+    public void delete(Long deletedBy) {
         markDeleted(deletedBy);
     }
 
