@@ -21,4 +21,11 @@ public interface UserQueryRepository {
      * 삭제되지 않은 사용자 중 Slack ID 중복 여부 확인
      */
     boolean existsBySlackId(String slackId);
+
+    /**
+     * 로그인할 사용자 username으로 조회
+     *
+     * 삭제된 사용자도 조회해야 AUTH_USER_DELETED를 반환 가능
+     */
+    Optional<User> findByUsername(String username);
 }

@@ -39,4 +39,11 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
         return jpaRepository
                 .existsBySlackId(slackId);
     }
+
+    @Override
+    public Optional<User> findByUsername(
+            String username
+    ) {
+        return jpaRepository.findByUsername(username);
+    }
 }
