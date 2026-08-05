@@ -12,4 +12,8 @@ public class ProductCommand {
 		
 	}
 	
+	public record ProductDeleteCommand(UUID companyId, Long userId, String role) {
+		
+	}
+	
 }
