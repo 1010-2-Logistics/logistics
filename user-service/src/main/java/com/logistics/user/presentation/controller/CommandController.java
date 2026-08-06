@@ -2,6 +2,7 @@ package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.command.ChangePasswordCommandDto;
 import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
+import com.logistics.user.application.dto.command.WithdrawUserCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.application.dto.result.ChangePasswordResultDto;
 import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
@@ -13,10 +14,7 @@ import com.logistics.user.global.exception.CustomException;
 import com.logistics.user.global.exception.UserErrorCode;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.infrastructure.security.AuthenticatedUser;
-import com.logistics.user.presentation.dto.request.UserApprovalRequestDto;
-import com.logistics.user.presentation.dto.request.UserCreateRequestDto;
-import com.logistics.user.presentation.dto.request.UserPasswordUpdateRequestDto;
-import com.logistics.user.presentation.dto.request.UserUpdateRequestDto;
+import com.logistics.user.presentation.dto.request.*;
 import com.logistics.user.presentation.dto.response.UserApprovalResponseDto;
 import com.logistics.user.presentation.dto.response.UserPasswordUpdateResponseDto;
 import com.logistics.user.presentation.dto.response.UserUpdateResponseDto;
@@ -118,18 +116,29 @@ public class CommandController {
         );
     }
 
-    @DeleteMapping("/{userId}")
+    /**
+     * 로그인한 사용자의 계정을 탈퇴 처리한다.
+     */
+    @DeleteMapping("/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(
-            @PathVariable Long userId
+    public void withdraw(
+            Authentication authentication,
+            @Valid @RequestBody UserWithdrawRequestDto request
     ) {
-        // TODO: 인증 적용 후 JWT에서 실제 로그인 사용자 ID를 추출한다.
-        Long deletedBy = 1L;
+        /*
+         * Filter가 Authentication principal에 넣은
+         * 현재 로그인 사용자 정보를 꺼낸다.
+         */
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
 
-        userCommandService.delete(
-                userId,
-                deletedBy
-        );
+        WithdrawUserCommandDto command =
+                new WithdrawUserCommandDto(
+                        currentUser.userId(),
+                        request.password()
+                );
+
+        userCommandService.withdraw(command);
     }
 
 
