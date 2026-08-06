@@ -30,7 +30,7 @@ public class Company extends BaseEntity {
   @Column(name = "hub_id", nullable = false, updatable = false)
   private UUID hubId;
   
-  @Column(name = "company_manager_id", nullable = false)
+  @Column(name = "company_manager_id")
   private Long companyManagerId;
   
   @Column(name = "company_name", nullable = false)
