@@ -29,7 +29,7 @@ public class Product extends BaseEntity {
 	@Column(name = "company_id", nullable = false)
 	private UUID companyId;
 	
-	@Column(name = "product_name", nullable = false)
+	@Column(name = "product_name", nullable = false, length = 20)
 	private String productName;
 	
 	public static Product create(UUID companyId, String productName) {
