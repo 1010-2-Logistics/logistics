@@ -6,16 +6,20 @@ import com.logistics.company.domain.OrderedCompanyInfo;
 
 public record OrderedCompanyInfoResultDto(
 		UUID startCompanyId,
-		String startCompanyName,
+		UUID startHubId,
+		String startCompanyAddress,
 		UUID endCompanyId,
-		String endCompanyName
+		UUID endHubId,
+		String endCompanyAddress
 ) {
 	public static OrderedCompanyInfoResultDto from(OrderedCompanyInfo companies) {
 		return new OrderedCompanyInfoResultDto(
 				companies.startCompanyId(),
-				companies.startCompanyName(),
+				companies.startHubId(),
+				companies.startCompanyAddress(),
 				companies.endCompanyId(),
-				companies.endCompanyName()
+				companies.endHubId(),
+				companies.endCompanyAddress()
 		);
 	}
 }

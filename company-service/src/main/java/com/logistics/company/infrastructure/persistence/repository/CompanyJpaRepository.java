@@ -16,10 +16,12 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 	@Query("""
 			select new com.logistics.company.domain.OrderedCompanyInfo(
 					startCompany.companyId,
-					startCompany.companyName,
+					startCompany.hubId,
+					startCompany.companyAddress,
 					startCompany.companyType,
 					endCompany.companyId,
-					endCompany.companyName,
+					endCompany.hubId,
+					endCompany.companyAddress,
 					endCompany.companyType
 			)
 			from Company startCompany, Company endCompany
