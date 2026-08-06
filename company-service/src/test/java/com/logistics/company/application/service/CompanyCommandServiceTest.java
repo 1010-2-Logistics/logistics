@@ -19,6 +19,7 @@ import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.application.dto.command.CompanyUpdateCommand;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
 
@@ -45,6 +46,7 @@ public class CompanyCommandServiceTest {
 		void company_create_success() {
 			String companyName = "업체 이름";
 			String companyAddress = "업체 주소";
+			Long companyManagerId = 1L;
 			CompanyType companyType = CompanyType.PRODUCER;
 			
 			Company company = Company.create(
@@ -56,6 +58,7 @@ public class CompanyCommandServiceTest {
 			
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
 					hubId,
+					companyManagerId,
 					companyName,
 					companyAddress,
 					companyType
@@ -69,6 +72,10 @@ public class CompanyCommandServiceTest {
 			assertThat(savedCompany.getCompanyName()).isEqualTo(companyName);
 			assertThat(savedCompany.getCompanyType()).isEqualTo(companyType);
 			assertThat(savedCompany.getCompanyAddress()).isEqualTo(companyAddress);
+			assertThat(savedCompany.getStatus()).isEqualTo(CompanyStatus.PENDING);
+			
+			// CompanyFacade 에서 command 의 companyManagerId 를 넣어줌
+			assertThat(savedCompany.getCompanyManagerId()).isNull();
 			
 			verify(companyCommandRepository).save(any(Company.class));
 		}

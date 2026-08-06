@@ -7,6 +7,7 @@ import com.logistics.company.domain.entity.CompanyType;
 
 public record CompanyCreateCommand(
 		UUID hubId,
+		Long companyManagerId,
 		String companyName,
 		String companyAddress,
 		CompanyType companyType
