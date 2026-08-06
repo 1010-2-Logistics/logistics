@@ -6,13 +6,14 @@ import com.logistics.product.application.dto.command.ProductCommand;
 import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
 import com.logistics.product.domain.entity.Role;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ProductCreateRequestDto(
 		@NotNull(message = "상품 생성시 업체 ID는 필수 항목입니다.")
 		UUID companyId,
 		
-		@NotNull(message = "상품 생성시 상품명은 필수 항목입니다.")
+		@NotBlank(message = "상품 생성시 상품명은 필수 항목입니다.")
 		String productName
 ) {
 	
