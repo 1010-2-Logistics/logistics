@@ -19,5 +19,9 @@ public interface DeliveryManagerRepository {
 
     Optional<DeliveryManager> findByIdAndDeletedAtIsNull(Long deliveryManagerId);
 
+    Optional<DeliveryManager> findNextCandidate(ManagerType managerType, UUID hubId, int afterSequence);
+
+    Optional<DeliveryManager> findFirstCandidate(ManagerType managerType, UUID hubId);
+
     Page<DeliveryManager> search(ManagerType managerType, UUID hubId, Pageable pageable);
 }
