@@ -5,8 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SlackCommandRepository {
-
-    Slack save(Slack sample);
+    Slack save(Slack slack);
 
     Optional<Slack> findByIdAndDeletedAtIsNull(UUID sampleId);
 }

@@ -2,6 +2,7 @@ package com.logistics.slack.application.service;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackCreateResult;
+import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
+import com.logistics.slack.infrastructure.messaging.SlackEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SlackCommandService {
     private final SlackCommandRepository slackCommandRepository;
+    private final SlackEventPublisher slackEventPublisher;
     private final SlackMessageSender slackMessageSender;
 
     // TODO : RabbitMQ에 Slack 발송 이벤트를 발행하고,
@@ -35,16 +38,27 @@ public class SlackCommandService {
         );
         slackCommandRepository.save(slack);
 
+        slackEventPublisher.publish(
+                new SlackSendEvent(slack.getSlackMessageId())
+        );
+        // 이 시점의 slack.status는 아직 PENDING!
+        return SlackCreateResult.from(slack);
+    }
+
+    public void send(
+            UUID slackMessageId
+    ) {
+        Slack slack = slackCommandRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow();
+
         try {
             slackMessageSender.send(slack.getMessage());
             slack.markSuccess();
 
         } catch (Exception e) {
             slack.markFailed(e.getMessage());
-//            throw new CustomException(SlackErrorCode.SLACK_SEND_FAILED);
         }
-
-        return SlackCreateResult.from(slack);
     }
 
     public void deleteSlack(UUID sampleId, String deletedBy) {

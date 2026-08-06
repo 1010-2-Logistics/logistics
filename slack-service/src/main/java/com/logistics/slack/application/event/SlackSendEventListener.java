@@ -1,0 +1,24 @@
+package com.logistics.slack.application.event;
+
+
+import com.logistics.slack.application.service.SlackCommandService;
+import com.logistics.slack.infrastructure.config.SlackRabbitConfig;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class SlackSendEventListener {
+    private final SlackCommandService slackCommandService;
+
+    @RabbitListener(queues = SlackRabbitConfig.QUEUE)
+    public void consume(
+            SlackSendEvent slackSendEvent
+    ) {
+        log.info("[slack-service] slack_message_id = {}", slackSendEvent.slackMessageId());
+        slackCommandService.send(slackSendEvent.slackMessageId());
+    }
+}
