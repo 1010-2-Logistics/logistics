@@ -8,6 +8,8 @@ import com.logistics.slack.domain.repository.SlackCommandRepository;
 
 import java.util.UUID;
 
+import com.logistics.slack.global.exception.CustomException;
+import com.logistics.slack.global.exception.SlackErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class SlackCommandService {
 
         } catch (Exception e) {
             slack.markFailed(e.getMessage());
+//            throw new CustomException(SlackErrorCode.SLACK_SEND_FAILED);
         }
 
         return SlackCreateResult.from(slack);
