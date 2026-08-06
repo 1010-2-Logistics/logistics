@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 헤더를 읽어 Authentication을 생성한다.
  */
 @Component
+@Profile("local")
 public class MockGatewayAuthenticationFilter
         extends OncePerRequestFilter {
 
