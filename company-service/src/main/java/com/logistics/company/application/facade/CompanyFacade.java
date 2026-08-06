@@ -51,9 +51,9 @@ public class CompanyFacade {
 		
 		// companyManagerId 가 존재하는 경우에만 소속 변경 API 요청
 		// 업체 생성 후 업체 담당자가 될 대상의 소속 업체, 소속 허브, Role 변경 요청
-		if(company.getCompanyManagerId() != null) {
+		if(command.companyManagerId() != null) {
 			UserRoleUpdateResponseDto userRoleUpdate = userPort.companyManagerRoleUpdateRequest(
-					UserRoleUpdateRequestDto.from(company)
+					UserRoleUpdateRequestDto.from(command.companyManagerId(), company)
 			);
 			
 			if(userRoleUpdate.exists()) {

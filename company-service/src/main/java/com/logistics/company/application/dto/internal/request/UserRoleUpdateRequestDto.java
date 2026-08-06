@@ -11,7 +11,12 @@ public record UserRoleUpdateRequestDto(
 		UUID hubId,
 		Role role
 ) {
-	public static UserRoleUpdateRequestDto from(Company company) {
-		return null;
+	public static UserRoleUpdateRequestDto from(Long companyManagerId, Company company) {
+		return new UserRoleUpdateRequestDto(
+				companyManagerId,
+				company.getCompanyId(),
+				company.getHubId(),
+				Role.COMPANY_MANAGER
+		);
 	}
 }
