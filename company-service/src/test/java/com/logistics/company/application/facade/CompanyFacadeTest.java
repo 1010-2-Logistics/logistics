@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.application.dto.internal.request.UserRoleUpdateRequestDto;
@@ -72,7 +73,9 @@ public class CompanyFacadeTest {
 			UserExistsResponseDto userExists = new UserExistsResponseDto(companyManagerId, true);
 			given(userPort.userExistsRequest(companyManagerId)).willReturn(userExists);
 			
+			UUID companyId = UUID.randomUUID();
 			Company company = Company.create(hubId, companyName, companyAddress, companyType);
+			ReflectionTestUtils.setField(company, "companyId", companyId);
 			given(companyCommandService.createCompany(companyCreateCommand)).willReturn(company);
 			
 			UserRoleUpdateResponseDto userRoleUpdate = new UserRoleUpdateResponseDto(
@@ -86,11 +89,16 @@ public class CompanyFacadeTest {
 					company
 			))).willReturn(userRoleUpdate);
 			
+			company.updateCompanyManager(companyManagerId);
+			company.updateStatus(CompanyStatus.ACTIVE);
+			
+			given(companyCommandService.assignCompanyManager(companyId, companyManagerId)).willReturn(company);
+			
 			CompanyCreateResultDto result = companyFacade.createCompany(companyCreateCommand);
 			
 			assertThat(result.hubId()).isEqualTo(hubId);
 			assertThat(result.hubName()).isEqualTo(hubName);
-			assertThat(result.status()).isEqualTo(CompanyStatus.PENDING);
+			assertThat(result.status()).isEqualTo(CompanyStatus.ACTIVE);
 			
 			assertThat(result.companyName()).isEqualTo(companyName);
 			assertThat(result.companyType()).isEqualTo(companyType);
