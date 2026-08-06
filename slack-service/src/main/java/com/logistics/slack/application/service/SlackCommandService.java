@@ -26,9 +26,6 @@ public class SlackCommandService {
     private static final int MAX_RETRY_COUNT = 3;
     private final SlackCommandRepository slackCommandRepository;
     private final SlackEventPublisher slackEventPublisher;
-
-    // TODO : RabbitMQ에 Slack 발송 이벤트를 발행하고,
-    // Slack 이벤트 리스너에서 Webhook 발송 및 SUCCESS/FAILED 상태 변경 처리
     private final SlackMessageSender slackMessageSender;
 
     public SlackCreateResult createSlack(
@@ -42,7 +39,8 @@ public class SlackCommandService {
         );
         slackCommandRepository.save(slack);
 
-        // TODO: 발송횟수가 count 되지 않는 문제 발견 - retryCount 및 PENDING 상태 커밋 전에 RabbitMQ 이벤트가 소비되면
+        // TroubleShooting01 - 발송횟수가 count 되지 않는 문제 발견
+        // -> retryCount 및 PENDING 상태 커밋 전에 RabbitMQ 이벤트가 소비되면
         // 리스너가 이전 DB 값을 조회하여 변경 값이 덮일 수 있음
         // 트랜잭션 커밋 이후 이벤트 발행 방식 검토
         slackEventPublisher.publish(
@@ -91,7 +89,7 @@ public class SlackCommandService {
     // -> 지금 트랜잭션이 진짜 커밋된 뒤에 이 코드 실행해라고 예약하는 기능
     // afterCommit() 안에 래빗엠큐 발행을 넣어서 "DB 저장완료 그 다음에 래빗엠큐 발행" 이 순서를 보장한다
     // 결과 : 성공적!
-    // TroubleShooting - 결국 원인은 리스너가 너무 빨리 실행되면서 아직 커밋되지 않은 이전 데이터를 읽을 수 있던 흐름이 문제
+    // TroubleShooting01 - 결국 원인은 리스너가 너무 빨리 실행되면서 아직 커밋되지 않은 이전 데이터를 읽을 수 있던 흐름이 문제
 
     // 그런데 유틸 클래스인데, service에 있는 게 맞을까?
     // -> 범용 유틸이 아니라 커밋 후 발행 흐름이라 괜찮다고 판단된다
