@@ -11,5 +11,5 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 
 	Optional<Product> findByProductIdAndDeletedAtIsNull(UUID productId);
 
-	boolean existsByCompanyIdAndProductName(UUID companyId, String productName);
+	boolean existsByCompanyIdAndProductNameAndDeletedAtIsNull(UUID companyId, String productName);
 }

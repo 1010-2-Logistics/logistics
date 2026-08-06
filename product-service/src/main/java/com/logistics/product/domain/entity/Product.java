@@ -12,21 +12,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-		name = "p_product",
-		uniqueConstraints = {
-				@UniqueConstraint(
-						name = "UQ_P_COMPANY_COMPANY_ID_PRODUCT_NAME",
-						columnNames = {"company_id", "product_name"}
-				)
-		}
-)
+@Table(name = "p_product")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product extends BaseEntity {

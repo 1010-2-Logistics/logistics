@@ -16,3 +16,19 @@ CREATE TABLE IF NOT EXISTS company_service.p_company (
     deleted_at TIMESTAMP,
     deleted_by BIGINT
 );
+
+CREATE TABLE IF NOT EXISTS product_service.p_product (
+    product_id UUID PRIMARY KEY,
+    company_id UUID NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_at TIMESTAMP,
+    updated_by BIGINT,
+    deleted_at TIMESTAMP,
+    deleted_by BIGINT
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_P_COMPANY_PRODUCT_NAME_ACTIVE
+ON p_product (company_id, product_name)
+WHERE deleted_at IS NULL;
