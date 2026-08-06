@@ -9,6 +9,7 @@ import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.application.dto.command.CompanyUpdateCommand;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,16 @@ public class CompanyCommandService {
 		Company entity = companyCreateCommand.toEntity();
 		
 		return companyCommandRepository.save(entity);
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	public Company companyManagerFix(UUID companyId, Long companyManagerId) {
+		Company entity = companyQueryService.findByCompany(companyId);
+		
+		entity.updateCompanyManager(companyManagerId);
+		entity.updateStatus(CompanyStatus.ACTIVE);
+		
+		return entity;
 	}
 	
 	

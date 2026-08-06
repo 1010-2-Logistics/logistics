@@ -7,11 +7,12 @@ import com.logistics.company.domain.entity.CompanyType;
 
 public record CompanyCreateCommand(
 		UUID hubId,
+		Long companyManagerId,
 		String companyName,
 		String companyAddress,
 		CompanyType companyType
 ) {
 	public Company toEntity() {
-		return Company.create(hubId, companyName, companyAddress, companyType);
+		return Company.create(hubId, companyManagerId, companyName, companyAddress, companyType);
 	}
 }

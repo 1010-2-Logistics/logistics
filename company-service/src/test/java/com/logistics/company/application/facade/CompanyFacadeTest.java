@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
-import com.logistics.company.application.dto.internal.HubInfoResponseDto;
+import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.service.CompanyCommandService;

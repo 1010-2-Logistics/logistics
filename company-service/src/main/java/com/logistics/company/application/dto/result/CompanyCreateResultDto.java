@@ -2,7 +2,7 @@ package com.logistics.company.application.dto.result;
 
 import java.util.UUID;
 
-import com.logistics.company.application.dto.internal.HubInfoResponseDto;
+import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyType;
 

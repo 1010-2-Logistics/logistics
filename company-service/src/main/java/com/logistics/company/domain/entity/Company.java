@@ -30,7 +30,7 @@ public class Company extends BaseEntity {
   @Column(name = "hub_id", nullable = false, updatable = false)
   private UUID hubId;
   
-  @Column(name = "company_manager_id")
+  @Column(name = "company_manager_id", nullable = false)
   private Long companyManagerId;
   
   @Column(name = "company_name", nullable = false)
@@ -43,6 +43,10 @@ public class Company extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private CompanyType companyType;
   
+  @Column(name = "company_status", nullable = false)
+  @Enumerated(EnumType.STRING)
+  private CompanyStatus status;
+  
   public static Company create(UUID hubId, String companyName, String companyAddress, CompanyType companyType) {
   	Company company = new Company();
   	
@@ -50,6 +54,7 @@ public class Company extends BaseEntity {
   	company.companyName = companyName;
   	company.companyAddress = companyAddress;
   	company.companyType = companyType;
+  	company.status = CompanyStatus.PENDING;
   	
   	return company;
   }
@@ -58,8 +63,12 @@ public class Company extends BaseEntity {
   	this.companyName = companyName;
   }
   
-  public void markCompanyManager(Long companyManagerId) {
+  public void updateCompanyManager(Long companyManagerId) {
   	this.companyManagerId = companyManagerId;
+  }
+  
+  public void updateStatus(CompanyStatus status) {
+  	this.status = status;
   }
   
 }
