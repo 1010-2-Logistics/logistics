@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-import com.logistics.user.application.dto.command.SignupCommand;
+import com.logistics.user.application.dto.command.SignupCommandDto;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;
@@ -71,7 +71,7 @@ class SignupServiceTest {
         // given
         UUID hubId = UUID.randomUUID();
 
-        SignupCommand command = new SignupCommand(
+        SignupCommandDto command = new SignupCommandDto(
                 "user01",
                 "Password1!",
                 "Password1!",
@@ -154,7 +154,7 @@ class SignupServiceTest {
     @DisplayName("저장되는 비밀번호는 평문이 아니라 암호화된 값이다")
     void signup_savesEncodedPassword() {
         // given
-        SignupCommand command = createHubManagerCommand();
+        SignupCommandDto command = createHubManagerCommand();
 
         given(
                 userQueryRepository
@@ -202,7 +202,7 @@ class SignupServiceTest {
     @DisplayName("비밀번호와 비밀번호 확인값이 다르면 회원가입에 실패한다")
     void signup_fail_whenPasswordConfirmationMismatch() {
         // given
-        SignupCommand command = new SignupCommand(
+        SignupCommandDto command = new SignupCommandDto(
                 "user01",
                 "Password1!",
                 "Different1!",
@@ -246,7 +246,7 @@ class SignupServiceTest {
     @DisplayName("username이 중복되면 회원가입에 실패한다")
     void signup_fail_whenUsernameDuplicated() {
         // given
-        SignupCommand command = createHubManagerCommand();
+        SignupCommandDto command = createHubManagerCommand();
 
         given(
                 userQueryRepository
@@ -292,7 +292,7 @@ class SignupServiceTest {
     @DisplayName("Slack ID가 중복되면 회원가입에 실패한다")
     void signup_fail_whenSlackIdDuplicated() {
         // given
-        SignupCommand command = createHubManagerCommand();
+        SignupCommandDto command = createHubManagerCommand();
 
         given(
                 userQueryRepository
@@ -334,8 +334,8 @@ class SignupServiceTest {
     /**
      * 여러 테스트에서 공통으로 사용하는 정상 회원가입 Command.
      */
-    private SignupCommand createHubManagerCommand() {
-        return new SignupCommand(
+    private SignupCommandDto createHubManagerCommand() {
+        return new SignupCommandDto(
                 "user01",
                 "Password1!",
                 "Password1!",

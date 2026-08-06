@@ -8,10 +8,12 @@ import com.logistics.company.global.exception.CompanyException;
 
 public record OrderedCompanyInfo(
 		UUID startCompanyId,
-		String startCompanyName,
+    UUID startHubId,
+    String startCompanyAddress,
 		CompanyType startCompanyType,
 		UUID endCompanyId,
-		String endCompanyName,
+    UUID endHubId,
+    String endCompanyAddress,
 		CompanyType endCompanyType
 ) {
 

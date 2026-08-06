@@ -1,7 +1,7 @@
 package com.logistics.user.presentation.controller;
 
-import com.logistics.user.application.dto.query.GetUserQuery;
-import com.logistics.user.application.dto.query.SearchUserQuery;
+import com.logistics.user.application.dto.query.GetUserQueryDto;
+import com.logistics.user.application.dto.query.SearchUserQueryDto;
 import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.global.response.ApiResponse;
@@ -27,7 +27,7 @@ public class QueryController {
 
     @GetMapping("/{UserId}")
     public ApiResponse<UserResponseDto> get(@PathVariable Long UserId) {
-        User User = UserQueryService.get(new GetUserQuery(UserId));
+        User User = UserQueryService.get(new GetUserQueryDto(UserId));
         return ApiResponse.success(200, "샘플 조회 성공", UserResponseDto.from(User));
     }
 
@@ -35,7 +35,7 @@ public class QueryController {
     public ApiResponse<PageResponse<UserSummaryResponseDto>> search(
             @RequestParam(required = false) String keyword,
             Pageable pageable) {
-        Page<User> page = UserQueryService.search(new SearchUserQuery(keyword, pageable));
+        Page<User> page = UserQueryService.search(new SearchUserQueryDto(keyword, pageable));
         Page<UserSummaryResponseDto> responsePage = page.map(UserSummaryResponseDto::from);
         return ApiResponse.success(200, "샘플 목록 조회 성공", PageResponse.of(responsePage));
     }

@@ -1,7 +1,7 @@
 package com.logistics.user.application.service;
 
-import com.logistics.user.application.dto.query.GetUserQuery;
-import com.logistics.user.application.dto.query.SearchUserQuery;
+import com.logistics.user.application.dto.query.GetUserQueryDto;
+import com.logistics.user.application.dto.query.SearchUserQueryDto;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
@@ -18,7 +18,7 @@ public class UserQueryService {
 
     private final UserQueryRepository UserQueryRepository;
 
-    public User get(GetUserQuery query) {
+    public User get(GetUserQueryDto query) {
         return UserQueryRepository.findByIdAndDeletedAtIsNull(query.UserId())
                 .orElseThrow(
                         () -> new CustomException(
@@ -27,7 +27,7 @@ public class UserQueryService {
                 );
     }
 
-    public Page<User> search(SearchUserQuery query) {
+    public Page<User> search(SearchUserQueryDto query) {
         return UserQueryRepository.search(query.keyword(), query.pageable());
     }
 }
