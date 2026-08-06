@@ -2,7 +2,7 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=company_service # 스키마명 바꾸세요
+    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=product_service # 스키마명 바꾸세요
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:

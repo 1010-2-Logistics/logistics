@@ -1,7 +1,7 @@
 package com.logistics.user.application.service;
 
-import com.logistics.user.application.dto.command.CreateUserCommand;
-import com.logistics.user.application.dto.command.UpdateUserCommand;
+import com.logistics.user.application.dto.command.CreateUserCommandDto;
+import com.logistics.user.application.dto.command.UpdateUserCommandDto;
 import com.logistics.user.application.event.UserCreatedEvent;
 import com.logistics.user.application.port.EventPublisher;
 import com.logistics.user.domain.entity.User;
@@ -25,7 +25,7 @@ public class UserCommandService {
      * 현재 command.encodedPassword()는 이름상 암호화된 값
      * 실제 회원가입 구현 시 반드시 BCrypt 처리된 값이 전달되어야 한다.
      */
-    public Long create(CreateUserCommand command) {
+    public Long create(CreateUserCommandDto command) {
         User user = User.create(
                 command.username(),
                 command.encodedPassword(),
@@ -52,7 +52,7 @@ public class UserCommandService {
     /**
      * 현재 구조에서는 Slack ID만 수정
      */
-    public void update(UpdateUserCommand command) {
+    public void update(UpdateUserCommandDto command) {
         User user = userCommandRepository
                 .findByIdAndDeletedAtIsNull(command.userId())
                 .orElseThrow(

@@ -1,11 +1,11 @@
 package com.logistics.delivery.presentation.controller.dto.response;
 
-import com.logistics.delivery.domain.entity.Delivery;
-import com.logistics.delivery.domain.entity.DeliveryStatus;
+import com.logistics.delivery.application.service.DeliveryCommandService.DeliveryCreateResult;
 import java.util.UUID;
 
-public record DeliveryCreateResponse(UUID deliveryId, DeliveryStatus status) {
-    public static DeliveryCreateResponse from(Delivery delivery) {
-        return new DeliveryCreateResponse(delivery.getDeliveryId(), delivery.getStatus());
+public record DeliveryCreateResponse(UUID deliveryId, int routeCount) {
+
+    public static DeliveryCreateResponse from(DeliveryCreateResult result) {
+        return new DeliveryCreateResponse(result.delivery().getDeliveryId(), result.routeCount());
     }
 }
