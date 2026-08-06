@@ -7,8 +7,14 @@ import com.logistics.delivery.domain.entity.DeliveryRoute;
 import com.logistics.delivery.domain.entity.ManagerType;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
+import com.logistics.delivery.global.exception.CustomException;
+import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.feign.client.HubClient;
+import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,17 +25,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeliveryCommandService {
 
-    // hub-route 서비스 연동 전까지 쓰는 임시값 (expected_distance > 0 제약 때문에 0은 못 씀)
     private static final BigDecimal PLACEHOLDER_DISTANCE = BigDecimal.ONE;
     private static final int PLACEHOLDER_DURATION = 1;
+    private static final Long TEMP_CREATED_BY = 1L; // TODO: 인증 붙으면 실제 로그인 사용자(호출자)로 교체
 
     private final DeliveryRepository deliveryRepository;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
-    // TODO: 인증 붙으면 실제 로그인 사용자(호출자)로 교체
-    private static final Long TEMP_CREATED_BY = 1L;
+    private final HubClient hubClient;
 
-    public Delivery create(CreateDeliveryCommand command) {
+    public DeliveryCreateResult create(CreateDeliveryCommand command) {
+        Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
+        if (existing.isPresent()) {
+            Delivery delivery = existing.get();
+            int routeCount = deliveryRouteRepository.countByDeliveryId(delivery.getDeliveryId());
+            return new DeliveryCreateResult(delivery, routeCount);
+        }
+
+        validateHub(command.startHubId());
+        validateHub(command.endHubId());
+
         Delivery delivery = Delivery.create(
                 command.orderId(), command.startHubId(), command.endHubId(),
                 command.deliveryAddress(), command.receiverName(), command.slackId(), TEMP_CREATED_BY);
@@ -49,7 +64,18 @@ public class DeliveryCommandService {
             deliveryRouteRepository.save(route);
         }
 
-        return savedDelivery;
+        return new DeliveryCreateResult(savedDelivery, segments.size());
+    }
+
+    private void validateHub(UUID hubId) {
+        try {
+            Set<UUID> validIds = hubClient.validateHubIds(List.of(hubId));
+            if (!validIds.contains(hubId)) {
+                throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+            }
+        } catch (FeignException e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+        }
     }
 
     // TODO: hub-route 서비스 연동되면 실제 멀티홉 경로 계산으로 교체
@@ -58,5 +84,8 @@ public class DeliveryCommandService {
     }
 
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
+    }
+
+    public record DeliveryCreateResult(Delivery delivery, int routeCount) {
     }
 }

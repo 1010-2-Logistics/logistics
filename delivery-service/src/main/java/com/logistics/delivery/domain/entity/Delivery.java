@@ -18,7 +18,7 @@ public class Delivery extends BaseEntity {
     @Column(name = "delivery_id")
     private UUID deliveryId;
 
-    @Column(name = "order_id", nullable = false)
+    @Column(name = "order_id", nullable = false, updatable = false)
     private UUID orderId;
 
     @Column(name = "start_hub_id", nullable = false)
