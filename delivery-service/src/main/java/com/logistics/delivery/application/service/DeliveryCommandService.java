@@ -1,10 +1,9 @@
 package com.logistics.delivery.application.service;
 
+import com.logistics.delivery.application.dto.command.ChangeDeliveryRouteStatusCommand;
+import com.logistics.delivery.application.dto.command.ChangeDeliveryStatusCommand;
 import com.logistics.delivery.application.dto.command.CreateDeliveryCommand;
-import com.logistics.delivery.domain.entity.Delivery;
-import com.logistics.delivery.domain.entity.DeliveryManager;
-import com.logistics.delivery.domain.entity.DeliveryRoute;
-import com.logistics.delivery.domain.entity.ManagerType;
+import com.logistics.delivery.domain.entity.*;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
@@ -87,5 +86,65 @@ public class DeliveryCommandService {
     }
 
     public record DeliveryCreateResult(Delivery delivery, int routeCount) {
+    }
+
+    public Delivery changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command) {
+        Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+
+        if (command.status() != DeliveryStatus.DELIVERED || delivery.getStatus() != DeliveryStatus.COMPANY_MOVING) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+        }
+
+        delivery.changeStatus(DeliveryStatus.DELIVERED);
+        return delivery;
+    }
+
+    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId, ChangeDeliveryRouteStatusCommand command) {
+        DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
+        if (!route.getDeliveryId().equals(deliveryId)) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
+        }
+        validateRouteTransition(route.getStatus(), command.status());
+
+        Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+
+        route.changeStatus(command.status());
+
+        if (command.status() == DeliveryRouteStatus.HUB_MOVING
+                && route.getSequence() == 0
+                && delivery.getStatus() == DeliveryStatus.HUB_WAITING) {
+            delivery.changeStatus(DeliveryStatus.HUB_MOVING);
+        }
+
+        if (command.status() == DeliveryRouteStatus.DEST_HUB_ARRIVED) {
+            BigDecimal actualDistance = command.actualDistance() != null ? command.actualDistance() : route.getExpectedDistance();
+            Integer actualDuration = command.actualDuration() != null ? command.actualDuration() : route.getExpectedDuration();
+            route.recordActual(actualDistance, actualDuration);
+
+            int totalRoutes = deliveryRouteRepository.countByDeliveryId(deliveryId);
+            boolean isLastRoute = route.getSequence() == totalRoutes - 1;
+            if (isLastRoute) {
+                DeliveryManager companyManager = deliveryManagerAssignmentService
+                        .assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, delivery.getEndHubId());
+                delivery.assignCompanyDeliveryManager(companyManager.getDeliveryManagerId());
+                delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+            }
+        }
+
+        return new RouteStatusChangeResult(route, delivery);
+    }
+
+    private void validateRouteTransition(DeliveryRouteStatus current, DeliveryRouteStatus target) {
+        boolean valid = (current == DeliveryRouteStatus.HUB_MOVE_WAITING && target == DeliveryRouteStatus.HUB_MOVING)
+                || (current == DeliveryRouteStatus.HUB_MOVING && target == DeliveryRouteStatus.DEST_HUB_ARRIVED);
+        if (!valid) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+        }
+    }
+
+    public record RouteStatusChangeResult(DeliveryRoute route, Delivery delivery) {
     }
 }
