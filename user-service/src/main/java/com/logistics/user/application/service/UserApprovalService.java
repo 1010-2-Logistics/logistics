@@ -1,7 +1,7 @@
 package com.logistics.user.application.service;
 
 import com.logistics.user.application.dto.command.ChangeApprovalCommandDto;
-import com.logistics.user.application.dto.result.ChangeApprovalResult;
+import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.domain.entity.ApprovalDecision;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
@@ -29,7 +29,7 @@ public class UserApprovalService {
 
     private final UserQueryRepository userQueryRepository;
 
-    public ChangeApprovalResult changeApproval(
+    public ChangeApprovalResultDto changeApproval(
             ChangeApprovalCommandDto command
     ) {
         // 1. 서비스 계층에서도 필수 입력값을 검증
@@ -76,7 +76,7 @@ public class UserApprovalService {
         /*
          * 별도의 save() 호출없이 업데이트 됨.
          */
-        return new ChangeApprovalResult(
+        return new ChangeApprovalResultDto(
                 targetUser.getUserId(),
                 previousStatus,
                 targetUser.getStatus(),
