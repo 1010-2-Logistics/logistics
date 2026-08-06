@@ -41,6 +41,16 @@ public class CompanyCommandService {
 		return entity;
 	}
 	
+	@Transactional(rollbackFor = Exception.class)
+	public Company assignCompanyManagerFail(UUID companyId, Long companyManagerId) {
+		Company entity = companyQueryService.findByCompany(companyId);
+		
+		entity.updateCompanyManager(companyManagerId);
+		entity.updateStatus(CompanyStatus.FAILED);
+		
+		return entity;
+	}
+	
 	
 	@Transactional(rollbackFor = Exception.class)
 	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand companyUpdateCommand) {
