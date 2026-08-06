@@ -29,10 +29,10 @@ public class Slack extends BaseEntity {
     private UUID slackMessageId;
 
     @Column(name = "sender_id", nullable = false)
-    private UUID senderId; // 발신자 식별자
+    private Long senderId; // 발신자 식별자
 
     @Column(name = "receiver_id", nullable = false)
-    private UUID receiverId; // 수신자 식별자
+    private Long receiverId; // 수신자 식별자
 
     @Column(name = "message", nullable = false)
     private String message; // 메시지 내용
