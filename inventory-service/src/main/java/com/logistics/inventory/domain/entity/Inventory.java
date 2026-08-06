@@ -86,4 +86,9 @@ public class Inventory extends BaseEntity {
             throw new CustomException(InventoryErrorCode.INVENTORY_INVALID_REQUEST);
         }
     }
+
+    // TODO : baseEntity
+    public void delete(Long deletedBy) {
+        markDeleted(deletedBy);
+    }
 }

@@ -3,7 +3,9 @@ package com.logistics.hub.infrastructure.persistence.repository;
 import com.logistics.hub.domain.entity.Hub;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,5 +45,8 @@ interface HubJpaRepository extends JpaRepository<Hub, UUID> {
                                         @Param("latitude") BigDecimal latitude,
                                         @Param("longitude") BigDecimal longitude,
                                         @Param("hubAddress") String hubAddress);
+
+    @Query("SELECT h.hubId FROM Hub h WHERE h.hubId IN :hubIds AND h.deletedAt IS NULL")
+    Set<UUID> findValidHubIdsIn(@Param("hubIds") List<UUID> hubIds);
 
 }
