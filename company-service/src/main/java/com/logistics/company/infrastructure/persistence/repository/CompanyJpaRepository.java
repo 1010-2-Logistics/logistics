@@ -11,7 +11,7 @@ import com.logistics.company.domain.entity.Company;
 
 interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 
-	Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId);
+	Optional<Company> findByCompanyIdAndDeletedAtIsNullAndStatusActive(UUID companyId);
 
 	@Query("""
 			select new com.logistics.company.domain.OrderedCompanyInfo(
@@ -29,6 +29,8 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 					and endCompany.id = :endCompanyId
 					and startCompany.deletedAt is null
 					and endCompany.deletedAt is null
+					and startCompany.status = com.logistics.company.domain.CompanyStatus.ACTIVE
+					and endCompany.status = com.logistics.company.domain.CompanyStatus.ACTIVE
 	""")
 	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId);
 
