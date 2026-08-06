@@ -5,4 +5,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 interface DeliveryRouteJpaRepository extends JpaRepository<DeliveryRoute, UUID> {
+
+    int countByDeliveryIdAndDeletedAtIsNull(UUID deliveryId);
 }

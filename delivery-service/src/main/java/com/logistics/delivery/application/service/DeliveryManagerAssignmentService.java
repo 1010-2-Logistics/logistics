@@ -30,7 +30,7 @@ public class DeliveryManagerAssignmentService {
         DeliveryManager nextManager = deliveryManagerRepository
                 .findNextCandidate(managerType, hubId, state.getLastAssignedSequence())
                 .or(() -> deliveryManagerRepository.findFirstCandidate(managerType, hubId))
-                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NO_AVAILABLE_MANAGER));
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE));
 
         state.assign(nextManager);
         assignmentStateRepository.save(state);

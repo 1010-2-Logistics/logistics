@@ -30,4 +30,9 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
     public Page<Delivery> search(DeliveryStatus status, UUID hubId, Pageable pageable) {
         return jpaRepository.search(status, hubId, pageable);
     }
+
+    @Override
+    public Optional<Delivery> findByOrderId(UUID orderId) {
+        return jpaRepository.findByOrderIdAndDeletedAtIsNull(orderId);
+    }
 }
