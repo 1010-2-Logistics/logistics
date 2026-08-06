@@ -15,7 +15,8 @@ public enum HubRouteErrorCode implements ErrorCode {
     END_HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 도착 허브입니다."),
     HUB_ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 허브경로입니다."),
     HUB_START_END_SAME(HttpStatus.CONFLICT,"출발 허브와 도착허브가 동일합니다."),
-    HUB_ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT,  "이미 존재하는 허브 경로 입니다");
+    HUB_ROUTE_ALREADY_EXISTS(HttpStatus.CONFLICT,  "이미 존재하는 허브 경로 입니다"),
+    HUB_ROUTE_DELETE_CONFLICT(HttpStatus.CONFLICT,"이미 삭제된 허브 경로입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

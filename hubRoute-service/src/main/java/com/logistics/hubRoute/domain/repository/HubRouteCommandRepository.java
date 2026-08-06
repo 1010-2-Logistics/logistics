@@ -17,4 +17,6 @@ public interface HubRouteCommandRepository {
 
     //허브 수정 동일한 경로인지 탐색[자기 자신은 제외]
     boolean existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(UUID startHubId, UUID endHubId, UUID hubRouteId);
+
+    boolean findByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId);
 }

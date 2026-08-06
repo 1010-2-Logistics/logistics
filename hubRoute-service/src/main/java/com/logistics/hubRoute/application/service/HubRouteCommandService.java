@@ -14,9 +14,7 @@ import java.util.UUID;
 import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteUpdateRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateResponseDto;
-import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,8 +107,16 @@ public class HubRouteCommandService {
         return new HubRouteUpdateResponseDto(hubRoute.getHubRouteId());
     }
 
-//    //허브 삭제
-//    public void deleteHub(UUID hubId, long deletedBy) {
+    //허브 경로 삭제
+    public void deleteHubRoute(UUID hubRouteId, long deletedBy) {
+        //경로가 이미 삭제되었는지 체크
+        if(!hubRouteCommandRepository.findByHubRouteIdAndDeletedAtIsNull(hubRouteId))
+        {
+            throw new CustomException(HubRouteErrorCode.HUB_ROUTE_DELETE_CONFLICT);
+        }
+        HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId)
+                .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
 
-   // }
+        hubRoute.markDeleted(deletedBy);
+    }
 }

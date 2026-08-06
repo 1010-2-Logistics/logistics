@@ -48,12 +48,12 @@ public class HubRouteCommandController {
         return ApiResponse.success(200, "허브 경로 수정 성공", hubRouteUpdateResponseDto);
     }
 
-//    @DeleteMapping("/{hubRouteId}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void delete(@PathVariable UUID hubId) {
-//        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-//        hubRouteFacade.deleteHub(hubId, 1L);
-//    }
+    @DeleteMapping("/{hubRouteId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID hubRouteId) {
+        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
+        hubRouteCommandService.deleteHubRoute(hubRouteId,1L);
+    }
 
 
 

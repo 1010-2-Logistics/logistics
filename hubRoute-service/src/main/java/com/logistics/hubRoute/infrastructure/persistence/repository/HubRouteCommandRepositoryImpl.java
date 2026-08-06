@@ -36,4 +36,9 @@ public class HubRouteCommandRepositoryImpl implements HubRouteCommandRepository 
         return jpaRepository.existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(startHubId, endHubId, hubRouteId);
     }
 
+    @Override
+    public boolean findByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId) {
+        return jpaRepository.existsByHubRouteIdAndDeletedAtIsNull(hubRouteId);
+    }
+
 }
