@@ -85,18 +85,22 @@ public class CompanyQueryServiceTest {
 		@DisplayName("주문시 업체 정보 조회 성공")
 		void companyInfo_ordered_success() {
 			UUID startCompanyId = UUID.randomUUID();
-			String startCompanyName = "출발 업체 이름";
+			UUID startHubId = UUID.randomUUID();
+			String startCompanyAddress = "출발 업체 주소";
 			CompanyType startCompanyType = CompanyType.PRODUCER;
 			UUID endCompanyId = UUID.randomUUID();
-			String endCompanyName = "도착 업체 이름";
+			UUID endHubId = UUID.randomUUID();
+			String endCompanyAddress = "도착 업체 주소";
 			CompanyType endCompanyType = CompanyType.RECEIVER;
 			
 			OrderedCompanyInfo companyInfo = new OrderedCompanyInfo(
 					startCompanyId,
-					startCompanyName,
+					startHubId,
+					startCompanyAddress,
 					startCompanyType,
 					endCompanyId,
-					endCompanyName,
+					endHubId,
+					endCompanyAddress,
 					endCompanyType
 			);
 			
@@ -105,28 +109,32 @@ public class CompanyQueryServiceTest {
 			OrderedCompanyInfoResultDto result = companyQueryService.findOrderedCompanyInfo(startCompanyId, endCompanyId);
 			
 			assertThat(result.startCompanyId()).isEqualTo(startCompanyId);
-			assertThat(result.startCompanyName()).isEqualTo(startCompanyName);
+			assertThat(result.startCompanyAddress()).isEqualTo(startCompanyAddress);
 			
 			assertThat(result.endCompanyId()).isEqualTo(endCompanyId);
-			assertThat(result.endCompanyName()).isEqualTo(endCompanyName);
+			assertThat(result.endCompanyAddress()).isEqualTo(endCompanyAddress);
 		}
 		
 		@Test
 		@DisplayName("출발 업체는 생산 업체, 도착 업체는 수령 업체여야 한다. - CASE 1")
 		void companyInfo_ordered_fail_case1() {
 			UUID startCompanyId = UUID.randomUUID();
-			String startCompanyName = "출발 업체 이름";
+			UUID startHubId = UUID.randomUUID();
+			String startCompanyAddress = "출발 업체 주소";
 			CompanyType startCompanyType = CompanyType.RECEIVER;
 			UUID endCompanyId = UUID.randomUUID();
-			String endCompanyName = "도착 업체 이름";
+			UUID endHubId = UUID.randomUUID();
+			String endCompanyAddress = "도착 업체 주소";
 			CompanyType endCompanyType = CompanyType.PRODUCER;
 			
 			assertThatThrownBy(() -> new OrderedCompanyInfo(
 					startCompanyId,
-					startCompanyName,
+					startHubId,
+					startCompanyAddress,
 					startCompanyType,
 					endCompanyId,
-					endCompanyName,
+					endHubId,
+					endCompanyAddress,
 					endCompanyType
 			))
 			.isInstanceOf(CompanyException.class)
@@ -137,18 +145,22 @@ public class CompanyQueryServiceTest {
 		@DisplayName("출발 업체는 생산 업체, 도착 업체는 수령 업체여야 한다. - CASE 2")
 		void companyInfo_ordered_fail_case2() {
 			UUID startCompanyId = UUID.randomUUID();
-			String startCompanyName = "출발 업체 이름";
-			CompanyType startCompanyType = CompanyType.PRODUCER;
+			UUID startHubId = UUID.randomUUID();
+			String startCompanyAddress = "출발 업체 주소";
+			CompanyType startCompanyType = CompanyType.RECEIVER;
 			UUID endCompanyId = UUID.randomUUID();
-			String endCompanyName = "도착 업체 이름";
-			CompanyType endCompanyType = CompanyType.PRODUCER;
+			UUID endHubId = UUID.randomUUID();
+			String endCompanyAddress = "도착 업체 주소";
+			CompanyType endCompanyType = CompanyType.RECEIVER;
 			
 			assertThatThrownBy(() -> new OrderedCompanyInfo(
 					startCompanyId,
-					startCompanyName,
+					startHubId,
+					startCompanyAddress,
 					startCompanyType,
 					endCompanyId,
-					endCompanyName,
+					endHubId,
+					endCompanyAddress,
 					endCompanyType
 			))
 			.isInstanceOf(CompanyException.class)
@@ -160,18 +172,22 @@ public class CompanyQueryServiceTest {
 		@DisplayName("출발 업체는 생산 업체, 도착 업체는 수령 업체여야 한다. - CASE 3")
 		void companyInfo_ordered_fail_case3() {
 			UUID startCompanyId = UUID.randomUUID();
-			String startCompanyName = "출발 업체 이름";
-			CompanyType startCompanyType = CompanyType.RECEIVER;
+			UUID startHubId = UUID.randomUUID();
+			String startCompanyAddress = "출발 업체 주소";
+			CompanyType startCompanyType = CompanyType.PRODUCER;
 			UUID endCompanyId = UUID.randomUUID();
-			String endCompanyName = "도착 업체 이름";
-			CompanyType endCompanyType = CompanyType.RECEIVER;
+			UUID endHubId = UUID.randomUUID();
+			String endCompanyAddress = "도착 업체 주소";
+			CompanyType endCompanyType = CompanyType.PRODUCER;
 			
 			assertThatThrownBy(() -> new OrderedCompanyInfo(
 					startCompanyId,
-					startCompanyName,
+					startHubId,
+					startCompanyAddress,
 					startCompanyType,
 					endCompanyId,
-					endCompanyName,
+					endHubId,
+					endCompanyAddress,
 					endCompanyType
 					))
 			.isInstanceOf(CompanyException.class)

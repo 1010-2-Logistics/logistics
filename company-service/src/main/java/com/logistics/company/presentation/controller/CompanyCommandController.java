@@ -38,7 +38,7 @@ public class CompanyCommandController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public ApiResponse<CompanyCreateResponseDto> createCompany(
 			@Valid @RequestBody CompanyCreateRequestDto request) {
-		CompanyCreateResultDto result = companyFacade.createCompany("인증 문자열", request.toCommand());
+		CompanyCreateResultDto result = companyFacade.createCompany(request.toCommand());
 		
 		CompanyCreateResponseDto response = CompanyCreateResponseDto.from(result);
 		

@@ -14,8 +14,10 @@ public enum DeliveryErrorCode implements ErrorCode {
     DELIVERY_MANAGER_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 등록된 배송 담당자입니다."),
     DELIVERY_MANAGER_TYPE_HUB_MISMATCH(HttpStatus.BAD_REQUEST, "담당자 타입과 허브 ID 조합이 올바르지 않습니다."),
     DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "허브 정보 검증 중 Hub 서비스에 연결할 수 없습니다."),
-    DELIVERY_NO_AVAILABLE_MANAGER(HttpStatus.NOT_FOUND, "배정 가능한 담당자가 없습니다."),
-    DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 배송입니다.");
+    DELIVERY_MANAGER_UNAVAILABLE(HttpStatus.CONFLICT, "배정 가능한 담당자가 없습니다."),
+    DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 배송입니다."),
+    DELIVERY_INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 상태 전이입니다."),
+    DELIVERY_ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 배송 경로입니다.");
 
     private final HttpStatus httpStatus;
     private final String message;

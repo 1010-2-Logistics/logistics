@@ -14,6 +14,8 @@ interface DeliveryJpaRepository extends JpaRepository<Delivery, UUID> {
 
     Optional<Delivery> findByDeliveryIdAndDeletedAtIsNull(UUID deliveryId);
 
+    Optional<Delivery> findByOrderIdAndDeletedAtIsNull(UUID orderId);
+
     @Query("SELECT d FROM Delivery d "
             + "WHERE d.deletedAt IS NULL "
             + "AND (:status IS NULL OR d.status = :status) "
