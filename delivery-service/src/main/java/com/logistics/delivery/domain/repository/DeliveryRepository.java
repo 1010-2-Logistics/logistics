@@ -13,5 +13,7 @@ public interface DeliveryRepository {
 
     Optional<Delivery> findByIdAndDeletedAtIsNull(UUID deliveryId);
 
+    Optional<Delivery> findByOrderId(UUID orderId);
+
     Page<Delivery> search(DeliveryStatus status, UUID hubId, Pageable pageable);
 }

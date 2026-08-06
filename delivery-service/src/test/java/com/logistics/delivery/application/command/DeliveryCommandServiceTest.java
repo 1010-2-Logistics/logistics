@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.logistics.delivery.application.dto.command.CreateDeliveryCommand;
 import com.logistics.delivery.application.service.DeliveryCommandService;
+import com.logistics.delivery.application.service.DeliveryCommandService.DeliveryCreateResult;
 import com.logistics.delivery.application.service.DeliveryManagerAssignmentService;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryManager;
@@ -20,7 +21,10 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.feign.client.HubClient;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +45,9 @@ class DeliveryCommandServiceTest {
     @Mock
     private DeliveryManagerAssignmentService deliveryManagerAssignmentService;
 
+    @Mock
+    private HubClient hubClient;
+
     @InjectMocks
     private DeliveryCommandService deliveryCommandService;
 
@@ -53,6 +60,8 @@ class DeliveryCommandServiceTest {
         CreateDeliveryCommand command = new CreateDeliveryCommand(
                 orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
 
+        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -63,17 +72,19 @@ class DeliveryCommandServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        Delivery result = deliveryCommandService.create(command);
+        DeliveryCreateResult result = deliveryCommandService.create(command);
 
         // then
-        assertThat(result.getOrderId()).isEqualTo(orderId);
-        assertThat(result.getStartHubId()).isEqualTo(startHubId);
-        assertThat(result.getEndHubId()).isEqualTo(endHubId);
-        assertThat(result.getDeliveryAddress()).isEqualTo("서울시 송파구");
-        assertThat(result.getReceiverName()).isEqualTo("홍길동");
-        assertThat(result.getSlackId()).isEqualTo("U01");
-        assertThat(result.getStatus()).isEqualTo(DeliveryStatus.HUB_WAITING);
-        assertThat(result.getCreatedBy()).isNotNull();
+        Delivery delivery = result.delivery();
+        assertThat(delivery.getOrderId()).isEqualTo(orderId);
+        assertThat(delivery.getStartHubId()).isEqualTo(startHubId);
+        assertThat(delivery.getEndHubId()).isEqualTo(endHubId);
+        assertThat(delivery.getDeliveryAddress()).isEqualTo("서울시 송파구");
+        assertThat(delivery.getReceiverName()).isEqualTo("홍길동");
+        assertThat(delivery.getSlackId()).isEqualTo("U01");
+        assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.HUB_WAITING);
+        assertThat(delivery.getCreatedBy()).isNotNull();
+        assertThat(result.routeCount()).isEqualTo(1);
     }
 
     @Test
@@ -85,6 +96,8 @@ class DeliveryCommandServiceTest {
         CreateDeliveryCommand command = new CreateDeliveryCommand(
                 orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
 
+        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -111,21 +124,44 @@ class DeliveryCommandServiceTest {
     }
 
     @Test
-    void 배정_가능한_담당자가_없으면_예외가_전파되고_배송_경로는_저장되지_않는다() {
+    void 출발_허브가_존재하지_않으면_예외() {
         // given
+        UUID startHubId = UUID.randomUUID();
+        UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), startHubId, endHubId, "주소", "홍길동", "U01");
 
-        when(deliveryRepository.save(any(Delivery.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
-                .thenThrow(new CustomException(DeliveryErrorCode.DELIVERY_NO_AVAILABLE_MANAGER));
+        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of());
 
         // when & then
         assertThatThrownBy(() -> deliveryCommandService.create(command))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_NO_AVAILABLE_MANAGER);
+                .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+
+        verify(deliveryRepository, never()).save(any());
+    }
+
+    @Test
+    void 배정_가능한_담당자가_없으면_예외가_전파되고_배송_경로는_저장되지_않는다() {
+        // given
+        UUID startHubId = UUID.randomUUID();
+        UUID endHubId = UUID.randomUUID();
+        CreateDeliveryCommand command = new CreateDeliveryCommand(
+                UUID.randomUUID(), startHubId, endHubId, "주소", "홍길동", "U01");
+
+        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(deliveryRepository.save(any(Delivery.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenThrow(new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE));
+
+        // when & then
+        assertThatThrownBy(() -> deliveryCommandService.create(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
 
         verify(deliveryRouteRepository, never()).save(any());
     }

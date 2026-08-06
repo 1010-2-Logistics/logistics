@@ -3,8 +3,7 @@ package com.logistics.delivery.application.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
 import com.logistics.delivery.application.service.DeliveryManagerCommandService;
@@ -17,7 +16,10 @@ import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.infrastructure.feign.client.HubClient;
 import com.logistics.delivery.infrastructure.feign.response.HubValidationResponse;
 import feign.FeignException;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,7 +94,7 @@ class DeliveryManagerCommandServiceTest {
         // given
         UUID hubId = UUID.randomUUID();
         when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(3L)).thenReturn(false);
-        when(hubClient.getHub(hubId)).thenThrow(mock(FeignException.NotFound.class));
+        when(hubClient.validateHubIds(List.of(hubId))).thenReturn(Set.of());
 
         RegisterDeliveryManagerCommand command =
                 new RegisterDeliveryManagerCommand(3L, hubId, "U03", ManagerType.COMPANY_DELIVERY_MANAGER);
@@ -108,8 +110,9 @@ class DeliveryManagerCommandServiceTest {
     void Hub_서비스_호출_실패시_503_예외() {
         // given
         UUID hubId = UUID.randomUUID();
-        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(4L)).thenReturn(false);
-        when(hubClient.getHub(hubId)).thenThrow(FeignException.class);
+        FeignException feignException = mock(FeignException.class);
+        lenient().when(feignException.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        when(hubClient.validateHubIds(List.of(hubId))).thenThrow(feignException);
 
         RegisterDeliveryManagerCommand command =
                 new RegisterDeliveryManagerCommand(4L, hubId, "U04", ManagerType.COMPANY_DELIVERY_MANAGER);
@@ -155,6 +158,7 @@ class DeliveryManagerCommandServiceTest {
         UUID newHubId = UUID.randomUUID();
         DeliveryManager manager = DeliveryManager.create(10L, UUID.randomUUID(), "U10", ManagerType.COMPANY_DELIVERY_MANAGER, 0);
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(manager));
+        when(hubClient.validateHubIds(List.of(newHubId))).thenReturn(Set.of(newHubId));
 
         DeliveryManager result = deliveryManagerCommandService.update(10L, newHubId);
 
