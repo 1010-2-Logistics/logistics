@@ -45,11 +45,11 @@ public class HubRouteCommandService {
         Set<UUID> existingHubIds = hubClient.validateHubIds(targetHubIds);
 
         if (!existingHubIds.contains(startHubId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+            throw new CustomException(HubRouteErrorCode.START_HUB_NOT_FOUND);
         }
 
         if (!existingHubIds.contains(endHubId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+            throw new CustomException(HubRouteErrorCode.END_HUB_NOT_FOUND);
         }
 
         //중복 경로 탐색
@@ -85,11 +85,11 @@ public class HubRouteCommandService {
         Set<UUID> existingHubIds = hubClient.validateHubIds(targetHubIds);
 
         if (!existingHubIds.contains(startHubId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+            throw new CustomException(HubRouteErrorCode.START_HUB_NOT_FOUND);
         }
 
         if (!existingHubIds.contains(endHubId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+            throw new CustomException(HubRouteErrorCode.END_HUB_NOT_FOUND);
         }
 
         //중복 경로 탐색
@@ -109,11 +109,6 @@ public class HubRouteCommandService {
         return new HubRouteUpdateResponseDto(hubRoute.getHubRouteId());
     }
 
-//    //허브 수정
-//    public HubRouteResponseDto updateHub(UUID hubId, HubRouteUpdateCommand hubRouteUpdateCommand) {
-//        return null;
-//    }
-//
 //    //허브 삭제
 //    public void deleteHub(UUID hubId, long deletedBy) {
 

@@ -3,6 +3,7 @@ package com.logistics.hubRoute.infrastructure.persistence.repository;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -22,4 +23,8 @@ interface HubRouteJpaRepository extends JpaRepository<HubRoute, UUID> {
     boolean existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
 
     boolean existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(UUID startHubId, UUID endHubId, UUID hubRouteId);
+
+    Optional<HubRoute> findByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
+
+    List<HubRoute> findAllByDeletedAtIsNull();
 }
