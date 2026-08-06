@@ -6,17 +6,21 @@ import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
 
 public record OrderedCompanyInfoResponseDto(
 		UUID startCompanyId,
-		String startCompanyName,
+		UUID startHubId,
+		String startCompanyAddress,
 		UUID endCompanyId,
-		String endCompanyName
+		UUID endHubId,
+		String endCompanyAddress
 ) {
 
 	public static OrderedCompanyInfoResponseDto from(OrderedCompanyInfoResultDto result) {
 		return new OrderedCompanyInfoResponseDto(
 				result.startCompanyId(),
-				result.startCompanyName(),
+				result.startHubId(),
+				result.startCompanyAddress(),
 				result.endCompanyId(),
-				result.endCompanyName()
+				result.endHubId(),
+				result.endCompanyAddress()
 		);
 	}
 
