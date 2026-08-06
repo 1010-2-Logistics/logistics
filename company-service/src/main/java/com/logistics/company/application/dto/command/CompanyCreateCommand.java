@@ -13,6 +13,6 @@ public record CompanyCreateCommand(
 		CompanyType companyType
 ) {
 	public Company toEntity() {
-		return Company.create(hubId, companyManagerId, companyName, companyAddress, companyType);
+		return Company.create(hubId, companyName, companyAddress, companyType);
 	}
 }

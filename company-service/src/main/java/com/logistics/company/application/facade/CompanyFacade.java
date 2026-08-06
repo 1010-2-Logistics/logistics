@@ -33,17 +33,20 @@ public class CompanyFacade {
 		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
 		
+		// 업체 담당자를 지정하여 요청을 보낸 경우
 		// 업체 담당자로 지정될 companyManagerId 로 해당 회원이 존재하는지 확인
-		UserExistsResponseDto userExists = userPort.userExistsRequest(command.companyManagerId());
-		
-		// 해당 회원이 존재하지 않는 경우
-		// 잘못된 요청이라고 판단
-		if(!userExists.exists()) {
-			throw new CompanyException(CompanyErrorCode.COMPANY_USER_NOT_FOUND);
+		if(command.companyManagerId() != null) {
+			UserExistsResponseDto userExists = userPort.userExistsRequest(command.companyManagerId());
+			
+			// 해당 회원이 존재하지 않는 경우
+			// 잘못된 요청이라고 판단
+			if(!userExists.exists()) {
+				throw new CompanyException(CompanyErrorCode.COMPANY_USER_NOT_FOUND);
+			}
 		}
 		
 		// T1 - PENDING 상태 업체 생성 완료
-		// 회원이 존재하지 않는 경우 우선 companyManagerId 가 null인 상태
+		// 담당자를 지정하지 않은 업체 생성 - Status:PENDING
 		Company company = companyCommandService.createCompany(command);
 		
 		// companyManagerId 가 존재하는 경우에만 소속 변경 API 요청
