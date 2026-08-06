@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.logistics.company.application.dto.query.CompanySearchQuery;
 import com.logistics.company.application.dto.result.OrderedCompanyInfoResultDto;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CompanyQueryService {
 
 	private final CompanyQueryRepository companyQueryRepository;
@@ -42,9 +44,11 @@ public class CompanyQueryService {
 	 * @param endCompanyId: 도착업체 ID
 	 * @return {
 	 * 		"startCompanyId": "출발업체 - UUID",
-	 * 		"startCompanyName": "출발업체 이름",
+	 * 		"startHubId": "출발업체 소속 허브 - UUID",
+	 * 		"startCompanyAddress": "출발업체 주소",
 	 * 		"endCompanyId": "도착업체 - UUID",
-	 * 		"endCompanyName": "도착업체 이름"
+	 * 		"endHubId": "도착업체 소속 허브 - UUID",
+	 * 		"endCompanyAddress": "도착업체 주소"
 	 * }
 	 */
 	public OrderedCompanyInfoResultDto findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId) {

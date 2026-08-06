@@ -12,6 +12,8 @@ public record CompanyCreateRequestDto(
 		@NotBlank(message = "업체명은 필수 항목입니다.")
 		String companyName,
 		
+		Long companyManagerId,
+		
 		@NotNull(message = "업체 타입은 필수 항목입니다.")
 		CompanyType companyType,
 		
@@ -24,6 +26,7 @@ public record CompanyCreateRequestDto(
 	public CompanyCreateCommand toCommand() {
 		return new CompanyCreateCommand(
 				hubId,
+				companyManagerId,
 				companyName,
 				companyAddress,
 				companyType

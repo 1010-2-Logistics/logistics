@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.logistics.user.application.dto.query.GetUserQuery;
+import com.logistics.user.application.dto.query.GetUserQueryDto;
 import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
@@ -36,7 +36,7 @@ class UserQueryServiceTest {
 
         // when & then
         assertThatThrownBy(
-                () -> userQueryService.get(new GetUserQuery(userId))
+                () -> userQueryService.get(new GetUserQueryDto(userId))
         ).isInstanceOf(CustomException.class);
     }
 
@@ -66,7 +66,7 @@ class UserQueryServiceTest {
 
         // when
         User result = userQueryService.get(
-                new GetUserQuery(userId)
+                new GetUserQueryDto(userId)
         );
 
         // then
