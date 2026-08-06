@@ -47,7 +47,7 @@ public class Slack extends BaseEntity {
     private LocalDateTime sentAt; // 실제 발송 완료 시간
 
     @Column(name = "reference_id")
-    private Long referenceId; // 관련 업무 식별자
+    private Long referenceId; // 관련 업무 식별자 (해당 주문·배송과 관련해 어떤 슬랙 메시지를 보냈는지)
 
 //    // ERD에는 있고 테이블 명세서에는 없다 -> 근데 sendAt 같음
 //    @Column(name = "send_time", nullable = false)
@@ -75,13 +75,13 @@ public class Slack extends BaseEntity {
     }
 
     public void markSuccess() {
-        this.status = status;
+        this.status = SlackStatus.SUCCESS;
         this.sentAt = LocalDateTime.now();
         this.errorMessage = null;
     }
 
     public void markFailed(String errorMessage) {
-        this.status = status;
+        this.status = SlackStatus.FAILED;
         this.errorMessage = errorMessage;
     }
 }

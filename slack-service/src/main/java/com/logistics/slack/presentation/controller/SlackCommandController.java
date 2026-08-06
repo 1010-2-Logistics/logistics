@@ -28,19 +28,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SlackCommandController {
     private final SlackFacade slackFacade;
-    private final SlackCommandService sampleCommandService;
+    private final SlackCommandService slackCommandService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SlackCreateResponseDto> createSlack(
             @Valid @RequestBody SlackCreateRequestDto slackCreateRequestDto
     ) {
+        // TODO : 인증 구현 후 로그인 사용자 교체
+        Long senderId = 1L;
+
         SlackCreateCommand slackCreateCommand = SlackCreateCommand.toCommand(
-//                senderId,
+                senderId,
                 slackCreateRequestDto
         );
 
-        SlackCreateResult slackCreatResult = slackFacade.createSlack(slackCreateCommand);
+        SlackCreateResult slackCreatResult = slackFacade.createSlack(
+                slackCreateCommand
+        );
 
         SlackCreateResponseDto slackCreateResponseDto = SlackCreateResponseDto.from(slackCreatResult);
 
@@ -55,12 +60,13 @@ public class SlackCommandController {
     public ApiResponse<SlackRetryResponseDto> updateSlack(
             @PathVariable("slackMessageId") UUID slackMessageId
     ) {
-        SlackRetryResponseDto slackRetryResponseDto = slackFacade.retrySlackMessage(slackMessageId);
+//        SlackRetryResponseDto slackRetryResponseDto = slackFacade.retrySlackMessage(slackMessageId);
 
         return ApiResponse.success(
                 HttpStatus.OK.value(),
                 "Slack 메시지 재발송 요청 성공",
-                slackRetryResponseDto
+//                slackRetryResponseDto
+                null
         );
     }
 
@@ -70,6 +76,6 @@ public class SlackCommandController {
             @PathVariable("slackMessageId") UUID slackMessageId
     ) {
         // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-        sampleCommandService.deleteSlack(slackMessageId, "system");
+        slackCommandService.deleteSlack(slackMessageId, "system");
     }
 }

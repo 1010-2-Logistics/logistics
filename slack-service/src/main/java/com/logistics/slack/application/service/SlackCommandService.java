@@ -19,12 +19,14 @@ public class SlackCommandService {
     private final SlackCommandRepository slackCommandRepository;
     private final SlackMessageSender slackMessageSender;
 
+    // TODO : RabbitMQ에 Slack 발송 이벤트를 발행하고,
+    // Slack 이벤트 리스너에서 Webhook 발송 및 SUCCESS/FAILED 상태 변경 처리
+
     public SlackCreateResult createSlack(
-            Long senderId,
             SlackCreateCommand slackCreateCommand
     ) {
         Slack slack = Slack.create(
-                senderId,
+                slackCreateCommand.senderId(),
                 slackCreateCommand.receiverId(),
                 slackCreateCommand.message(),
                 slackCreateCommand.referenceId()

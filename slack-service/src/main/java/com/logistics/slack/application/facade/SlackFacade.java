@@ -18,16 +18,14 @@ public class SlackFacade {
     public SlackCreateResult createSlack(
             SlackCreateCommand slackCreateCommand
     ) {
-        return null;
+        return slackCommandService.createSlack(slackCreateCommand);
     }
 
     public SlackCreateResult retrySlackMessage(
-            Long slackMessageId,
             SlackCreateCommand slackCreateCommand
 
     ) {
         return slackCommandService.createSlack(
-                slackMessageId,
                 slackCreateCommand
         );
     }
