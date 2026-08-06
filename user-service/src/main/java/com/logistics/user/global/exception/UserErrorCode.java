@@ -35,6 +35,33 @@ public enum UserErrorCode implements ErrorCode {
             HttpStatus.BAD_REQUEST,
             "USER_PASSWORD_CONFIRM_MISMATCH",
             "비밀번호와 비밀번호 확인값이 일치하지 않습니다."
+    ),
+    USER_APPROVAL_INVALID_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "USER_APPROVAL_INVALID_REQUEST",
+            "승인 요청 형식이 올바르지 않습니다."
+    ),
+
+    USER_APPROVAL_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "USER_APPROVAL_ACCESS_DENIED",
+            "사용자 가입 승인 또는 거절 권한이 없습니다."
+    ),
+
+    USER_APPROVAL_CONFLICT(
+            HttpStatus.CONFLICT,
+            "USER_APPROVAL_CONFLICT",
+            "이미 처리된 가입 신청입니다."
+    ),
+    AUTH_UNAUTHORIZED(
+            HttpStatus.UNAUTHORIZED,
+            "AUTH_UNAUTHORIZED",
+            "인증 토큰이 없거나 유효하지 않습니다."
+    ),
+    USER_DELETED_CONFLICT(
+            HttpStatus.CONFLICT,
+            "USER_DELETED_CONFLICT",
+            "삭제된 사용자는 가입 승인 또는 거절할 수 없습니다."
     );
 
 

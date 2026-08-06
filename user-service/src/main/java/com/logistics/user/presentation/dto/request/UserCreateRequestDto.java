@@ -1,6 +1,6 @@
 package com.logistics.user.presentation.dto.request;
 
-import com.logistics.user.application.dto.command.CreateUserCommand;
+import com.logistics.user.application.dto.command.CreateUserCommandDto;
 import com.logistics.user.domain.entity.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,8 +38,8 @@ public record UserCreateRequestDto(
 
 ) {
 
-    public CreateUserCommand toCommand() {
-        return new CreateUserCommand(
+    public CreateUserCommandDto toCommand() {
+        return new CreateUserCommandDto(
                 username,
                 password,
                 slackId,

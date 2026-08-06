@@ -1,6 +1,8 @@
 package com.logistics.user.domain.entity;
 
 import com.logistics.user.global.entity.BaseEntity;
+import com.logistics.user.global.exception.CustomException;
+import com.logistics.user.global.exception.UserErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -178,7 +180,7 @@ public class User extends BaseEntity {
      * 가입 요청 승인
      */
     public void approve() {
-        validateNotSameStatus(UserStatus.APPROVED);
+        validatePendingStatus();
         this.status = UserStatus.APPROVED;
     }
 
@@ -186,8 +188,19 @@ public class User extends BaseEntity {
      * 가입 요청 거절
      */
     public void reject() {
-        validateNotSameStatus(UserStatus.REJECTED);
+        validatePendingStatus();
         this.status = UserStatus.REJECTED;
+    }
+
+    /**
+     * 가입 신청을 처리할 수 있는 PENDING 상태인지 검증
+     */
+    private void validatePendingStatus() {
+        if (this.status != UserStatus.PENDING) {
+            throw new CustomException(
+                    UserErrorCode.USER_APPROVAL_CONFLICT
+            );
+        }
     }
 
     /**
@@ -291,14 +304,6 @@ public class User extends BaseEntity {
                     );
                 }
             }
-        }
-    }
-
-    private void validateNotSameStatus(UserStatus targetStatus) {
-        if (this.status == targetStatus) {
-            throw new IllegalStateException(
-                    "이미 " + targetStatus + " 상태입니다."
-            );
         }
     }
 }

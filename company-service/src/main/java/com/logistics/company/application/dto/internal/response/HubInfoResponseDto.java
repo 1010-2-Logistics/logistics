@@ -1,4 +1,4 @@
-package com.logistics.company.application.dto.internal;
+package com.logistics.company.application.dto.internal.response;
 
 import java.util.UUID;
 

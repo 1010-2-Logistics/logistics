@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.domain.entity.QCompany;
 import com.querydsl.core.types.OrderSpecifier;
@@ -39,7 +40,8 @@ public class CompanyQueryDslRepository {
 						hubIdEquals(hubId),
 						companyTypeEquals(companyType),
 						companyNameContains(companyName),
-						company.deletedAt.isNull()
+						company.deletedAt.isNull(),
+						company.status.eq(CompanyStatus.ACTIVE)
 						)
 				.orderBy(getOrder(pageable))
 				.offset(pageable.getOffset())
@@ -53,7 +55,8 @@ public class CompanyQueryDslRepository {
 						hubIdEquals(hubId),
 						companyTypeEquals(companyType),
 						companyNameContains(companyName),
-						company.deletedAt.isNull()
+						company.deletedAt.isNull(),
+						company.status.eq(CompanyStatus.ACTIVE)
 						)
 				.fetchOne();
 		

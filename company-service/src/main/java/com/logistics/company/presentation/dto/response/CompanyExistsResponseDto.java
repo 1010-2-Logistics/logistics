@@ -9,11 +9,13 @@ import com.logistics.company.domain.entity.CompanyType;
 public record CompanyExistsResponseDto(
 		UUID companyId,
 		CompanyType companyType,
+		UUID hubId,
+		Long companyManagerId,
 		boolean exists
 ) {
 	public static CompanyExistsResponseDto from(Optional<Company> companyOptioanl) {
 		if(companyOptioanl.isEmpty()) {
-			return new CompanyExistsResponseDto(null, null, false);
+			return new CompanyExistsResponseDto(null, null, null, null, false);
 		}
 		
 		Company company = companyOptioanl.get();
@@ -21,6 +23,8 @@ public record CompanyExistsResponseDto(
 		return new CompanyExistsResponseDto(
 				company.getCompanyId(),
 				company.getCompanyType(),
+				company.getHubId(),
+				company.getCompanyManagerId(),
 				true
 		);
 	}
