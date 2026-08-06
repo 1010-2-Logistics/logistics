@@ -30,6 +30,9 @@ public class Company extends BaseEntity {
   @Column(name = "hub_id", nullable = false, updatable = false)
   private UUID hubId;
   
+  @Column(name = "company_manager_id")
+  private Long companyManagerId;
+  
   @Column(name = "company_name", nullable = false)
   private String companyName;
   
@@ -53,6 +56,10 @@ public class Company extends BaseEntity {
   
   public void updateCompanyName(String companyName) {
   	this.companyName = companyName;
+  }
+  
+  public void markCompanyManager(Long companyManagerId) {
+  	this.companyManagerId = companyManagerId;
   }
   
 }
