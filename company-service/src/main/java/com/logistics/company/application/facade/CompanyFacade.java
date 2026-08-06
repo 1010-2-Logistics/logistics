@@ -58,7 +58,9 @@ public class CompanyFacade {
 			
 			if(userRoleUpdate.exists()) {
 				// T2 - 업체 담당자가 될 대상의 소속 변경 API 가 성공한 경우
-				companyCommandService.assignCompanyManager(company.getCompanyId(), userRoleUpdate.userId());
+				company = companyCommandService.assignCompanyManager(company.getCompanyId(), userRoleUpdate.userId());
+			} else {
+				throw new CompanyException(CompanyErrorCode.COMPANY_USER_NOT_FOUND);
 			}
 		}
 		

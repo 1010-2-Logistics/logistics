@@ -32,11 +32,13 @@ public class CompanyCommandService {
 	}
 	
 	@Transactional(rollbackFor = Exception.class)
-	public void assignCompanyManager(UUID companyId, Long companyManagerId) {
+	public Company assignCompanyManager(UUID companyId, Long companyManagerId) {
 		Company entity = companyQueryService.findByCompany(companyId);
 		
 		entity.updateCompanyManager(companyManagerId);
 		entity.updateStatus(CompanyStatus.ACTIVE);
+		
+		return entity;
 	}
 	
 	
