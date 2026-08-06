@@ -1,7 +1,6 @@
 package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
-import com.logistics.user.application.dto.command.UpdateUserCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.facade.UserFacade;
@@ -46,26 +45,6 @@ public class CommandController {
         );
     }
 
-    @PutMapping("/{userId}")
-    public ApiResponse<Void> update(
-            @PathVariable Long userId,
-            @Valid @RequestBody UserUpdateRequestDto request
-    ) {
-        // HTTP 요청 객체를 애플리케이션 계층의 Command로 변환한다.
-        UpdateUserCommandDto command = new UpdateUserCommandDto(
-                userId,
-                request.slackId()
-        );
-
-        // 실제 사용자 수정 비즈니스 로직을 실행한다.
-        userCommandService.update(command);
-
-        return ApiResponse.success(
-                200,
-                "사용자 수정 성공",
-                null
-        );
-    }
 
     /**
      * 로그인한 사용자의 Slack ID를 수정한다.

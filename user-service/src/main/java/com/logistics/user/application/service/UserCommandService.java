@@ -2,7 +2,6 @@ package com.logistics.user.application.service;
 
 import com.logistics.user.application.dto.command.CreateUserCommandDto;
 import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
-import com.logistics.user.application.dto.command.UpdateUserCommandDto;
 import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.event.UserCreatedEvent;
 import com.logistics.user.application.port.EventPublisher;
@@ -51,21 +50,6 @@ public class UserCommandService {
         );
 
         return user.getUserId();
-    }
-
-    /**
-     * 현재 구조에서는 Slack ID만 수정
-     */
-    public void update(UpdateUserCommandDto command) {
-        User user = userCommandRepository
-                .findByIdAndDeletedAtIsNull(command.userId())
-                .orElseThrow(
-                        () -> new CustomException(
-                                UserErrorCode.USER_NOT_FOUND
-                        )
-                );
-
-        user.updateSlackId(command.slackId());
     }
 
     public UpdateMyInfoResultDto updateMySlackId(
