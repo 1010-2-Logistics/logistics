@@ -50,6 +50,10 @@ public enum UserErrorCode implements ErrorCode {
             HttpStatus.UNAUTHORIZED,
             "인증 토큰이 없거나 유효하지 않습니다."
     ),
+    USER_NOT_APPROVED(
+            HttpStatus.FORBIDDEN,
+            "승인되지 않은 사용자입니다."
+    ),
     USER_DELETED_CONFLICT(
             HttpStatus.CONFLICT,
             "삭제된 사용자는 가입 승인 또는 거절할 수 없습니다."

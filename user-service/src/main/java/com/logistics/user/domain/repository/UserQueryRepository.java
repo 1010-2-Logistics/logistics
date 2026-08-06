@@ -28,4 +28,6 @@ public interface UserQueryRepository {
      * 삭제된 사용자도 조회해야 AUTH_USER_DELETED를 반환 가능
      */
     Optional<User> findByUsername(String username);
+
+
 }

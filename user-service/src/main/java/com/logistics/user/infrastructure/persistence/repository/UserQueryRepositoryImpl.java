@@ -12,23 +12,23 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class UserQueryRepositoryImpl implements UserQueryRepository {
 
-    private final UserJpaRepository jpaRepository;
+    private final UserJpaRepository userJpaRepository;
 
     @Override
     public Optional<User> findByIdAndDeletedAtIsNull(Long userId) {
-        return jpaRepository.findByUserIdAndDeletedAtIsNull(userId);
+        return userJpaRepository.findByUserIdAndDeletedAtIsNull(userId);
     }
 
     @Override
     public Page<User> search(String keyword, Pageable pageable) {
-        return jpaRepository.search(keyword, pageable);
+        return userJpaRepository.search(keyword, pageable);
     }
 
     @Override
     public boolean existsByUsername(
             String username
     ) {
-        return jpaRepository
+        return userJpaRepository
                 .existsByUsername(username);
     }
 
@@ -36,7 +36,7 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     public boolean existsBySlackId(
             String slackId
     ) {
-        return jpaRepository
+        return userJpaRepository
                 .existsBySlackId(slackId);
     }
 
@@ -44,6 +44,6 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     public Optional<User> findByUsername(
             String username
     ) {
-        return jpaRepository.findByUsername(username);
+        return userJpaRepository.findByUsername(username);
     }
 }
