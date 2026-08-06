@@ -12,6 +12,8 @@ import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.port.UserPort;
 import com.logistics.company.application.service.CompanyCommandService;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.global.exception.CompanyErrorCode;
+import com.logistics.company.global.exception.CompanyException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +36,12 @@ public class CompanyFacade {
 		// 업체 담당자로 지정될 companyManagerId 로 해당 회원이 존재하는지 확인
 		UserExistsResponseDto userExists = userPort.userExistsRequest(command.companyManagerId());
 		
+		// 해당 회원이 존재하지 않는 경우
+		// 잘못된 요청이라고 판단
+		if(!userExists.exists()) {
+			throw new CompanyException(CompanyErrorCode.COMPANY_USER_NOT_FOUND);
+		}
+		
 		// T1 - PENDING 상태 업체 생성 완료
 		// 회원이 존재하지 않는 경우 우선 companyManagerId 가 null인 상태
 		Company company = companyCommandService.createCompany(command);
@@ -47,7 +55,7 @@ public class CompanyFacade {
 			
 			if(userRoleUpdate.exists()) {
 				// T2 - 업체 담당자가 될 대상의 소속 변경 API 가 성공한 경우
-				company = companyCommandService.companyManagerFix(company.getCompanyId(), userRoleUpdate.userId());
+				companyCommandService.assignCompanyManager(company.getCompanyId(), userRoleUpdate.userId());
 			}
 		}
 		
