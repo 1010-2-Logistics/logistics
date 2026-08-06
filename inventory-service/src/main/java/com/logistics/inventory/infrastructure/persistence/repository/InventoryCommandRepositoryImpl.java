@@ -15,6 +15,11 @@ public class InventoryCommandRepositoryImpl implements InventoryCommandRepositor
     private final InventoryJpaRepository inventoryJpaRepository;
 
     @Override
+    public Optional<Inventory> findById(UUID inventoryId) {
+        return inventoryJpaRepository.findById(inventoryId);
+    }
+
+    @Override
     public Optional<Inventory> findByProductAndHubId(
             UUID productId,
             UUID hubId
