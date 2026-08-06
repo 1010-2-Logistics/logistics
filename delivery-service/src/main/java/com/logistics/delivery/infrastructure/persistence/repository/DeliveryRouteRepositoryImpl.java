@@ -5,6 +5,7 @@ import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -21,5 +22,10 @@ public class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
     @Override
     public int countByDeliveryId(UUID deliveryId) {
         return jpaRepository.countByDeliveryIdAndDeletedAtIsNull(deliveryId);
+    }
+
+    @Override
+    public Optional<DeliveryRoute> findByIdAndDeletedAtIsNull(UUID deliveryRouteId) {
+        return jpaRepository.findByDeliveryRouteIdAndDeletedAtIsNull(deliveryRouteId);
     }
 }
