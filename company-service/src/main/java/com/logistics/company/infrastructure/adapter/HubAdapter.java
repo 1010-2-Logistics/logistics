@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.logistics.company.application.dto.internal.HubInfoResponseDto;
+import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.infrastructure.feign.client.HubClient;
 import com.logistics.company.infrastructure.feign.response.HubValidationResponse;

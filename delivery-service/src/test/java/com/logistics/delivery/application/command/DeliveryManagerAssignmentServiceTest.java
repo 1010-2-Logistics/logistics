@@ -112,7 +112,7 @@ class DeliveryManagerAssignmentServiceTest {
         assertThatThrownBy(() -> deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_NO_AVAILABLE_MANAGER);
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE );
         verify(assignmentStateRepository, never()).save(any());
     }
 

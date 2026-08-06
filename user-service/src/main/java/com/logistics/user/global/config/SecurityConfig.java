@@ -25,7 +25,7 @@ public class SecurityConfig {
      * 비밀번호 단방향 암호화
      * PasswordEncoder 인터페이스에 의존하도록 Bean으로 등록
      */
-    @Bean
+    @Bean	
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

@@ -10,6 +10,9 @@ import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.infrastructure.feign.client.HubClient;
 import feign.FeignException;
+
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,9 +55,10 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
         }
         try {
-            hubClient.getHub(hubId);
-        } catch (FeignException.NotFound e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+            Set<UUID> validIds = hubClient.validateHubIds(List.of(hubId));
+            if (!validIds.contains(hubId)) {
+                throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+            }
         } catch (FeignException e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
