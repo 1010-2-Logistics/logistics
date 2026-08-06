@@ -1,6 +1,6 @@
 package com.logistics.user.application.dto.command;
 
-public record UpdateUserCommand(
+public record UpdateUserCommandDto(
         Long userId,
         String slackId
 ) {

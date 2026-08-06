@@ -7,7 +7,7 @@ spring:
     active: local
 
 server:
-  port: 19095 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
+  port: 19099 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
 
 eureka:
   client:

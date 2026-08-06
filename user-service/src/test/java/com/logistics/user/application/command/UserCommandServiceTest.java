@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.logistics.user.application.dto.command.CreateUserCommand;
+import com.logistics.user.application.dto.command.CreateUserCommandDto;
 import com.logistics.user.application.event.UserCreatedEvent;
 import com.logistics.user.application.port.EventPublisher;
 import com.logistics.user.application.service.UserCommandService;
@@ -43,7 +43,7 @@ class UserCommandServiceTest {
         // given
         UUID companyId = UUID.randomUUID();
 
-        CreateUserCommand command = new CreateUserCommand(
+        CreateUserCommandDto command = new CreateUserCommandDto(
                 "sample01",
                 "encoded-password",
                 "U0123456789",
