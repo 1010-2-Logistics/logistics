@@ -9,7 +9,7 @@ import java.util.UUID;
  * presentation 계층의 SignupRequest가
  * application 계층에 직접 노출되지 않도록 분리한다.
  */
-public record SignupCommand(
+public record SignupCommandDto(
         String username,
         String password,
         String passwordConfirm,

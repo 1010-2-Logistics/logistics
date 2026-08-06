@@ -7,6 +7,9 @@ import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;
 import java.util.UUID;
+
+import com.logistics.user.global.exception.CustomException;
+import com.logistics.user.global.exception.UserErrorCode;
 import org.junit.jupiter.api.Test;
 
 class UserTest {
@@ -146,8 +149,20 @@ class UserTest {
 
         // when & then
         assertThatThrownBy(user::approve)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("이미 APPROVED 상태입니다");
+                .isInstanceOf(CustomException.class)
+                .satisfies(exception -> {
+                    CustomException customException =
+                            (CustomException) exception;
+
+                    assertThat(customException.getErrorCode())
+                            .isEqualTo(
+                                    UserErrorCode.USER_APPROVAL_CONFLICT
+                            );
+                });
+
+        // 예외 발생 후에도 기존 상태는 유지되어야 한다.
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.APPROVED);
     }
 
     @Test

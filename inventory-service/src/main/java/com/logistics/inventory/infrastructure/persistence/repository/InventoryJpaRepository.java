@@ -15,7 +15,10 @@ interface InventoryJpaRepository extends JpaRepository<Inventory, UUID> {
 
     Optional<Inventory> findByInventoryIdAndDeletedAtIsNull(UUID inventoryId);
 
-    Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(UUID productId, UUID hubId);
+    Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(
+            UUID productId,
+            UUID hubId
+    );
 
     @Query("""
             SELECT i
@@ -29,6 +32,4 @@ interface InventoryJpaRepository extends JpaRepository<Inventory, UUID> {
             @Param("hubId") UUID hubId,
             Pageable pageable
     );
-
-
 }
