@@ -33,11 +33,9 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     }
 
     @Override
-    public boolean existsBySlackId(
-            String slackId
-    ) {
+    public boolean existsBySlackId(String slackId) {
         return userJpaRepository
-                .existsBySlackId(slackId);
+                .existsBySlackIdAndDeletedAtIsNull(slackId);
     }
 
     @Override
