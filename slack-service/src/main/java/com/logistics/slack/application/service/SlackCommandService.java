@@ -2,6 +2,7 @@ package com.logistics.slack.application.service;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackCreateResult;
+import com.logistics.slack.application.dto.result.SlackRetryResult;
 import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
 import com.logistics.slack.domain.entity.Slack;
@@ -20,12 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class SlackCommandService {
+    private static final int MAX_RETRY_COUNT = 3;
     private final SlackCommandRepository slackCommandRepository;
     private final SlackEventPublisher slackEventPublisher;
-    private final SlackMessageSender slackMessageSender;
 
     // TODO : RabbitMQ에 Slack 발송 이벤트를 발행하고,
     // Slack 이벤트 리스너에서 Webhook 발송 및 SUCCESS/FAILED 상태 변경 처리
+    private final SlackMessageSender slackMessageSender;
 
     public SlackCreateResult createSlack(
             SlackCreateCommand slackCreateCommand
@@ -59,6 +61,19 @@ public class SlackCommandService {
         } catch (Exception e) {
             slack.markFailed(e.getMessage());
         }
+    }
+
+    public SlackRetryResult retrySlack(
+            UUID slackMessageId
+    ) {
+        Slack slack = slackCommandRepository.findById(slackMessageId)
+                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
+
+        slack.retry(MAX_RETRY_COUNT);
+
+        slackEventPublisher.publish(new SlackSendEvent(slack.getSlackMessageId()));
+
+        return SlackRetryResult.from(slack);
     }
 
     public void deleteSlack(UUID sampleId, String deletedBy) {

@@ -2,8 +2,8 @@ package com.logistics.slack.application.facade;
 
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackCreateResult;
+import com.logistics.slack.application.dto.result.SlackRetryResult;
 import com.logistics.slack.application.service.SlackCommandService;
-import com.logistics.slack.presentation.dto.response.SlackRetryResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,13 +21,9 @@ public class SlackFacade {
         return slackCommandService.createSlack(slackCreateCommand);
     }
 
-    public SlackCreateResult retrySlackMessage(
-            SlackCreateCommand slackCreateCommand
-
+    public SlackRetryResult retrySlack(
+            UUID slackMessageId
     ) {
-        return slackCommandService.createSlack(
-                slackCreateCommand
-        );
+        return slackCommandService.retrySlack(slackMessageId);
     }
-
 }

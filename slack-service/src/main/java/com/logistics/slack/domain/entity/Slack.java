@@ -1,6 +1,8 @@
 package com.logistics.slack.domain.entity;
 
 import com.logistics.slack.global.entity.BaseEntity;
+import com.logistics.slack.global.exception.CustomException;
+import com.logistics.slack.global.exception.SlackErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -49,10 +51,6 @@ public class Slack extends BaseEntity {
     @Column(name = "reference_id")
     private Long referenceId; // 관련 업무 식별자 (해당 주문·배송과 관련해 어떤 슬랙 메시지를 보냈는지)
 
-//    // ERD에는 있고 테이블 명세서에는 없다 -> 근데 sendAt 같음
-//    @Column(name = "send_time", nullable = false)
-//    private Instant send_time;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private SlackStatus status; // 발송 상태
@@ -83,5 +81,24 @@ public class Slack extends BaseEntity {
     public void markFailed(String errorMessage) {
         this.status = SlackStatus.FAILED;
         this.errorMessage = errorMessage;
+    }
+
+    public void retry(int maxRetryCount) {
+        if (isDeleted()) {
+            throw new CustomException(SlackErrorCode.SLACK_DELETED_CONFLICT);
+        }
+
+        if (status != SlackStatus.FAILED) {
+            throw new CustomException(SlackErrorCode.SLACK_RETRY_STATUS_CONFLICT);
+        }
+
+        if (retryCount >= maxRetryCount) {
+            throw new CustomException(SlackErrorCode.SLACK_RETRY_LIMIT_CONFLICT);
+        }
+
+        this.status = SlackStatus.PENDING;
+        this.retryCount++;
+        this.errorMessage = null;
+        this.sentAt = null;
     }
 }
