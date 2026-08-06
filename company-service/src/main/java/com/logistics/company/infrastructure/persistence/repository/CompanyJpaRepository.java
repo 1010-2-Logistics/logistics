@@ -8,10 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.logistics.company.domain.OrderedCompanyInfo;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.CompanyStatus;
 
 interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 
-	Optional<Company> findByCompanyIdAndDeletedAtIsNullAndStatusActive(UUID companyId);
+	Optional<Company> findByCompanyIdAndDeletedAtIsNullAndStatus(UUID companyId, CompanyStatus status);
 
 	@Query("""
 			select new com.logistics.company.domain.OrderedCompanyInfo(

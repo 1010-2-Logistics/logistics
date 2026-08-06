@@ -8,5 +8,4 @@ public record UserRoleUpdateResponseDto(
 		Long userId,
 		boolean exists
 ) {
-
 }
