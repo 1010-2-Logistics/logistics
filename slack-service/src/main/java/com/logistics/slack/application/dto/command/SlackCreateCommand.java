@@ -6,9 +6,9 @@ import java.util.UUID;
 
 public record SlackCreateCommand(
 //        UUID senderId,
-        UUID receiverId,
+        Long receiverId,
         String message,
-        UUID referenceId
+        Long referenceId
 ) {
     public static SlackCreateCommand toCommand(
             SlackCreateRequestDto slackCreateRequestDto

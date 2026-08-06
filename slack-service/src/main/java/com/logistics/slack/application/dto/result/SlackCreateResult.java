@@ -8,12 +8,12 @@ import java.util.UUID;
 
 public record SlackCreateResult(
         UUID slackMessageId,
-        UUID senderId,
-        UUID receiverId,
+        Long senderId,
+        Long receiverId,
         String message,
         SlackStatus status,
         Integer retryCount,
-        UUID referenceId,
+        Long referenceId,
         LocalDateTime createdAt
 ) {
     public static SlackCreateResult from(

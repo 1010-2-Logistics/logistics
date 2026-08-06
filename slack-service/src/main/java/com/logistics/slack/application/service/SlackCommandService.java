@@ -15,14 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SlackCommandService {
     private final SlackCommandRepository slackCommandRepository;
-    private final EventPublisher eventPublisher;
 
     public SlackCreateResult createSlack(SlackCreateCommand slackCreateCommand) {
         return null;
-    }
-
-    public void updateSlack(UpdateSampleCommand command) {
-
     }
 
     public void deleteSlack(UUID sampleId, String deletedBy) {

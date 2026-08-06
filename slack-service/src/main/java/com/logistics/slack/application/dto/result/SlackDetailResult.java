@@ -8,14 +8,14 @@ import java.util.UUID;
 
 public record SlackDetailResult(
         UUID slackMessageId,
-        UUID senderId,
-        UUID receiverId,
+        Long senderId,
+        Long receiverId,
         String message,
         SlackStatus status,
         String errorMessage,
         Integer retryCount,
         LocalDateTime sentAt,
-        UUID referenceId,
+        Long referenceId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

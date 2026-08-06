@@ -8,13 +8,13 @@ import java.util.UUID;
 
 public record SlackListResponseDto(
         UUID slackMessageId,
-        UUID senderId,
-        UUID receiverId,
+        Long senderId,
+        Long receiverId,
         String message,
         SlackStatus status,
         Integer retryCount,
         LocalDateTime sentAt,
-        UUID referenceId,
+        Long referenceId,
         LocalDateTime createdAt
 ) {
     public static SlackListResponseDto from(

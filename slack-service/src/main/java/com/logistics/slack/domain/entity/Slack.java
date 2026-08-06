@@ -11,13 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// 실제 서비스로 복사할 때: Sample -> 도메인 엔티티명, p_sample -> p_{테이블명}으로 바꾸세요.
 @Getter
 @Entity
 @Table(name = "p_slack")
@@ -44,10 +44,10 @@ public class Slack extends BaseEntity {
     private Integer retryCount; // 재시도 횟수
 
     @Column(name = "sent_at")
-    private String sentAt; // 실제 발송 완료 시간
+    private LocalDateTime sentAt; // 실제 발송 완료 시간
 
     @Column(name = "reference_id")
-    private UUID referenceId; // 관련 업무 식별자
+    private Long referenceId; // 관련 업무 식별자
 
 //    // ERD에는 있고 테이블 명세서에는 없다 -> 근데 sendAt 같음
 //    @Column(name = "send_time", nullable = false)
@@ -58,23 +58,30 @@ public class Slack extends BaseEntity {
     private SlackStatus status; // 발송 상태
 
     public static Slack create(
-            String receiverId,
+            Long senderId,
+            Long receiverId,
             String message,
-            String referenceId
+            Long referenceId
     ) {
         Slack slack = new Slack();
+        slack.senderId = senderId;
         slack.receiverId = receiverId;
         slack.message = message;
         slack.referenceId = referenceId;
+        slack.retryCount = 0;
         slack.status = SlackStatus.PENDING;
+
         return slack;
     }
 
-//    public void update(String name) {
-//        this.name = name;
-//    }
-
-    public void changeStatus(SlackStatus status) {
+    public void markSuccess() {
         this.status = status;
+        this.sentAt = LocalDateTime.now();
+        this.errorMessage = null;
+    }
+
+    public void markFailed(String errorMessage) {
+        this.status = status;
+        this.errorMessage = errorMessage;
     }
 }

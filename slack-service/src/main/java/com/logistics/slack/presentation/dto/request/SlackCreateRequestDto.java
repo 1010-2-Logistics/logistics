@@ -7,11 +7,11 @@ import java.util.UUID;
 
 public record SlackCreateRequestDto(
         @NotNull
-        UUID receiverId,
+        Long receiverId,
 
         @NotBlank
         String message,
 
-        UUID referenceId
+        Long referenceId
 ) {
 }

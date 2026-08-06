@@ -19,7 +19,7 @@ public class SlackFacade {
     }
 
     public SlackRetryResponseDto retrySlackMessage(UUID slackMessageId) {
-
+        return null;
     }
 
 }
