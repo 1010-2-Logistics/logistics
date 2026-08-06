@@ -1,10 +1,7 @@
 package com.logistics.user.presentation.controller;
 
-import com.logistics.user.application.dto.command.ChangePasswordCommandDto;
-import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
+import com.logistics.user.application.dto.command.UpdateUserCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
-import com.logistics.user.application.dto.result.ChangePasswordResultDto;
-import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
