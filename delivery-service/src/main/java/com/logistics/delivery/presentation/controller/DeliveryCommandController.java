@@ -20,7 +20,7 @@ public class DeliveryCommandController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<DeliveryCreateResponse> create(@Valid @RequestBody DeliveryCreateRequest request) {
-        Delivery delivery = deliveryCommandService.create(request.toCommand());
-        return ApiResponse.success(201, "배송 생성 성공", DeliveryCreateResponse.from(delivery));
+        var result = deliveryCommandService.create(request.toCommand());
+        return ApiResponse.success(201, "배송 생성 성공", DeliveryCreateResponse.from(result));
     }
 }
