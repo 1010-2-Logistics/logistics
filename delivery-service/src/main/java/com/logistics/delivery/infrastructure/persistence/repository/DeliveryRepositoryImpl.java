@@ -1,6 +1,8 @@
 package com.logistics.delivery.infrastructure.persistence.repository;
 
 import com.logistics.delivery.domain.entity.Delivery;
+import com.logistics.delivery.domain.repository.DeliveryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
