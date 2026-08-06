@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.logistics.delivery.application.dto.query.SearchDeliveryQuery;
+import com.logistics.delivery.application.dto.result.DeliveryResults;
 import com.logistics.delivery.application.service.DeliveryQueryService;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
@@ -42,10 +43,10 @@ class DeliveryQueryServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         // when
-        Delivery result = deliveryQueryService.getById(deliveryId);
+        DeliveryResults.DeliveryDetailResult result = deliveryQueryService.getById(deliveryId);
 
         // then
-        assertThat(result).isEqualTo(delivery);
+        assertThat(result.delivery()).isEqualTo(delivery);
     }
 
     @Test
@@ -91,7 +92,7 @@ class DeliveryQueryServiceTest {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(DeliveryStatus.HUB_WAITING, hubId, "createdAt", 0, 10);
 
         // when
-        Page<Delivery> result = deliveryQueryService.search(query);
+        Page<DeliveryResults.DeliveryDetailResult> result = deliveryQueryService.search(query);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(1);
