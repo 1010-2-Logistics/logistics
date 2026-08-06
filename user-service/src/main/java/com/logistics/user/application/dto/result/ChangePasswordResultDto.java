@@ -7,14 +7,12 @@ import java.time.LocalDateTime;
  * 비밀번호 변경 결과.
  */
 public record ChangePasswordResultDto(
-        Long userId,
-        LocalDateTime passwordChangedAt
+        Long userId
 ) {
 
     public static ChangePasswordResultDto from(User user) {
         return new ChangePasswordResultDto(
-                user.getUserId(),
-                user.getUpdatedAt()
+                user.getUserId()
         );
     }
 }
