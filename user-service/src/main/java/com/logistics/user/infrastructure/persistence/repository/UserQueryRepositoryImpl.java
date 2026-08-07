@@ -29,15 +29,13 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
             String username
     ) {
         return userJpaRepository
-                .existsByUsername(username);
+                .existsByUsernameAndDeletedAtIsNull(username);
     }
 
     @Override
-    public boolean existsBySlackId(
-            String slackId
-    ) {
+    public boolean existsBySlackId(String slackId) {
         return userJpaRepository
-                .existsBySlackId(slackId);
+                .existsBySlackIdAndDeletedAtIsNull(slackId);
     }
 
     @Override
