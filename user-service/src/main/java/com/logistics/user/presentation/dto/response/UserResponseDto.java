@@ -1,8 +1,9 @@
 package com.logistics.user.presentation.dto.response;
 
-import com.logistics.user.domain.entity.User;
+import com.logistics.user.application.dto.result.UserDetailResultDto;
 import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record UserResponseDto(
@@ -11,19 +12,25 @@ public record UserResponseDto(
         String slackId,
         UserStatus status,
         UserRole role,
+        UUID hubId,
         UUID companyId,
-        UUID hubId
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
 
-    public static UserResponseDto from(User user) {
+    public static UserResponseDto from(
+            UserDetailResultDto result
+    ) {
         return new UserResponseDto(
-                user.getUserId(),
-                user.getUsername(),
-                user.getSlackId(),
-                user.getStatus(),
-                user.getRole(),
-                user.getCompanyId(),
-                user.getHubId()
+                result.userId(),
+                result.username(),
+                result.slackId(),
+                result.status(),
+                result.role(),
+                result.hubId(),
+                result.companyId(),
+                result.createdAt(),
+                result.updatedAt()
         );
     }
 }

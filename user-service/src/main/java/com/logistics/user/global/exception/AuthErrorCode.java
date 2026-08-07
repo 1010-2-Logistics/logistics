@@ -57,6 +57,10 @@ public enum AuthErrorCode implements ErrorCode {
     AUTH_UNAUTHORIZED(
             HttpStatus.UNAUTHORIZED,
             "인증 토큰이 없거나 유효하지 않습니다."
+    ),
+    AUTH_INVALID_GATEWAY_HEADER(
+            HttpStatus.UNAUTHORIZED,
+            "Gateway 인증 헤더 형식이 올바르지 않습니다."
     );
 
     private final HttpStatus httpStatus;
