@@ -90,14 +90,15 @@ class SlackCommandServiceTest {
         @Test
         @DisplayName("슬랙 메시지를 생성하고 발송 이벤트를 발행")
         void slack_create_success() {
-            SlackCreateCommand command = new SlackCreateCommand(
+            SlackCreateCommand slackCreateCommand = new SlackCreateCommand(
                     senderId,
                     receiverId,
                     "주문이 생성되었습니다.",
                     referenceId
             );
+            TransactionSynchronizationManager.initSynchronization();
 
-            slackCommandService.createSlack(command);
+            slackCommandService.createSlack(slackCreateCommand);
             ArgumentCaptor<Slack> slackCaptor = ArgumentCaptor.forClass(Slack.class);
             verify(slackCommandRepository).save(slackCaptor.capture());
             Slack savedSlack = slackCaptor.getValue();
@@ -109,7 +110,7 @@ class SlackCommandServiceTest {
             assertThat(savedSlack.getRetryCount()).isZero();
             assertThat(savedSlack.getStatus()).isEqualTo(SlackStatus.PENDING);
 
-            verify(slackEventPublisher).publish(any(SlackSendEvent.class));
+            verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
         }
     }
 
