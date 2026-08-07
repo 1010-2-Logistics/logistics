@@ -23,7 +23,6 @@ public class SlackCommandController {
     private final SlackFacade slackFacade;
     private final SlackCommandService slackCommandService;
 
-    // TODO : 무
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SlackCreateResponseDto> createSlack(
@@ -71,6 +70,8 @@ public class SlackCommandController {
             @PathVariable("slackMessageId") UUID slackMessageId
     ) {
         // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-        slackCommandService.deleteSlack(slackMessageId, "system");
+        Long deletedBy = 1L;
+
+        slackCommandService.deleteSlack(slackMessageId, deletedBy);
     }
 }
