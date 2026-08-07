@@ -1,6 +1,6 @@
 package com.logistics.user.presentation.dto.response;
 
-import com.logistics.user.application.dto.result.ChangeApprovalResult;
+import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.domain.entity.UserStatus;
 import java.time.LocalDateTime;
 
@@ -18,7 +18,7 @@ public record UserApprovalResponseDto(
 ) {
 
     public static UserApprovalResponseDto from(
-            ChangeApprovalResult result
+            ChangeApprovalResultDto result
     ) {
         return new UserApprovalResponseDto(
                 result.userId(),

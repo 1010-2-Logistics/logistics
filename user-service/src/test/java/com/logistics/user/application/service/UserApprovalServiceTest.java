@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import com.logistics.user.application.dto.command.ChangeApprovalCommandDto;
-import com.logistics.user.application.dto.result.ChangeApprovalResult;
+import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
 import com.logistics.user.domain.entity.ApprovalDecision;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
@@ -85,7 +85,7 @@ class UserApprovalServiceTest {
         ).willReturn(Optional.of(targetUser));
 
         // when
-        ChangeApprovalResult result =
+        ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(command);
 
         // then
@@ -141,7 +141,7 @@ class UserApprovalServiceTest {
         ).willReturn(Optional.of(targetUser));
 
         // when
-        ChangeApprovalResult result =
+        ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(command);
 
         // then
@@ -189,7 +189,7 @@ class UserApprovalServiceTest {
         ).willReturn(Optional.of(targetUser));
 
         // when
-        ChangeApprovalResult result =
+        ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(command);
 
         // then
