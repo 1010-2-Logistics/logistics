@@ -245,4 +245,20 @@ class SlackCommandServiceTest {
             verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
         }
     }
+
+    @Nested
+    @DisplayName("슬랙 메시지 삭제")
+    class slack_delete {
+        @Test
+        @DisplayName("슬랙 메시지 삭제 시 삭제 정보 기록")
+        void slack_delete_success(){
+
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 메시지 삭제 시 예외")
+        void slack_delete_not_found(){
+
+        }
+    }
 }
