@@ -7,6 +7,6 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @Getter
-public class HubRouteCreateResponseDto {
+public class HubRouteUpdateResponseDto {
     private UUID hubRouteId;
 }
