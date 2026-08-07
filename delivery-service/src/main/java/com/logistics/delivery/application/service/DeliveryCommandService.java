@@ -149,4 +149,16 @@ public class DeliveryCommandService {
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         delivery.markDeleted(TEMP_CREATED_BY);
     }
+
+    public void cancel(UUID orderId) {
+        Optional<Delivery> delivery = deliveryRepository.findByOrderId(orderId);
+        if (delivery.isEmpty()) {
+            return; // 이미 없음 = 목표 상태 달성, 그냥 성공 처리
+        }
+        Delivery found = delivery.get();
+        if (found.getStatus() == DeliveryStatus.DELIVERED) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+        }
+        found.changeStatus(DeliveryStatus.CANCELLED);
+    }
 }
