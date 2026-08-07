@@ -3,12 +3,15 @@ package com.logistics.delivery.application.service;
 import com.logistics.delivery.application.dto.command.ChangeDeliveryRouteStatusCommand;
 import com.logistics.delivery.application.dto.command.ChangeDeliveryStatusCommand;
 import com.logistics.delivery.application.dto.command.CreateDeliveryCommand;
+import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCreateResult;
+import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryDetailResult;
+import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
+import com.logistics.delivery.application.port.HubPort;
 import com.logistics.delivery.domain.entity.*;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.infrastructure.feign.client.HubClient;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,7 +34,7 @@ public class DeliveryCommandService {
     private final DeliveryRepository deliveryRepository;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
-    private final HubClient hubClient;
+    private final HubPort hubPort;
 
     public DeliveryCreateResult create(CreateDeliveryCommand command) {
         Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
@@ -68,7 +71,7 @@ public class DeliveryCommandService {
 
     private void validateHub(UUID hubId) {
         try {
-            Set<UUID> validIds = hubClient.validateHubIds(List.of(hubId));
+            Set<UUID> validIds = hubPort.validateHubIds(List.of(hubId));
             if (!validIds.contains(hubId)) {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
@@ -85,10 +88,7 @@ public class DeliveryCommandService {
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
     }
 
-    public record DeliveryCreateResult(Delivery delivery, int routeCount) {
-    }
-
-    public Delivery changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command) {
+    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
 
@@ -97,7 +97,7 @@ public class DeliveryCommandService {
         }
 
         delivery.changeStatus(DeliveryStatus.DELIVERED);
-        return delivery;
+        return new DeliveryDetailResult(delivery);
     }
 
     public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId, ChangeDeliveryRouteStatusCommand command) {
@@ -144,10 +144,6 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
     }
-
-    public record RouteStatusChangeResult(DeliveryRoute route, Delivery delivery) {
-    }
-
     public void delete(UUID deliveryId) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));

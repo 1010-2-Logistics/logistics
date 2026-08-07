@@ -23,8 +23,8 @@ public class DeliveryStatusCommandController {
     @PatchMapping("/{deliveryId}")
     public ApiResponse<DeliveryStatusChangeResponse> changeStatus(
             @PathVariable UUID deliveryId, @Valid @RequestBody DeliveryStatusChangeRequest request) {
-        Delivery delivery = deliveryCommandService.changeStatus(deliveryId, request.toCommand());
-        return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(delivery));
+        var result = deliveryCommandService.changeStatus(deliveryId, request.toCommand());
+        return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(result));
     }
 
     @PatchMapping("/{deliveryId}/routes/{routeId}")
