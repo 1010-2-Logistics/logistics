@@ -6,6 +6,7 @@ import com.logistics.slack.application.dto.result.SlackListResult;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.domain.repository.SlackQueryRepository;
+import com.logistics.slack.global.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -79,7 +81,10 @@ class SlackQueryServiceTest {
         @Test
         @DisplayName("존재하지 않는 슬랙 메시지 상세 조회 시 예외")
         void slack_detail_not_found() {
+            given(slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
+            assertThatThrownBy(() -> slackQueryService.getSlack(slackMessageId))
+                    .isInstanceOf(CustomException.class);
         }
     }
 
