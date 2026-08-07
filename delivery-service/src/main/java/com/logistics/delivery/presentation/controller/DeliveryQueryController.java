@@ -38,7 +38,7 @@ public class DeliveryQueryController {
 
     @GetMapping("/{deliveryId}")
     public ApiResponse<DeliveryResponse> getById(@PathVariable UUID deliveryId) {
-        Delivery delivery = deliveryQueryService.getById(deliveryId);
-        return ApiResponse.success(200, "배송 조회 성공", DeliveryResponse.from(delivery));
+        var result = deliveryQueryService.getById(deliveryId);
+        return ApiResponse.success(200, "배송 조회 성공", DeliveryResponse.from(result));
     }
 }
