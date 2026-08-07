@@ -268,7 +268,10 @@ class SlackCommandServiceTest {
         @Test
         @DisplayName("존재하지 않는 메시지 삭제 시 예외")
         void slack_delete_not_found() {
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
+            assertThatThrownBy(() -> slackCommandService.deleteSlack(slackMessageId, 1L))
+                    .isInstanceOf(CustomException.class);
         }
     }
 }
