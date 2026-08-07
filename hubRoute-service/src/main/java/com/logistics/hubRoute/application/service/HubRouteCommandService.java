@@ -70,6 +70,10 @@ public class HubRouteCommandService {
 
     public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
 
+        //수정 하려는 경로가 삭제되었는지 체크
+        HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId)
+                .orElseThrow(()->new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
+
         UUID startHubId = hubRouteUpdateRequestDto.startHubId();
         UUID endHubId = hubRouteUpdateRequestDto.endHubId();
 
@@ -95,7 +99,6 @@ public class HubRouteCommandService {
             throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
         }
 
-        HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId).get();
         hubRoute.update(
                 hubRouteUpdateRequestDto.startHubId(),
                 hubRouteUpdateRequestDto.endHubId(),
