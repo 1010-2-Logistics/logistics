@@ -1,6 +1,7 @@
 package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.query.GetMyInfoQueryDto;
+import com.logistics.user.application.dto.query.GetUserDetailQueryDto;
 import com.logistics.user.application.dto.query.GetUserQueryDto;
 import com.logistics.user.application.dto.query.SearchUserQueryDto;
 import com.logistics.user.application.dto.result.UserDetailResultDto;
@@ -55,6 +56,32 @@ public class QueryController {
         return ApiResponse.success(
                 HttpStatus.OK.value(),
                 "내 정보 조회 성공",
+                UserResponseDto.from(result)
+        );
+    }
+
+    @GetMapping("/{userId}")
+    public ApiResponse<UserResponseDto> getUserDetail(
+            @PathVariable Long userId,
+            Authentication authentication
+    ) {
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
+
+        GetUserDetailQueryDto query =
+                new GetUserDetailQueryDto(
+                        currentUser.userId(),
+                        currentUser.role(),
+                        currentUser.hubId(),
+                        userId
+                );
+
+        UserDetailResultDto result =
+                UserQueryService.getUserDetail(query);
+
+        return ApiResponse.success(
+                HttpStatus.OK.value(),
+                "사용자 상세 조회 성공",
                 UserResponseDto.from(result)
         );
     }
