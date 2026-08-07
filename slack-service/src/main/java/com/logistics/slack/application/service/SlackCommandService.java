@@ -39,13 +39,9 @@ public class SlackCommandService {
         );
         slackCommandRepository.save(slack);
 
-        // TroubleShooting01 - 발송횟수가 count 되지 않는 문제 발견
-        // -> retryCount 및 PENDING 상태 커밋 전에 RabbitMQ 이벤트가 소비되면
-        // 리스너가 이전 DB 값을 조회하여 변경 값이 덮일 수 있음
-        // 트랜잭션 커밋 이후 이벤트 발행 방식 검토
-        slackEventPublisher.publish(
-                new SlackSendEvent(slack.getSlackMessageId())
-        );
+        // DB 커밋 전에 RabbitMQ 이벤트가 소비되는 문제 방지를 위해
+        // 트랜잭션 커밋 이후 이벤트 발행
+        publishAfterCommit(slack.getSlackMessageId());
         // 이 시점의 slack.status는 아직 PENDING!
         return SlackCreateResult.from(slack);
     }
