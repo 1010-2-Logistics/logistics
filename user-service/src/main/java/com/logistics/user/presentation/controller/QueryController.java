@@ -132,6 +132,9 @@ public class QueryController {
         AuthenticatedUser currentUser =
                 (AuthenticatedUser) authentication.getPrincipal();
 
+        int validatedPage =
+                Math.max(page, 0);
+
         int validatedSize =
                 (size == 10 || size == 30 || size == 50)
                         ? size
@@ -144,7 +147,7 @@ public class QueryController {
 
         Pageable pageable =
                 PageRequest.of(
-                        page,
+                        validatedPage,
                         validatedSize,
                         Sort.by(
                                 sortDirection,
