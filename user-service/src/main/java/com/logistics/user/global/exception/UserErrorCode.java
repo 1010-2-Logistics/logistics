@@ -80,6 +80,21 @@ public enum UserErrorCode implements ErrorCode {
     USER_PASSWORD_CONFLICT(
             HttpStatus.CONFLICT,
             "현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."
+    ),
+
+    USER_INVALID_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "요청값 형식이 올바르지 않습니다."
+    ),
+
+    USER_DELETE_CONFLICT(
+            HttpStatus.CONFLICT,
+            "이미 삭제된 사용자입니다."
+    ),
+
+    USER_ACTIVE_TASK_CONFLICT(
+            HttpStatus.CONFLICT,
+            "진행 중인 업무가 존재하여 탈퇴할 수 없습니다."
     );
 
 
