@@ -1,11 +1,13 @@
 package com.logistics.product.application.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
-import com.logistics.product.application.dto.command.ProductCommand.ProductDeleteCommand;
-import com.logistics.product.application.dto.command.ProductCommand.ProductUpdateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductUpdateCommand;
+import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.repository.ProductCommandRepository;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -22,14 +24,15 @@ public class ProductCommandService {
 	private final ProductQueryService productQueryService;
 	
 	@Transactional(rollbackFor = Exception.class)
-	public Product createProduct(ProductCreateCommand command) {
+	public Product createProduct(ProductCreateCommand command, CompanyExistsResponseDto companyInfo) {
 		if(productQueryService.existsProductName(command.companyId(), command.productName())) {
 			throw new ProductException(ProductErrorCode.PRODUCT_EXISTS_PRODUCT_NAME);
 		}
 		
 		Product product = Product.create(
 				command.companyId(),
-				command.productName()
+				command.productName(),
+				companyInfo.companyName()
 		);
 		
 		return productCommandRepository.save(product);
@@ -45,10 +48,10 @@ public class ProductCommandService {
 	}
 	
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteProduct(ProductDeleteCommand command) {
-		Product product = productQueryService.findProduct(command.productId());
+	public void deleteProduct(UUID productId, Long deletedBy) {
+		Product product = productQueryService.findProduct(productId);
 		
-		product.markDeleted(command.userId());
+		product.markDeleted(deletedBy);
 	}
 	
 }
