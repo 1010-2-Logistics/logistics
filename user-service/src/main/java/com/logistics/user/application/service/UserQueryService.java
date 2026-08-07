@@ -13,6 +13,9 @@ import com.logistics.user.global.exception.CustomException;
 import com.logistics.user.global.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +41,16 @@ public class UserQueryService {
     public Page<User> search(
             SearchUserQueryDto query
     ) {
+        // 조회 권한과 허브 범위 검증
         validateSearchAccess(query);
 
+        //HUB_MANAGER는 요청한 hubId가 아니라 본인 담당 허브만 가능하도록 조회 범위 제한
         UUID searchHubId =
                 resolveSearchHubId(query);
+
+        // page, size, sort, direction 정책 검증
+        Pageable pageable =
+                createPageable(query);
 
         return UserQueryRepository.search(
                 query.username(),
@@ -49,10 +58,56 @@ public class UserQueryService {
                 query.role(),
                 searchHubId,
                 query.companyId(),
-                query.pageable()
+                pageable
         );
     }
 
+    private Pageable createPageable(
+            SearchUserQueryDto query
+    ) {
+        // 요청값이 음수인 page는 첫 페이지(0)로 보정
+        int validatedPage =
+                Math.max(query.page(), 0);
+        // 허용된 size(10, 30, 50)만 사용하고 그 외에는 10으로 보정
+        int validatedSize =
+                resolvePageSize(query.size());
+        // ASC만 명시적으로 허용하고 그 외 값은 DESC로 처리
+        Sort.Direction sortDirection =
+                "ASC".equalsIgnoreCase(query.direction())
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC;
+
+        return PageRequest.of(
+                validatedPage,
+                validatedSize,
+                Sort.by(
+                        sortDirection,
+                        resolveSortField(query.sort())
+                )
+        );
+    }
+
+    //목록 조회에 허용된 페이지 크기 정의
+    private int resolvePageSize(
+            int size
+    ) {
+        return (size == 10 || size == 30 || size == 50)
+                ? size
+                : 10;
+    }
+    //API 명세에서 허용한 정렬 필드 정의
+    private String resolveSortField(
+            String sort
+    ) {
+        return switch (sort) {
+            case "username" -> "username";
+            case "status" -> "status";
+            case "createdAt" -> "createdAt";
+            default -> "createdAt";
+        };
+    }
+
+    //사용자 목록 조회 권한과 HUB_MANAGER의 허브 접근 범위 검증
     private void validateSearchAccess(
             SearchUserQueryDto query
     ) {

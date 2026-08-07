@@ -19,6 +19,9 @@ public record SearchUserQueryDto(
         UUID companyId,
 
         // 페이징/정렬 정보
-        Pageable pageable
+        int page,
+        int size,
+        String sort,
+        String direction
 ) {
 }

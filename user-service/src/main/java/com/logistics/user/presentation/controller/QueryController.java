@@ -132,29 +132,6 @@ public class QueryController {
         AuthenticatedUser currentUser =
                 (AuthenticatedUser) authentication.getPrincipal();
 
-        int validatedPage =
-                Math.max(page, 0);
-
-        int validatedSize =
-                (size == 10 || size == 30 || size == 50)
-                        ? size
-                        : 10;
-
-        Sort.Direction sortDirection =
-                "ASC".equalsIgnoreCase(direction)
-                        ? Sort.Direction.ASC
-                        : Sort.Direction.DESC;
-
-        Pageable pageable =
-                PageRequest.of(
-                        validatedPage,
-                        validatedSize,
-                        Sort.by(
-                                sortDirection,
-                                resolveSortField(sort)
-                        )
-                );
-
         SearchUserQueryDto query =
                 new SearchUserQueryDto(
                         currentUser.role(),
@@ -164,7 +141,10 @@ public class QueryController {
                         role,
                         hubId,
                         companyId,
-                        pageable
+                        page,
+                        size,
+                        sort,
+                        direction
                 );
 
         Page<User> userPage =
@@ -180,20 +160,5 @@ public class QueryController {
                 "사용자 목록 조회 성공",
                 PageResponse.of(responsePage)
         );
-    }
-
-    private String resolveSortField(
-            String sort
-    ) {
-        return switch (sort) {
-
-            case "username" -> "username";
-
-            case "status" -> "status";
-
-            case "createdAt" -> "createdAt";
-
-            default -> "createdAt";
-        };
     }
 }
