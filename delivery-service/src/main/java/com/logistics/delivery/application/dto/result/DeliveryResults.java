@@ -3,6 +3,8 @@ package com.logistics.delivery.application.dto.result;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryRoute;
 
+import java.util.List;
+
 public final class DeliveryResults {
 
     private DeliveryResults() {
@@ -15,5 +17,8 @@ public final class DeliveryResults {
     }
 
     public record DeliveryDetailResult(Delivery delivery) {
+    }
+
+    public record DeliveryRouteListResult(List<DeliveryRoute> routes) {
     }
 }
