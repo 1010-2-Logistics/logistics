@@ -28,13 +28,13 @@ public class ProductPolicy {
 	}
 	
 	public void validateHubManagerAndCompanyManager(ProductAuth auth) {
-		if(!auth.role().isMaster() || !auth.role().isHubManager() || !auth.role().isCompanyManager()) {
+		if(!auth.role().isMaster() && !auth.role().isHubManager() && !auth.role().isCompanyManager()) {
 			throw new ProductException(CommonErrorCode.AUTH_FORBIDDEN);
 		}
 	}
 	
 	public void validateHubManager(ProductAuth auth) {
-		if(!auth.role().isMaster() || !auth.role().isHubManager()) {
+		if(!auth.role().isMaster() && !auth.role().isHubManager()) {
 			throw new ProductException(CommonErrorCode.AUTH_FORBIDDEN);
 		}
 	}

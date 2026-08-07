@@ -51,7 +51,7 @@ public record ProductSearchRequestDto(
 	
 	public Pageable toPageable() {
 		Sort.Direction direction = "asc".equals(sort) ? Sort.Direction.ASC : Sort.Direction.DESC;
-    return PageRequest.of(page, size, direction);
+    return PageRequest.of(page, size, direction, "createdAt");
 	}
 	
 	@AssertTrue(message = "상품명, 업체ID, 소속 허브ID 중 하나는 반드시 입력해야 합니다.")
