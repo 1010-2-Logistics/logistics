@@ -2,6 +2,7 @@ package com.logistics.hubRoute.application.service;
 
 import com.logistics.hubRoute.application.dto.command.HubRouteCreateCommand;
 import com.logistics.hubRoute.application.port.EventPublisher;
+import com.logistics.hubRoute.application.port.HubPort;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteCommandRepository;
 import com.logistics.hubRoute.global.exception.CustomException;
@@ -15,6 +16,7 @@ import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteUpdateRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateResponseDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +28,8 @@ public class HubRouteCommandService {
 
     private final HubRouteCommandRepository hubRouteCommandRepository;
     private final EventPublisher eventPublisher;
-    private final HubClient hubClient;
+
+    private final HubPort hubPort;
 
     //허브 경로 등록
     public HubRouteCreateResponseDto createHubRoute(HubRouteCreateCommand hubRouteCreateCommand) {
@@ -39,16 +42,7 @@ public class HubRouteCommandService {
         }
 
         //출발허브 도착허브 존재하는지 체크
-        List<UUID> targetHubIds = List.of(startHubId, endHubId);
-        Set<UUID> existingHubIds = hubClient.validateHubIds(targetHubIds);
-
-        if (!existingHubIds.contains(startHubId)) {
-            throw new CustomException(HubRouteErrorCode.START_HUB_NOT_FOUND);
-        }
-
-        if (!existingHubIds.contains(endHubId)) {
-            throw new CustomException(HubRouteErrorCode.END_HUB_NOT_FOUND);
-        }
+        validateHubs(List.of(startHubId, endHubId), startHubId, endHubId);
 
         //중복 경로 탐색
         if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId, endHubId)) {
@@ -83,16 +77,7 @@ public class HubRouteCommandService {
         }
 
         //출발허브 도착허브 존재하는지 체크
-        List<UUID> targetHubIds = List.of(startHubId, endHubId);
-        Set<UUID> existingHubIds = hubClient.validateHubIds(targetHubIds);
-
-        if (!existingHubIds.contains(startHubId)) {
-            throw new CustomException(HubRouteErrorCode.START_HUB_NOT_FOUND);
-        }
-
-        if (!existingHubIds.contains(endHubId)) {
-            throw new CustomException(HubRouteErrorCode.END_HUB_NOT_FOUND);
-        }
+        validateHubs(List.of(startHubId, endHubId), startHubId, endHubId);
 
         //중복 경로 탐색
         if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(startHubId, endHubId,hubRouteId)) {
@@ -122,4 +107,23 @@ public class HubRouteCommandService {
 
         hubRoute.markDeleted(deletedBy);
     }
+
+
+    private void validateHubs(List<UUID> hubIds, UUID startHubId, UUID endHubId) {
+        try {
+            Set<UUID> validIds = hubPort.validateHubIds(hubIds);
+
+            if (!validIds.contains(startHubId)) {
+                throw new CustomException(HubRouteErrorCode.START_HUB_NOT_FOUND);
+            }
+            if (!validIds.contains(endHubId)) {
+                throw new CustomException(HubRouteErrorCode.END_HUB_NOT_FOUND);
+            }
+        } catch (FeignException e) {
+            // Feign 통신 장애 시 기본 허브 조회 실패 예외로 래핑
+            throw new CustomException(HubRouteErrorCode.HUB_NOT_FOUND);
+        }
+    }
+
+
 }
