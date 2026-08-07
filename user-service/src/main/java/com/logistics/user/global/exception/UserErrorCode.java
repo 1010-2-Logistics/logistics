@@ -95,6 +95,11 @@ public enum UserErrorCode implements ErrorCode {
     USER_ACTIVE_TASK_CONFLICT(
             HttpStatus.CONFLICT,
             "진행 중인 업무가 존재하여 탈퇴할 수 없습니다."
+    ),
+
+    USER_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "사용자 조회 권한이 없습니다."
     );
 
 
