@@ -22,7 +22,7 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
 	
 	@Modifying(clearAutomatically = true)
 	@Query("""
-			UPDATE product p SET p.companyName = :companyName
+			UPDATE Product p SET p.companyName = :companyName
 			WHERE p.companyId = :companyId
 					AND p.deletedAt IS NULL
 	""")
