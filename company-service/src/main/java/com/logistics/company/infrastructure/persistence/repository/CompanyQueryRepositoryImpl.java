@@ -1,5 +1,6 @@
 package com.logistics.company.infrastructure.persistence.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,6 +42,11 @@ public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 			Pageable pageable) {
 		
 		return dslRepository.searchCompany(companyName, hubId, companyType, pageable);
+	}
+
+	@Override
+	public List<UUID> findIdsByHubId(UUID hubId) {
+		return jpaRepository.findCompanyIdByHubIdAndDeletedAtIsNull(hubId);
 	}
   
   

@@ -1,5 +1,6 @@
 package com.logistics.company.infrastructure.persistence.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,5 +35,7 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 					and endCompany.status = :status
 	""")
 	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId, CompanyStatus status);
+
+	List<UUID> findCompanyIdByHubIdAndDeletedAtIsNull(UUID hubId);
 
 }

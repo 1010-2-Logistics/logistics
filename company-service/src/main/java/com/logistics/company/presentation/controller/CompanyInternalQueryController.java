@@ -1,5 +1,6 @@
 package com.logistics.company.presentation.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,17 @@ public class CompanyInternalQueryController {
 		return ApiResponse.success(
 				HttpStatus.OK.value(),
 				"업체 존재 여부 확인",
+				response
+		);
+	}
+	
+	@GetMapping("/ids/{hubId}")
+	public ApiResponse<List<UUID>> getCompanyIdsByHubId(@PathVariable("hubId") UUID hubId) {
+		List<UUID> response = companyQueryService.findIdsByHubId(hubId);
+		
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"소속 허브 업체 리스트 조회",
 				response
 		);
 	}
