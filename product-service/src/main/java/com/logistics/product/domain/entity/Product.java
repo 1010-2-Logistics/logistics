@@ -29,14 +29,18 @@ public class Product extends BaseEntity {
 	@Column(name = "company_id", nullable = false)
 	private UUID companyId;
 	
-	@Column(name = "product_name", nullable = false)
+	@Column(name = "product_name", nullable = false, length = 20)
 	private String productName;
 	
-	public static Product create(UUID companyId, String productName) {
+	@Column(name = "company_name", nullable = false)
+	private String companyName;
+	
+	public static Product create(UUID companyId, String productName, String companyName) {
 		Product product = new Product();
 		
 		product.companyId = companyId;
 		product.productName = productName;
+		product.companyName = companyName;
 		
 		return product;
 	}

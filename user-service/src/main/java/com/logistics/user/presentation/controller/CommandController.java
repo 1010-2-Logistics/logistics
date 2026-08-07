@@ -10,6 +10,7 @@ import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.domain.entity.UserStatus;
+import com.logistics.user.global.exception.AuthErrorCode;
 import com.logistics.user.global.exception.CustomException;
 import com.logistics.user.global.exception.UserErrorCode;
 import com.logistics.user.global.response.ApiResponse;
@@ -174,7 +175,7 @@ public class CommandController {
                 || !authentication.isAuthenticated()) {
 
             throw new CustomException(
-                    UserErrorCode.AUTH_UNAUTHORIZED
+                    AuthErrorCode.AUTH_UNAUTHORIZED
             );
         }
 
@@ -184,7 +185,7 @@ public class CommandController {
             );
         } catch (NumberFormatException exception) {
             throw new CustomException(
-                    UserErrorCode.AUTH_UNAUTHORIZED
+                    AuthErrorCode.AUTH_UNAUTHORIZED
             );
         }
     }
