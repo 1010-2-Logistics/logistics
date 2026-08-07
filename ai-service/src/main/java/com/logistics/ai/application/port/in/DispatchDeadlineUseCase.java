@@ -1,7 +1,7 @@
 package com.logistics.ai.application.port.in;
 
-import java.util.UUID;
+import com.logistics.ai.application.event.OrderCreatedEvent;
 
 public interface DispatchDeadlineUseCase {
-	void generate(UUID orderId, UUID deliveryId);
+	void generate(OrderCreatedEvent event);
 }
