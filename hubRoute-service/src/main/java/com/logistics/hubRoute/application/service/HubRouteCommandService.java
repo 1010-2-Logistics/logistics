@@ -18,6 +18,7 @@ import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateRespon
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class HubRouteCommandService {
     private final HubPort hubPort;
 
     //허브 경로 등록
+    @CacheEvict(value = "hubRoute", allEntries = true) //경로 생성시 캐시 삭제
     public HubRouteCreateResponseDto createHubRoute(HubRouteCreateCommand hubRouteCreateCommand) {
         UUID startHubId = hubRouteCreateCommand.startHubId();
         UUID endHubId = hubRouteCreateCommand.endHubId();
@@ -62,6 +64,8 @@ public class HubRouteCommandService {
         return new HubRouteCreateResponseDto(hubRoute.getHubRouteId());
     }
 
+    //허브 경로 수정
+    @CacheEvict(value = "hubRoute", allEntries = true) // 경로 수정 시 캐시 무효
     public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
 
         //수정 하려는 경로가 삭제되었는지 체크
@@ -96,6 +100,7 @@ public class HubRouteCommandService {
     }
 
     //허브 경로 삭제
+    @CacheEvict(value = "hubRoute", allEntries = true) //경로 삭제시 캐시 삭제
     public void deleteHubRoute(UUID hubRouteId, long deletedBy) {
         //경로가 이미 삭제되었는지 체크
         if(!hubRouteCommandRepository.findByHubRouteIdAndDeletedAtIsNull(hubRouteId))
