@@ -1,11 +1,14 @@
 package com.logistics.product.application.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.logistics.product.application.dto.query.ProductSearchQuery;
+import com.logistics.product.application.dto.result.ProductSearchResultDto;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.repository.ProductQueryRepository;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -41,6 +44,10 @@ public class ProductQueryService {
 	
 	public boolean existsProductName(UUID companyId, String productName) {
 		return productQueryRepository.existsCompanyIdAndProductName(companyId, productName);
+	}
+	
+	public List<ProductSearchResultDto> search(ProductSearchQuery search) {
+		
 	}
 	
 }
