@@ -1,5 +1,6 @@
 package com.logistics.product.application.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -28,6 +29,10 @@ public class ProductQueryService {
 	public Product findProduct(UUID productId) {
 		return productQueryRepository.findByProductId(productId)
 				.orElseThrow(() -> new ProductException(ProductErrorCode.PRODUCT_NOT_FOUND));
+	}
+	
+	public Optional<Product> findProductOptional(UUID productId) {
+		return productQueryRepository.findByProductId(productId);
 	}
 	
 	public boolean existsProductName(UUID companyId, String productName) {

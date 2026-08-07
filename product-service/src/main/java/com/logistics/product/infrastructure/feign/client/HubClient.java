@@ -6,6 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.infrastructure.config.FeignConfig;
 import com.logistics.product.infrastructure.feign.response.HubValidationResponse;
 
@@ -13,6 +14,6 @@ import com.logistics.product.infrastructure.feign.response.HubValidationResponse
 @FeignClient(name = "hub-service", configuration = FeignConfig.class)
 public interface HubClient {
 
-    @GetMapping("/internal/v1/hubs/{hubId}")
-    HubValidationResponse getHub(@PathVariable("hubId") UUID hubId);
+  @GetMapping("/internal/v1/hubs/{hubId}")
+  ApiResponse<HubValidationResponse> getHub(@PathVariable("hubId") UUID hubId);
 }
