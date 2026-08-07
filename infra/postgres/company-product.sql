@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS company_service.p_company (
     company_name VARCHAR(255) NOT NULL,
     company_address VARCHAR(255) NOT NULL,
     company_type VARCHAR(20) NOT NULL CHECK (company_type IN ('PRODUCER', 'RECEIVER')),
-    company_status VARCHAR(20) NOT NULL CHECK (company_status IN ('PENDING', 'ACTIVE', 'INACTIVE', 'DELETED')),
+    company_status VARCHAR(20) NOT NULL CHECK (company_status IN ('PENDING', 'ACTIVE', 'FAILED')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT,
     updated_at TIMESTAMP,
@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS company_service.p_company (
 CREATE TABLE IF NOT EXISTS product_service.p_product (
     product_id UUID PRIMARY KEY,
     company_id UUID NOT NULL,
-    product_name VARCHAR(255) NOT NULL,
+    product_name VARCHAR(20) NOT NULL,
+    company_name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT,
     updated_at TIMESTAMP,

@@ -53,8 +53,7 @@ public class User extends BaseEntity {
     @Column(
             name = "username",
             nullable = false,
-            length = 10,
-            unique = true
+            length = 10
     )
     private String username;
 
@@ -70,8 +69,7 @@ public class User extends BaseEntity {
     @Column(
             name = "slack_id",
             nullable = false,
-            length = 255,
-            unique = true
+            length = 255
     )
     private String slackId;
 

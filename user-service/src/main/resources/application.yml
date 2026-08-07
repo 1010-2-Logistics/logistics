@@ -19,3 +19,7 @@ management:
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
+
+jwt:
+  access-token-expiration-seconds: 1800 #만료 시간 30분
+  refresh-token-expiration-seconds: 1209600 #만료 시간 14일

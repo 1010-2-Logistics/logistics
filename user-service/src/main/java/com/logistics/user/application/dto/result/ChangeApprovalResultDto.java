@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 /**
  * 사용자 승인 상태 변경 처리 결과.
  */
-public record ChangeApprovalResult(
+public record ChangeApprovalResultDto(
         Long userId,
         UserStatus previousStatus,
         UserStatus status,
