@@ -30,7 +30,7 @@ public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 
 	@Override
 	public Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId) {
-		return jpaRepository.findOrderedCompanyInfo(startCompanyId, endCompanyId);
+		return jpaRepository.findOrderedCompanyInfo(startCompanyId, endCompanyId, CompanyStatus.ACTIVE);
 	}
 
 	@Override

@@ -30,9 +30,9 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 					and endCompany.id = :endCompanyId
 					and startCompany.deletedAt is null
 					and endCompany.deletedAt is null
-					and startCompany.status = com.logistics.company.domain.CompanyStatus.ACTIVE
-					and endCompany.status = com.logistics.company.domain.CompanyStatus.ACTIVE
+					and startCompany.status = :status
+					and endCompany.status = :status
 	""")
-	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId);
+	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId, CompanyStatus status);
 
 }
