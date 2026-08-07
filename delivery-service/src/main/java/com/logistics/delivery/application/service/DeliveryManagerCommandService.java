@@ -1,16 +1,15 @@
 package com.logistics.delivery.application.service;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
+import com.logistics.delivery.application.port.HubPort;
 import com.logistics.delivery.domain.entity.DeliveryManager;
+import com.logistics.delivery.domain.entity.DeliveryManagerAssignmentState;
 import com.logistics.delivery.domain.entity.ManagerType;
 import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRepository;
-import com.logistics.delivery.domain.entity.DeliveryManagerAssignmentState;
 import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.infrastructure.feign.client.HubClient;
 import feign.FeignException;
-
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,7 +24,7 @@ public class DeliveryManagerCommandService {
 
     private final DeliveryManagerRepository deliveryManagerRepository;
     private final DeliveryManagerAssignmentStateRepository assignmentStateRepository;
-    private final HubClient hubClient;
+    private final HubPort hubPort;
 
     public DeliveryManager register(RegisterDeliveryManagerCommand command) {
         if (deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(command.userId())) {
@@ -36,6 +35,12 @@ public class DeliveryManagerCommandService {
             validateHub(command.hubId());
         }
 
+        // 같은 (managerType, hubId) 풀에 대한 시퀀스 채번을 직렬화 + 배정 상태 생성 책임을 등록 쪽으로 확정
+        assignmentStateRepository
+                .findForUpdate(command.managerType(), command.hubId())
+                .orElseGet(() -> assignmentStateRepository.save(
+                        DeliveryManagerAssignmentState.init(command.managerType(), command.hubId())));
+
         int nextSequence = deliveryManagerRepository
                 .findMaxSequence(command.managerType(), command.hubId())
                 .map(seq -> seq + 1)
@@ -43,11 +48,7 @@ public class DeliveryManagerCommandService {
 
         DeliveryManager manager = DeliveryManager.create(
                 command.userId(), command.hubId(), command.slackId(), command.managerType(), nextSequence);
-        DeliveryManager saved = deliveryManagerRepository.save(manager);
-
-        ensureAssignmentStateExists(command.managerType(), command.hubId());
-
-        return saved;
+        return deliveryManagerRepository.save(manager);
     }
 
     private void validateHub(UUID hubId) {
@@ -55,7 +56,7 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
         }
         try {
-            Set<UUID> validIds = hubClient.validateHubIds(List.of(hubId));
+            Set<UUID> validIds = hubPort.validateHubIds(List.of(hubId));
             if (!validIds.contains(hubId)) {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
@@ -63,13 +64,6 @@ public class DeliveryManagerCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
     }
-
-    private void ensureAssignmentStateExists(ManagerType managerType, UUID hubId) {
-        if (assignmentStateRepository.findForUpdate(managerType, hubId).isEmpty()) {
-            assignmentStateRepository.save(DeliveryManagerAssignmentState.init(managerType, hubId));
-        }
-    }
-
 
     public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
@@ -82,6 +76,7 @@ public class DeliveryManagerCommandService {
         manager.updateHub(hubId);
         return manager;
     }
+
     public void delete(Long deliveryManagerId) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));

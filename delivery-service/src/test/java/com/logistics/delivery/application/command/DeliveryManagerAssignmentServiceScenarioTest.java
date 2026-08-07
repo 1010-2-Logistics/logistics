@@ -37,6 +37,7 @@ class DeliveryManagerAssignmentServiceScenarioTest {
         managerRepository = new FakeDeliveryManagerRepository();
         stateRepository = new FakeDeliveryManagerAssignmentStateRepository();
         assignmentService = new DeliveryManagerAssignmentService(managerRepository, stateRepository);
+        stateRepository.save(DeliveryManagerAssignmentState.init(ManagerType.HUB_DELIVERY_MANAGER, null));
     }
 
     @Test
@@ -91,6 +92,10 @@ class DeliveryManagerAssignmentServiceScenarioTest {
         // given
         UUID hubA = UUID.randomUUID();
         UUID hubB = UUID.randomUUID();
+
+        stateRepository.save(DeliveryManagerAssignmentState.init(ManagerType.COMPANY_DELIVERY_MANAGER, hubA));
+        stateRepository.save(DeliveryManagerAssignmentState.init(ManagerType.COMPANY_DELIVERY_MANAGER, hubB));
+
         managerRepository.add(DeliveryManager.create(10L, hubA, "A01", ManagerType.COMPANY_DELIVERY_MANAGER, 0));
         managerRepository.add(DeliveryManager.create(11L, hubA, "A02", ManagerType.COMPANY_DELIVERY_MANAGER, 1));
         managerRepository.add(DeliveryManager.create(20L, hubB, "B01", ManagerType.COMPANY_DELIVERY_MANAGER, 0));
