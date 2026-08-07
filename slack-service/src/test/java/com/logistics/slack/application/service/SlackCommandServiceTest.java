@@ -250,13 +250,24 @@ class SlackCommandServiceTest {
     class slack_delete {
         @Test
         @DisplayName("슬랙 메시지 삭제 시 삭제 정보 기록")
-        void slack_delete_success(){
+        void slack_delete_success() {
+            Slack slack = createFailedSlack();
+            Long deletedBy = 1L;
 
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
+
+            slackCommandService.deleteSlack(
+                    slackMessageId,
+                    deletedBy
+            );
+
+            assertThat(slack.getDeletedAt()).isNotNull();
+            assertThat(slack.getDeletedBy()).isEqualTo(deletedBy);
         }
 
         @Test
         @DisplayName("존재하지 않는 메시지 삭제 시 예외")
-        void slack_delete_not_found(){
+        void slack_delete_not_found() {
 
         }
     }
