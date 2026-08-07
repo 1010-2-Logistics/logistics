@@ -11,6 +11,8 @@ import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
+import com.logistics.company.global.exception.CompanyErrorCode;
+import com.logistics.company.global.exception.CompanyException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,10 +25,14 @@ public class CompanyCommandService {
 	private final CompanyQueryService companyQueryService;
 	
 	@Transactional(rollbackFor = Exception.class)
-	public Company createCompany(CompanyCreateCommand companyCreateCommand) {
-		// 인가 - Facade 로 할 수도
+	public Company createCompany(CompanyCreateCommand command) {
+		boolean exists = companyQueryService.checkCompanyName(command.hubId(), command.companyName());
 		
-		Company entity = companyCreateCommand.toEntity();
+		if(exists) {
+			throw new CompanyException(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME);
+		}
+		
+		Company entity = command.toEntity();
 		
 		return companyCommandRepository.save(entity);
 	}
@@ -53,20 +59,22 @@ public class CompanyCommandService {
 	
 	
 	@Transactional(rollbackFor = Exception.class)
-	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand companyUpdateCommand) {
-		// 인가 - Facade 로 할 수도
-		
+	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand command) {
 		Company entity = companyQueryService.findByCompany(companyId);
 		
-		entity.updateCompanyName(companyUpdateCommand.companyName());
+		boolean exists = companyQueryService.checkCompanyName(entity.getHubId(), command.companyName());
+		
+		if(exists) {
+			throw new CompanyException(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME);
+		}
+		
+		entity.updateCompanyName(command.companyName());
 		
 		return CompanyUpdateResultDto.from(entity);
 	}
 	
 	@Transactional(rollbackFor = Exception.class)
 	public void deleteCompany(Long deletedBy, UUID companyId) {
-		// 인가 - Facade 로 할 수도
-		
 		Company entity = companyQueryService.findByCompany(companyId);
 		
 		entity.markDeleted(deletedBy);

@@ -70,5 +70,9 @@ public class CompanyQueryService {
 				query.pageable()
 		);
 	}
+
+	public boolean checkCompanyName(UUID hubId, String companyName) {
+		return companyQueryRepository.existsByHubIdAndCompanyNameAndDeletedAtIsNull(hubId, companyName);
+	}
 	
 }

@@ -1,9 +1,12 @@
 package com.logistics.company.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
@@ -22,6 +25,8 @@ import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
+import com.logistics.company.global.exception.CompanyErrorCode;
+import com.logistics.company.global.exception.CompanyException;
 
 @ExtendWith(MockitoExtension.class)
 public class CompanyCommandServiceTest {
@@ -80,6 +85,28 @@ public class CompanyCommandServiceTest {
 			verify(companyCommandRepository).save(any(Company.class));
 		}
 		
+		@Test
+		@DisplayName("소속 허브에 같은 업체명이 있을 경우 실패")
+		void company_create_fail_1() {
+			UUID hubId = UUID.randomUUID();
+			Long companyManagerId = 1L;
+			String companyName = "업체이름A";
+			String companyAddress = "업체주소A";
+			
+			CompanyCreateCommand command = new CompanyCreateCommand(
+					hubId, companyManagerId,
+					companyName, companyAddress,
+					CompanyType.PRODUCER
+			);
+			
+			when(companyQueryService.checkCompanyName(hubId, companyName)).thenReturn(true);
+			
+			assertThatThrownBy(() -> companyCommandService.createCompany(command))
+			.isInstanceOf(CompanyException.class)
+			.hasMessage(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME.getMessage());
+			
+			verifyNoInteractions(companyCommandRepository);
+		}
 	}
 	
 	@Nested
@@ -117,6 +144,25 @@ public class CompanyCommandServiceTest {
 			assertThat(company.getCompanyName()).isEqualTo(updatedCompanyName);
 			
 			verify(companyQueryService).findByCompany(companyId);
+		}
+		
+		@Test
+		@DisplayName("업체 수정시 동일 허브 아이디로 같은 업체명이 있으면 실패")
+		void company_update_fail_1() {
+			UUID hubId = UUID.randomUUID();
+			UUID companyId = UUID.randomUUID();
+			String companyName = "같은업체A";
+			
+			CompanyUpdateCommand command = new CompanyUpdateCommand(companyName);
+			
+			Company company = Company.create(hubId, companyName, companyName, CompanyType.PRODUCER);
+			when(companyQueryService.findByCompany(companyId)).thenReturn(company);
+			
+			when(companyQueryService.checkCompanyName(hubId, companyName)).thenReturn(true);
+			
+			assertThatThrownBy(() -> companyCommandService.updateCompany(companyId, command))
+			.isInstanceOf(CompanyException.class)
+			.hasMessage(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME.getMessage());
 		}
 		
 	}
