@@ -13,7 +13,7 @@ public record SlackCreateCommand(
 //        String idempotencyKey
 ) {
     public static SlackCreateCommand toCommand(
-            UUID senderId,
+            Long senderId,
             SlackCreateRequestDto slackCreateRequestDto
     ) {
         return new SlackCreateCommand(

@@ -48,7 +48,7 @@ public class SlackQueryController {
             @RequestParam(required = false) SlackStatus status,
             @RequestParam(required = false) Long senderId,
             @RequestParam(required = false) Long receiverId,
-            @RequestParam(required = false) Long referenceId,
+            @RequestParam(required = false) UUID referenceId,
 
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

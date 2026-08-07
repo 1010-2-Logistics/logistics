@@ -10,7 +10,7 @@ public record SlackSearchQuery(
         SlackStatus status,
         Long senderId,
         Long receiverId,
-        Long referenceId,
+        UUID referenceId,
         LocalDateTime createdFrom,
         LocalDateTime createdTo,
         Pageable pageable
@@ -20,7 +20,7 @@ public record SlackSearchQuery(
             SlackStatus status,
             Long senderId,
             Long receiverId,
-            Long referenceId,
+            UUID referenceId,
             LocalDateTime createdFrom,
             LocalDateTime createdTo,
             Pageable pageable
