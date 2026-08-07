@@ -1,7 +1,10 @@
 package com.logistics.user.presentation.controller;
 
+
+import com.logistics.user.application.dto.command.ChangePasswordCommandDto;
 import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
+import com.logistics.user.application.dto.result.ChangePasswordResultDto;
 import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
@@ -13,8 +16,10 @@ import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.infrastructure.security.AuthenticatedUser;
 import com.logistics.user.presentation.dto.request.UserApprovalRequestDto;
 import com.logistics.user.presentation.dto.request.UserCreateRequestDto;
+import com.logistics.user.presentation.dto.request.UserPasswordUpdateRequestDto;
 import com.logistics.user.presentation.dto.request.UserUpdateRequestDto;
 import com.logistics.user.presentation.dto.response.UserApprovalResponseDto;
+import com.logistics.user.presentation.dto.response.UserPasswordUpdateResponseDto;
 import com.logistics.user.presentation.dto.response.UserUpdateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +83,39 @@ public class CommandController {
                 HttpStatus.OK.value(),
                 "내 정보 수정 성공",
                 UserUpdateResponseDto.from(result)
+        );
+    }
+
+    /**
+     * 로그인한 사용자의 비밀번호 변경
+     */
+    @PatchMapping("/me/password")
+    public ApiResponse<UserPasswordUpdateResponseDto> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody UserPasswordUpdateRequestDto request
+    ) {
+        /*
+         * Gateway 헤더 기반 Filter가 principal에 넣은
+         * 현재 로그인 사용자 정보 추출
+         */
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
+
+        ChangePasswordCommandDto command =
+                new ChangePasswordCommandDto(
+                        currentUser.userId(),
+                        request.currentPassword(),
+                        request.newPassword(),
+                        request.newPasswordConfirm()
+                );
+
+        ChangePasswordResultDto result =
+                userCommandService.changePassword(command);
+
+        return ApiResponse.success(
+                HttpStatus.OK.value(),
+                "비밀번호 변경 성공",
+                UserPasswordUpdateResponseDto.from(result)
         );
     }
 
