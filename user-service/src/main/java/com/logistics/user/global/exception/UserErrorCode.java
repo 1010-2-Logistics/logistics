@@ -57,6 +57,15 @@ public enum UserErrorCode implements ErrorCode {
     USER_DELETED_CONFLICT(
             HttpStatus.CONFLICT,
             "삭제된 사용자는 가입 승인 또는 거절할 수 없습니다."
+    ),
+    USER_SLACK_ID_CONFLICT(
+            HttpStatus.CONFLICT,
+            "이미 사용 중인 Slack ID입니다."
+    ),
+
+    USER_SAME_SLACK_ID_CONFLICT(
+            HttpStatus.CONFLICT,
+            "현재 Slack ID와 동일합니다."
     );
 
 

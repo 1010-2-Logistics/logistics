@@ -1,7 +1,8 @@
 package com.logistics.user.presentation.controller;
 
-import com.logistics.user.application.dto.command.UpdateUserCommandDto;
+import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
+import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
@@ -9,10 +10,12 @@ import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.global.exception.CustomException;
 import com.logistics.user.global.exception.UserErrorCode;
 import com.logistics.user.global.response.ApiResponse;
+import com.logistics.user.infrastructure.security.AuthenticatedUser;
 import com.logistics.user.presentation.dto.request.UserApprovalRequestDto;
 import com.logistics.user.presentation.dto.request.UserCreateRequestDto;
 import com.logistics.user.presentation.dto.request.UserUpdateRequestDto;
 import com.logistics.user.presentation.dto.response.UserApprovalResponseDto;
+import com.logistics.user.presentation.dto.response.UserUpdateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -42,24 +45,39 @@ public class CommandController {
         );
     }
 
-    @PutMapping("/{userId}")
-    public ApiResponse<Void> update(
-            @PathVariable Long userId,
+
+    /**
+     * 로그인한 사용자의 Slack ID를 수정한다.
+     */
+    @PatchMapping("/me")
+    public ApiResponse<UserUpdateResponseDto> updateMyInfo(
+            Authentication authentication,
             @Valid @RequestBody UserUpdateRequestDto request
     ) {
-        // HTTP 요청 객체를 애플리케이션 계층의 Command로 변환한다.
-        UpdateUserCommandDto command = new UpdateUserCommandDto(
-                userId,
-                request.slackId()
-        );
+        /*
+         * Filter가 Authentication principal에 넣은
+         * 현재 사용자 인증 정보를 꺼낸다.
+         */
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
 
-        // 실제 사용자 수정 비즈니스 로직을 실행한다.
-        userCommandService.update(command);
+        /*
+         * HTTP 요청값과 인증 사용자 ID를
+         * Application Command로 변환한다.
+         */
+        UpdateMySlackIdCommandDto command =
+                new UpdateMySlackIdCommandDto(
+                        currentUser.userId(),
+                        request.slackId()
+                );
+
+        UpdateMyInfoResultDto result =
+                userCommandService.updateMySlackId(command);
 
         return ApiResponse.success(
-                200,
-                "사용자 수정 성공",
-                null
+                HttpStatus.OK.value(),
+                "내 정보 수정 성공",
+                UserUpdateResponseDto.from(result)
         );
     }
 
