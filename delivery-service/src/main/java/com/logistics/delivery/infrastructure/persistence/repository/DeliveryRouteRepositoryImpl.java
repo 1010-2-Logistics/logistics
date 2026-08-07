@@ -5,6 +5,7 @@ import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,4 +29,9 @@ public class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
     public Optional<DeliveryRoute> findByIdAndDeletedAtIsNull(UUID deliveryRouteId) {
         return jpaRepository.findByDeliveryRouteIdAndDeletedAtIsNull(deliveryRouteId);
     }
+    @Override
+    public List<DeliveryRoute> findAllByDeliveryId(UUID deliveryId) {
+        return jpaRepository.findAllByDeliveryIdAndDeletedAtIsNullOrderBySequenceAsc(deliveryId);
+    }
+
 }
