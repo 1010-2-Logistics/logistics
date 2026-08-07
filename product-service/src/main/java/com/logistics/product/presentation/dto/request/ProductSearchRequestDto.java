@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import com.logistics.product.application.dto.query.ProductSearchQuery;
+import com.logistics.product.domain.entity.Role;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
@@ -25,8 +26,10 @@ public record ProductSearchRequestDto(
 		String sort
 ) {
 
-	public ProductSearchQuery toQuery() {
+	public ProductSearchQuery toQuery(Long userId, Role role) {
 		return new ProductSearchQuery(
+				userId,
+				role,
 				productName,
 				companyId,
 				hubId,

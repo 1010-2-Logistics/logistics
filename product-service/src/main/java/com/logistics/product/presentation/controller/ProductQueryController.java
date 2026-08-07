@@ -2,6 +2,7 @@ package com.logistics.product.presentation.controller;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.product.application.facade.ProductQueryFacade;
 import com.logistics.product.application.service.ProductQueryService;
+import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.global.response.PageResponse;
 import com.logistics.product.presentation.dto.request.ProductSearchRequestDto;
@@ -45,11 +47,17 @@ public class ProductQueryController {
 	// 상품 검색
 	@GetMapping
 	public ApiResponse<PageResponse<ProductInfoResponseDto>> productSearch(
-			@Valid @ModelAttribute ProductSearchRequestDto request
-	) {
+			@Valid @ModelAttribute ProductSearchRequestDto request) {
+		Long userId = 1L;
+		Role role = Role.COMPANY_MANAGER;
 		
+		Page<ProductInfoResponseDto> productPage = productQueryFacade.search(request.toQuery(userId, role));
 		
-		return null;
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"상품 조회 성공",
+				PageResponse.of(productPage)
+		);
 	}
 	
 }
