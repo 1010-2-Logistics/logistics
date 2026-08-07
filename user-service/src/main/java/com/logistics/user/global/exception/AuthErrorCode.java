@@ -61,7 +61,7 @@ public enum AuthErrorCode implements ErrorCode {
     AUTH_INVALID_GATEWAY_HEADER(
             HttpStatus.UNAUTHORIZED,
             "Gateway 인증 헤더 형식이 올바르지 않습니다."
-    ),;
+    );
 
     private final HttpStatus httpStatus;
     private final String message;
