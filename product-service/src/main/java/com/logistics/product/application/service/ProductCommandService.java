@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductUpdateCommand;
+import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.repository.ProductCommandRepository;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -23,14 +24,15 @@ public class ProductCommandService {
 	private final ProductQueryService productQueryService;
 	
 	@Transactional(rollbackFor = Exception.class)
-	public Product createProduct(ProductCreateCommand command) {
+	public Product createProduct(ProductCreateCommand command, CompanyExistsResponseDto companyInfo) {
 		if(productQueryService.existsProductName(command.companyId(), command.productName())) {
 			throw new ProductException(ProductErrorCode.PRODUCT_EXISTS_PRODUCT_NAME);
 		}
 		
 		Product product = Product.create(
 				command.companyId(),
-				command.productName()
+				command.productName(),
+				companyInfo.companyName()
 		);
 		
 		return productCommandRepository.save(product);

@@ -7,6 +7,7 @@ import com.logistics.product.domain.entity.CompanyType;
 public record CompanyExistsClientResponseDto(
 		UUID companyId,
 		CompanyType companyType,
+		String companyName,
 		UUID hubId,
 		Long companyManagerId,
 		boolean exists

@@ -1,20 +1,20 @@
-package com.logistics.company.infrastructure.adapter;
+package com.logistics.product.infrastructure.feign.adapter;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
-import com.logistics.company.application.port.HubPort;
-import com.logistics.company.infrastructure.feign.client.HubClient;
-import com.logistics.company.infrastructure.feign.response.HubValidationResponse;
+import com.logistics.product.application.dto.internal.response.HubInfoResponseDto;
+import com.logistics.product.application.port.HubPort;
+import com.logistics.product.infrastructure.feign.client.HubClient;
+import com.logistics.product.infrastructure.feign.response.HubValidationResponse;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class HubAdapter implements HubPort {
-
+	
 	private final HubClient hubClient;
 	
 	@Override
@@ -26,6 +26,4 @@ public class HubAdapter implements HubPort {
 				response.hubName()
 		);
 	}
-
-	
 }

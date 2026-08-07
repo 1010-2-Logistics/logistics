@@ -30,5 +30,5 @@ CREATE TABLE IF NOT EXISTS product_service.p_product (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS UQ_P_COMPANY_PRODUCT_NAME_ACTIVE
-ON p_product (company_id, product_name)
+ON product_service.p_product (company_id, product_name)
 WHERE deleted_at IS NULL;

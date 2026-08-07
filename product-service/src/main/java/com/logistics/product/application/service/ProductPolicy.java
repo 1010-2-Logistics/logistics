@@ -5,7 +5,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 import com.logistics.product.application.dto.command.ProductCommand;
-import com.logistics.product.application.dto.internal.CompanyExistsResponseDto;
+import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
 import com.logistics.product.domain.entity.CompanyType;
 import com.logistics.product.global.exception.CommonErrorCode;
 import com.logistics.product.global.exception.ProductErrorCode;

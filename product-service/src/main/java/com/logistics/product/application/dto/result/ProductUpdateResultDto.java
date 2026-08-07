@@ -6,12 +6,16 @@ import com.logistics.product.domain.entity.Product;
 
 public record ProductUpdateResultDto(
 		UUID productId,
-		String productName
+		String productName,
+		UUID companyId,
+		String companyName
 ) {
 	public static ProductUpdateResultDto from(Product product) {
 		return new ProductUpdateResultDto(
 				product.getProductId(),
-				product.getProductName()
+				product.getProductName(),
+				product.getCompanyId(),
+				product.getCompanyName()
 		);
 	}
 }
