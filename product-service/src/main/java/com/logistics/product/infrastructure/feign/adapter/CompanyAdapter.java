@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.logistics.product.application.dto.internal.CompanyExistsResponseDto;
+import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
 import com.logistics.product.application.port.CompanyPort;
 import com.logistics.product.infrastructure.feign.client.CompanyClient;
 import com.logistics.product.infrastructure.feign.response.CompanyExistsClientResponseDto;
@@ -24,6 +24,7 @@ public class CompanyAdapter implements CompanyPort {
 		return new CompanyExistsResponseDto(
 				response.companyId(),
 				response.companyType(),
+				response.companyName(),
 				response.hubId(),
 				response.companyManagerId(),
 				response.exists()

@@ -15,12 +15,16 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
     updated_at TIMESTAMP,
     updated_by BIGINT,
     deleted_at TIMESTAMP,
-
-    CONSTRAINT uk_user_username UNIQUE (username),
-    CONSTRAINT uk_user_slack_id UNIQUE (slack_id),
+    deleted_by BIGINT,
 
     CONSTRAINT chk_user_status
-    CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    CHECK (
+              status IN (
+              'PENDING',
+              'APPROVED',
+              'REJECTED'
+                        )
+    ),
 
     CONSTRAINT chk_user_role
     CHECK (
@@ -31,6 +35,12 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
               'COMPANY_MANAGER',
               'COMPANY_DELIVERY_MANAGER'
                       )
-    ),
-    deleted_by BIGINT
-    );
+    )
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_user_username_active
+    ON user_service.p_user (username)
+    WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_user_slack_id_active
+    ON user_service.p_user (slack_id)
+    WHERE deleted_at IS NULL;

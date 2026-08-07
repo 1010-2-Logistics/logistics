@@ -19,7 +19,7 @@ public class HubAdapter implements HubPort {
 	
 	@Override
 	public HubInfoResponseDto getHubInfo(UUID hubId) {
-		HubValidationResponse response = hubClient.getHub(hubId);
+		HubValidationResponse response = hubClient.getHub(hubId).getData();
 		
 		return new HubInfoResponseDto(
 				response.hubId(),
