@@ -147,4 +147,10 @@ public class DeliveryCommandService {
 
     public record RouteStatusChangeResult(DeliveryRoute route, Delivery delivery) {
     }
+
+    public void delete(UUID deliveryId) {
+        Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+        delivery.markDeleted(TEMP_CREATED_BY);
+    }
 }
