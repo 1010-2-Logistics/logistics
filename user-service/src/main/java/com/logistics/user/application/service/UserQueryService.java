@@ -34,8 +34,64 @@ public class UserQueryService {
                 );
     }
 
-    public Page<User> search(SearchUserQueryDto query) {
-        return UserQueryRepository.search(query.keyword(), query.pageable());
+    // 사용자 정보 목록 조회
+    public Page<User> search(
+            SearchUserQueryDto query
+    ) {
+        validateSearchAccess(query);
+
+        UUID searchHubId =
+                resolveSearchHubId(query);
+
+        return UserQueryRepository.search(
+                query.username(),
+                query.status(),
+                query.role(),
+                searchHubId,
+                query.companyId(),
+                query.pageable()
+        );
+    }
+
+    private void validateSearchAccess(
+            SearchUserQueryDto query
+    ) {
+        if (query.requesterRole() == UserRole.MASTER) {
+            return;
+        }
+
+        if (query.requesterRole() != UserRole.HUB_MANAGER) {
+            throw new CustomException(
+                    UserErrorCode.USER_ACCESS_DENIED
+            );
+        }
+
+        if (query.requesterHubId() == null) {
+            throw new CustomException(
+                    UserErrorCode.USER_ACCESS_DENIED
+            );
+        }
+
+        if (query.hubId() != null
+                && !query.requesterHubId()
+                .equals(query.hubId())) {
+
+            throw new CustomException(
+                    UserErrorCode.USER_ACCESS_DENIED
+            );
+        }
+    }
+
+    private UUID resolveSearchHubId(
+            SearchUserQueryDto query
+    ) {
+        if (query.requesterRole()
+                == UserRole.HUB_MANAGER) {
+
+            return query.requesterHubId();
+        }
+
+        return query.hubId();
     }
 
     /**
