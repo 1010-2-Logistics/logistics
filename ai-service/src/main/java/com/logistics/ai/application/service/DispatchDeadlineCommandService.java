@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.DeliveryRoutPort;
+import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.OrderPort;
 import com.logistics.ai.application.port.out.ProductPort;
 
@@ -14,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class DispatchDeadlineService implements DispatchDeadlineUseCase {
+public class DispatchDeadlineCommandService implements DispatchDeadlineUseCase {
 	
 	private final OrderPort orderPort;
 	
@@ -23,6 +24,8 @@ public class DispatchDeadlineService implements DispatchDeadlineUseCase {
 	private final DeliveryRoutPort deliveryRoutePort;
 	
 	private final ProductPort productPort;
+	
+	private final HubPort hubPort;
 	
 	@Override
 	public void generate(UUID orderId, UUID deliveryId) {
