@@ -100,7 +100,11 @@ public enum UserErrorCode implements ErrorCode {
     USER_ACCESS_DENIED(
             HttpStatus.FORBIDDEN,
             "사용자 조회 권한이 없습니다."
-    );
+    ),
+    USER_MASTER_SIGNUP_NOT_ALLOWED(
+            HttpStatus.FORBIDDEN,
+            "MASTER 권한으로 회원가입할 수 없습니다."
+    ),;
 
 
     private final HttpStatus httpStatus;
