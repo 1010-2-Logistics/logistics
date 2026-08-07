@@ -1,9 +1,14 @@
 package com.logistics.user.presentation.auth.controller;
 
+import com.logistics.user.application.dto.result.LoginResultDto;
+import com.logistics.user.application.service.LoginService;
 import com.logistics.user.application.service.SignupService;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.global.response.ApiResponse;
+import com.logistics.user.presentation.auth.dto.request.LoginRequestDto;
 import com.logistics.user.presentation.auth.dto.request.SignupRequestDto;
+import com.logistics.user.presentation.auth.dto.response.LoginResponseDto;
+import com.logistics.user.presentation.auth.dto.response.LoginUserResponseDto;
 import com.logistics.user.presentation.auth.dto.response.SignupResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final SignupService signupService;
+    private final LoginService loginService;
 
     /**
-     * 회원가입 요청을 처리한다.
-     *
-     * 인증되지 않은 사용자도 접근할 수 있다.
+     * 회원가입 요청 처리
+     * 인증받지 않은 사용자도 접근 가능
      */
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
@@ -52,6 +57,29 @@ public class AuthController {
                 HttpStatus.CREATED.value(),
                 "회원가입 요청 성공",
                 response
+        );
+    }
+
+    /**
+     * 사용자 로그인을 처리한다.
+     *
+     * 승인된 사용자에게 Access Token과 Refresh Token을 발급한다.
+     */
+    @PostMapping("/login")
+    public ApiResponse<LoginResponseDto> login(
+            @Valid @RequestBody LoginRequestDto request
+    ) {
+        // 1. HTTP DTO를 Application Command로 변환
+        LoginResultDto result =
+                loginService.login(
+                        request.toCommand()
+                );
+
+        // 2. Application 결과를 HTTP Response DTO로 변환
+        return ApiResponse.success(
+                HttpStatus.OK.value(),
+                "로그인 성공",
+                LoginResponseDto.from(result)
         );
     }
 }
