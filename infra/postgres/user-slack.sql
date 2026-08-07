@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
     password VARCHAR(255) NOT NULL,
     slack_id VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    rejection_reason VARCHAR(500),
     role VARCHAR(30) NOT NULL,
     company_id UUID,
     hub_id UUID,
