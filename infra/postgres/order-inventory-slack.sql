@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS order_service.p_order
 
     CONSTRAINT chk_order_status
     CHECK (status IN ('CREATED', 'CANCELED'))
-    );
+);
 
 CREATE TABLE IF NOT EXISTS inventory_service.p_inventory
 (
@@ -39,4 +39,30 @@ CREATE TABLE IF NOT EXISTS inventory_service.p_inventory
 
     CONSTRAINT uk_inventory_product_hub
     UNIQUE (product_id, hub_id)
+);
+
+CREATE SCHEMA IF NOT EXISTS slack_service;
+
+
+CREATE TABLE IF NOT EXISTS slack_service.p_slack
+(
+    slack_message_id UUID PRIMARY KEY,
+    sender_id        BIGINT       NOT NULL,
+    receiver_id      BIGINT       NOT NULL,
+    message          VARCHAR(255) NOT NULL,
+    error_message    VARCHAR(255),
+    retry_count      INTEGER      NOT NULL DEFAULT 0,
+    sent_at          TIMESTAMP,
+    reference_id     BIGINT,
+    status           VARCHAR(20)  NOT NULL,
+
+    created_at       TIMESTAMP,
+    created_by       BIGINT,
+    updated_at       TIMESTAMP,
+    updated_by       BIGINT,
+    deleted_at       TIMESTAMP,
+    deleted_by       BIGINT,
+
+    CONSTRAINT chk_slack_status
+    CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED'))
     );

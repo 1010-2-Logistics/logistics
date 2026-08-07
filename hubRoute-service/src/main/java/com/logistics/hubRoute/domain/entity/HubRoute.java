@@ -55,12 +55,12 @@ public class HubRoute extends BaseEntity {
         return hub;
     }
 
-//    public void update(String hubName, String hubAddress, BigDecimal latitude, BigDecimal longitude) {
-//        this.hubName = hubName;
-//        this.hubAddress = hubAddress;
-//        this.latitude = latitude;
-//        this.longitude = longitude;
-//    }
+    public void update(UUID startHubId, UUID endHubId, Integer duration, BigDecimal distance) {
+        this.startHubId = startHubId;
+        this.endHubId = endHubId;
+        this.duration = duration;
+        this.distance = distance;
+    }
 
 
 }

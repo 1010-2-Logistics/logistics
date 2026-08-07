@@ -1,0 +1,34 @@
+package com.logistics.slack.global.response;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logistics.slack.global.exception.ErrorCode;
+import java.time.LocalDateTime;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class ErrorResponse {
+
+    @JsonProperty("SUCCESS")
+    @Builder.Default
+    private final boolean success = false;
+
+    private final String code;
+    private final String message;
+    private final Map<String, Object> details;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private final LocalDateTime timestamp;
+
+    public static ErrorResponse of(ErrorCode errorCode, String reason) {
+        return ErrorResponse.builder()
+                .code(errorCode.name())
+                .message(errorCode.getMessage())
+                .details(Map.of("reason", reason))
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+}

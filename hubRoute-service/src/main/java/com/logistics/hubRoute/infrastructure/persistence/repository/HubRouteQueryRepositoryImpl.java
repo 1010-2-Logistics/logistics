@@ -2,6 +2,8 @@ package com.logistics.hubRoute.infrastructure.persistence.repository;
 
 import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteQueryRepository;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,5 +25,15 @@ public class HubRouteQueryRepositoryImpl implements HubRouteQueryRepository {
     @Override
     public Page<HubRoute> search(UUID hubId, Pageable pageable) {
         return jpaRepository.search(hubId, pageable);
+    }
+
+    @Override
+    public Optional<HubRoute> findByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId) {
+        return jpaRepository.findByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId,endHubId);
+    }
+
+    @Override
+    public List<HubRoute> findAllByDeletedAtIsNull() {
+        return jpaRepository.findAllByDeletedAtIsNull();
     }
 }
