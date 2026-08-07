@@ -1,18 +1,26 @@
 package com.logistics.user.infrastructure.security;
 
 import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.global.exception.AuthErrorCode;
+import com.logistics.user.global.response.ErrorResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Gateway가 아직 구현되지 않은 동안.
@@ -26,8 +34,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 헤더를 읽어 Authentication을 생성한다.
  */
 @Component
+@Profile("local")
+@RequiredArgsConstructor
 public class MockGatewayAuthenticationFilter
         extends OncePerRequestFilter {
+
+    private final ObjectMapper objectMapper;
 
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USER_ROLE_HEADER = "X-User-Role";
@@ -56,50 +68,95 @@ public class MockGatewayAuthenticationFilter
             return;
         }
 
-        Long userId = parseLong(userIdHeader);
-        UserRole role = parseRole(userRoleHeader);
+        try{
 
-        UUID hubId = parseNullableUuid(
-                request.getHeader(HUB_ID_HEADER)
-        );
+            Long userId = parseLong(userIdHeader);
+            UserRole role = parseRole(userRoleHeader);
 
-        UUID companyId = parseNullableUuid(
-                request.getHeader(COMPANY_ID_HEADER)
-        );
+            UUID hubId = parseNullableUuid(
+                    request.getHeader(HUB_ID_HEADER)
+            );
 
-        AuthenticatedUser principal =
-                new AuthenticatedUser(
-                        userId,
-                        role,
-                        hubId,
-                        companyId
-                );
+            UUID companyId = parseNullableUuid(
+                    request.getHeader(COMPANY_ID_HEADER)
+            );
 
-        /*
-         * Spring Security는 ROLE_ 접두사가 붙은 권한을
-         * 일반적인 역할 권한으로 다룬다.
-         */
-        SimpleGrantedAuthority authority =
-                new SimpleGrantedAuthority(
-                        "ROLE_" + role.name()
-                );
+            AuthenticatedUser principal =
+                    new AuthenticatedUser(
+                            userId,
+                            role,
+                            hubId,
+                            companyId
+                    );
 
-        /*
-         * principal에는 현재 사용자 정보를 넣는다.
-         * credentials는 이미 Gateway에서 인증됐으므로 null이다.
-         */
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        principal,
-                        null,
-                        List.of(authority)
-                );
+            /*
+             * Spring Security는 ROLE_ 접두사가 붙은 권한을
+             * 일반적인 역할 권한으로 다룬다.
+             */
+            SimpleGrantedAuthority authority =
+                    new SimpleGrantedAuthority(
+                            "ROLE_" + role.name()
+                    );
 
-        SecurityContextHolder.getContext()
-                .setAuthentication(authentication);
+            /*
+             * principal에는 현재 사용자 정보를 넣는다.
+             * credentials는 이미 Gateway에서 인증됐으므로 null이다.
+             */
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            List.of(authority)
+                    );
 
-        filterChain.doFilter(request, response);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authentication);
+
+            filterChain.doFilter(request, response);
+        } catch (IllegalArgumentException exception) {
+            SecurityContextHolder.clearContext();
+
+            writeErrorResponse(
+                    response,
+                    AuthErrorCode.AUTH_INVALID_GATEWAY_HEADER,
+                    exception.getMessage()
+            );
+        }
     }
+    private void writeErrorResponse(
+            HttpServletResponse response,
+            AuthErrorCode errorCode,
+            String reason
+    ) throws IOException {
+
+        response.setStatus(
+                errorCode.getHttpStatus().value()
+        );
+
+        response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE
+        );
+
+        response.setCharacterEncoding(
+                StandardCharsets.UTF_8.name()
+        );
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(
+                        errorCode,
+                        reason
+                );
+
+        objectMapper.writeValue(
+                response.getWriter(),
+                errorResponse
+        );
+    }
+
+
+
+
+
 
     private Long parseLong(String value) {
         try {
