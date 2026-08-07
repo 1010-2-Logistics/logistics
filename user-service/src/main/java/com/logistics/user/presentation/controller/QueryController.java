@@ -66,6 +66,9 @@ public class QueryController {
         );
     }
 
+    /**
+     * 사용자 정보 상세 조회 (MASTER, 허브 매니저는 본인 허브 소속 사용자만 조회 가능)
+     */
     @GetMapping("/{userId}")
     public ApiResponse<UserResponseDto> getUserDetail(
             @PathVariable Long userId,
@@ -92,6 +95,9 @@ public class QueryController {
         );
     }
 
+    /**
+     * 사용자 정보 목록 조회
+     */
     @GetMapping
     public ApiResponse<PageResponse<UserSummaryResponseDto>> search(
             Authentication authentication,
@@ -142,7 +148,7 @@ public class QueryController {
                         validatedSize,
                         Sort.by(
                                 sortDirection,
-                                sort
+                                resolveSortField(sort)
                         )
                 );
 
@@ -171,5 +177,20 @@ public class QueryController {
                 "사용자 목록 조회 성공",
                 PageResponse.of(responsePage)
         );
+    }
+
+    private String resolveSortField(
+            String sort
+    ) {
+        return switch (sort) {
+
+            case "username" -> "username";
+
+            case "status" -> "status";
+
+            case "createdAt" -> "createdAt";
+
+            default -> "createdAt";
+        };
     }
 }
