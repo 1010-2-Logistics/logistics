@@ -35,6 +35,10 @@ public class ProductQueryService {
 		return productQueryRepository.findByProductId(productId);
 	}
 	
+	public int countCompanyId(UUID companyId) {
+		return productQueryRepository.countByCompanyId(companyId);
+	}
+	
 	public boolean existsProductName(UUID companyId, String productName) {
 		return productQueryRepository.existsCompanyIdAndProductName(companyId, productName);
 	}

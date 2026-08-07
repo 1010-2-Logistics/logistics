@@ -10,4 +10,6 @@ public interface ProductQueryRepository {
 	Optional<Product> findByProductId(UUID productId);
 
 	boolean existsCompanyIdAndProductName(UUID companyId, String productName);
+	
+	int countByCompanyId(UUID companyId);
 }

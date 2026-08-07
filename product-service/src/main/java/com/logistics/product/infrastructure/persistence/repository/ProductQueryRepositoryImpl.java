@@ -25,6 +25,10 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 	public boolean existsCompanyIdAndProductName(UUID companyId, String productName) {
 		return jpaRepository.existsByCompanyIdAndProductNameAndDeletedAtIsNull(companyId, productName);
 	}
-	
+
+	@Override
+	public int countByCompanyId(UUID companyId) {
+		return jpaRepository.countByCompanyIdAndDeletedAtIsNull(companyId);
+	}
 	
 }
