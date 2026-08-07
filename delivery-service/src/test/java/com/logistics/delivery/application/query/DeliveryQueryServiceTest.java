@@ -9,10 +9,14 @@ import com.logistics.delivery.application.dto.query.SearchDeliveryQuery;
 import com.logistics.delivery.application.dto.result.DeliveryResults;
 import com.logistics.delivery.application.service.DeliveryQueryService;
 import com.logistics.delivery.domain.entity.Delivery;
+import com.logistics.delivery.domain.entity.DeliveryRoute;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
+import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +34,9 @@ class DeliveryQueryServiceTest {
 
     @Mock
     private DeliveryRepository deliveryRepository;
+
+    @Mock
+    private DeliveryRouteRepository deliveryRouteRepository;
 
     @InjectMocks
     private DeliveryQueryService deliveryQueryService;
@@ -96,5 +103,31 @@ class DeliveryQueryServiceTest {
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void 배송_경로_목록을_순번대로_조회한다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+
+        DeliveryRoute route = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(route));
+
+        DeliveryResults.DeliveryRouteListResult result = deliveryQueryService.getRoutes(deliveryId);
+
+        assertThat(result.routes()).hasSize(1);
+        assertThat(result.routes().get(0).getSequence()).isEqualTo(0);
+    }
+
+    @Test
+    void 존재하지_않는_배송의_경로_조회시_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryQueryService.getRoutes(deliveryId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
     }
 }
