@@ -6,5 +6,5 @@ RUN ./gradlew :slack-service:bootJar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/template-service/build/libs/*.jar app.jar
+COPY --from=build /app/slack-service/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

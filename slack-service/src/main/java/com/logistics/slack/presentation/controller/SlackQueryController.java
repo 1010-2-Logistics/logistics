@@ -46,9 +46,9 @@ public class SlackQueryController {
     @GetMapping
     public ApiResponse<PageResponse<SlackListResponseDto>> getSlacks(
             @RequestParam(required = false) SlackStatus status,
-            @RequestParam(required = false) UUID senderId,
-            @RequestParam(required = false) UUID receiverId,
-            @RequestParam(required = false) UUID referenceId,
+            @RequestParam(required = false) Long senderId,
+            @RequestParam(required = false) Long receiverId,
+            @RequestParam(required = false) Long referenceId,
 
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

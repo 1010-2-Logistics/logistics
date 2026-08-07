@@ -16,9 +16,9 @@ public interface SlackQueryRepository {
 
     Page<Slack> search(
             SlackStatus status,
-            UUID senderId,
-            UUID receiverId,
-            UUID referenceId,
+            Long senderId,
+            Long receiverId,
+            Long referenceId,
             LocalDateTime createdFrom,
             LocalDateTime createdTo,
             Pageable pageable

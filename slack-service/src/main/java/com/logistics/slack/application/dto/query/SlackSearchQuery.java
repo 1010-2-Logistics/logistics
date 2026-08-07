@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public record SlackSearchQuery(
         SlackStatus status,
-        UUID senderId,
-        UUID receiverId,
-        UUID referenceId,
+        Long senderId,
+        Long receiverId,
+        Long referenceId,
         LocalDateTime createdFrom,
         LocalDateTime createdTo,
         Pageable pageable
@@ -18,9 +18,9 @@ public record SlackSearchQuery(
 ) {
     public static SlackSearchQuery of(
             SlackStatus status,
-            UUID senderId,
-            UUID receiverId,
-            UUID referenceId,
+            Long senderId,
+            Long receiverId,
+            Long referenceId,
             LocalDateTime createdFrom,
             LocalDateTime createdTo,
             Pageable pageable
