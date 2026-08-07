@@ -21,4 +21,7 @@ public final class DeliveryResults {
 
     public record DeliveryRouteListResult(List<DeliveryRoute> routes) {
     }
+
+    public record DeliveryInternalResult(Delivery delivery, Long currentManagerId) {
+    }
 }
