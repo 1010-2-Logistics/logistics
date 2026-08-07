@@ -10,9 +10,10 @@ import static org.mockito.Mockito.when;
 import com.logistics.delivery.application.dto.command.ChangeDeliveryRouteStatusCommand;
 import com.logistics.delivery.application.dto.command.ChangeDeliveryStatusCommand;
 import com.logistics.delivery.application.dto.command.CreateDeliveryCommand;
+import com.logistics.delivery.application.dto.result.DeliveryResults;
 import com.logistics.delivery.application.service.DeliveryCommandService;
-import com.logistics.delivery.application.service.DeliveryCommandService.DeliveryCreateResult;
-import com.logistics.delivery.application.service.DeliveryCommandService.RouteStatusChangeResult;
+import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCreateResult;
+import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
 import com.logistics.delivery.application.service.DeliveryManagerAssignmentService;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryManager;
@@ -24,7 +25,7 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.infrastructure.feign.client.HubClient;
+import com.logistics.delivery.application.port.HubPort;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +51,7 @@ class DeliveryCommandServiceTest {
     private DeliveryManagerAssignmentService deliveryManagerAssignmentService;
 
     @Mock
-    private HubClient hubClient;
+    private HubPort hubPort;
 
     @InjectMocks
     private DeliveryCommandService deliveryCommandService;
@@ -65,8 +66,8 @@ class DeliveryCommandServiceTest {
                 orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
-        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
-        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -98,8 +99,8 @@ class DeliveryCommandServiceTest {
                 orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
-        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
-        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -131,7 +132,7 @@ class DeliveryCommandServiceTest {
                 orderId, startHubId, endHubId, "주소", "홍길동", "U01");
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
-        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of());
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of());
 
         // when & then
         assertThatThrownBy(() -> deliveryCommandService.create(command))
@@ -161,7 +162,7 @@ class DeliveryCommandServiceTest {
         assertThat(result.delivery()).isEqualTo(existing);
         assertThat(result.routeCount()).isEqualTo(1);
         verify(deliveryRepository, never()).save(any());
-        verify(hubClient, never()).validateHubIds(any());
+        verify(hubPort, never()).validateHubIds(any());
     }
 
     @Test
@@ -174,8 +175,8 @@ class DeliveryCommandServiceTest {
                 orderId, startHubId, endHubId, "주소", "홍길동", "U01");
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
-        when(hubClient.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
-        when(hubClient.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
@@ -202,11 +203,11 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         // when
-        Delivery result = deliveryCommandService.changeStatus(
+        DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
                 deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED));
 
-        // then
-        assertThat(result.getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+// then
+        assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
     }
 
     @Test
@@ -416,5 +417,28 @@ class DeliveryCommandServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
+    }
+
+    @Test
+    void 정상_삭제되면_deletedAt이_채워진다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+
+        deliveryCommandService.delete(deliveryId);
+
+        assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 존재하지_않는_배송_삭제시_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
     }
 }

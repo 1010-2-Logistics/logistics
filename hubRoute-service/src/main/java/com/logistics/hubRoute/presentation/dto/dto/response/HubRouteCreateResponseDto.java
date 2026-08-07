@@ -8,8 +8,5 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 public class HubRouteCreateResponseDto {
-
-
     private UUID hubRouteId;
-
 }
