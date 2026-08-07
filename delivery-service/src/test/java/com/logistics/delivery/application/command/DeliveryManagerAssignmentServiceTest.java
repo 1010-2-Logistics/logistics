@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,27 +35,6 @@ class DeliveryManagerAssignmentServiceTest {
 
     @InjectMocks
     private DeliveryManagerAssignmentService deliveryManagerAssignmentService;
-
-    @Test
-    void 배정_이력이_없으면_state를_새로_만들고_가장_작은_시퀀스_담당자가_배정된다() {
-        // given
-        DeliveryManager manager = DeliveryManager.create(1L, null, "U01", ManagerType.HUB_DELIVERY_MANAGER, 0);
-        when(assignmentStateRepository.findForUpdate(ManagerType.HUB_DELIVERY_MANAGER, null))
-                .thenReturn(Optional.empty());
-        when(deliveryManagerRepository.findNextCandidate(ManagerType.HUB_DELIVERY_MANAGER, null, -1))
-                .thenReturn(Optional.of(manager));
-        when(assignmentStateRepository.save(any(DeliveryManagerAssignmentState.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // when
-        DeliveryManager result = deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null);
-
-        // then
-        assertThat(result.getDeliveryManagerId()).isEqualTo(1L);
-        verify(assignmentStateRepository, times(1)).save(any(DeliveryManagerAssignmentState.class));
-        // 처음이라 findFirstCandidate(wrap 경로)는 호출되면 안 됨
-        verify(deliveryManagerRepository, never()).findFirstCandidate(any(), any());
-    }
 
     @Test
     void 마지막_배정_시퀀스보다_큰_담당자가_있으면_그_담당자가_배정되고_state가_그_값으로_갱신된다() {
@@ -99,10 +77,25 @@ class DeliveryManagerAssignmentServiceTest {
     }
 
     @Test
-    void 배정_가능한_담당자가_없으면_예외를_던지고_state는_저장하지_않는다() {
-        // given
+    void 배정_상태가_없으면_예외를_던지고_state는_저장하지_않는다() {
+        // given: 등록이 한 번도 안 된 풀 (배정 상태 자체가 없음)
         when(assignmentStateRepository.findForUpdate(ManagerType.HUB_DELIVERY_MANAGER, null))
                 .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
+        verify(assignmentStateRepository, never()).save(any());
+    }
+
+    @Test
+    void 배정_가능한_담당자가_없으면_예외를_던지고_state는_저장하지_않는다() {
+        // given: 배정 상태는 있는데 후보 담당자가 없는 경우
+        DeliveryManagerAssignmentState state = DeliveryManagerAssignmentState.init(ManagerType.HUB_DELIVERY_MANAGER, null);
+        when(assignmentStateRepository.findForUpdate(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(Optional.of(state));
         when(deliveryManagerRepository.findNextCandidate(ManagerType.HUB_DELIVERY_MANAGER, null, -1))
                 .thenReturn(Optional.empty());
         when(deliveryManagerRepository.findFirstCandidate(ManagerType.HUB_DELIVERY_MANAGER, null))
@@ -112,7 +105,7 @@ class DeliveryManagerAssignmentServiceTest {
         assertThatThrownBy(() -> deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE );
+                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
         verify(assignmentStateRepository, never()).save(any());
     }
 
@@ -120,13 +113,12 @@ class DeliveryManagerAssignmentServiceTest {
     void COMPANY_DELIVERY_MANAGER는_전달받은_hubId_그대로_조회에_사용한다() {
         // given
         UUID hubId = UUID.randomUUID();
+        DeliveryManagerAssignmentState state = DeliveryManagerAssignmentState.init(ManagerType.COMPANY_DELIVERY_MANAGER, hubId);
         DeliveryManager manager = DeliveryManager.create(5L, hubId, "U05", ManagerType.COMPANY_DELIVERY_MANAGER, 0);
         when(assignmentStateRepository.findForUpdate(ManagerType.COMPANY_DELIVERY_MANAGER, hubId))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(state));
         when(deliveryManagerRepository.findNextCandidate(eq(ManagerType.COMPANY_DELIVERY_MANAGER), eq(hubId), eq(-1)))
                 .thenReturn(Optional.of(manager));
-        when(assignmentStateRepository.save(any(DeliveryManagerAssignmentState.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         DeliveryManager result = deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, hubId);
