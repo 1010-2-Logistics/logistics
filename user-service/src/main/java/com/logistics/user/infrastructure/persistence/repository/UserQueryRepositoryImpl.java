@@ -29,7 +29,7 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
             String username
     ) {
         return userJpaRepository
-                .existsByUsername(username);
+                .existsByUsernameAndDeletedAtIsNull(username);
     }
 
     @Override

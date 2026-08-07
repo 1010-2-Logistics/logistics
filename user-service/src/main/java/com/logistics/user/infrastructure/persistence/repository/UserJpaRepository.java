@@ -16,7 +16,7 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
             + "AND (:keyword IS NULL OR s.username LIKE %:keyword%)")
     Page<User> search(@Param("keyword") String keyword, Pageable pageable);
 
-    boolean existsByUsername(String username);
+    boolean existsByUsernameAndDeletedAtIsNull(String username);
 
     boolean existsBySlackIdAndDeletedAtIsNull(
             String slackId
