@@ -1,6 +1,5 @@
 package com.logistics.product.presentation.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.logistics.product.application.dto.result.ProductSearchResultDto;
+import com.logistics.product.application.facade.ProductQueryFacade;
 import com.logistics.product.application.service.ProductQueryService;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.global.response.PageResponse;
@@ -25,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductQueryController {
 
+	private final ProductQueryFacade productQueryFacade;
+	
 	private final ProductQueryService productQueryService;
 	
 	// 상품 단건 조회
@@ -46,8 +47,6 @@ public class ProductQueryController {
 	public ApiResponse<PageResponse<ProductInfoResponseDto>> productSearch(
 			@Valid @ModelAttribute ProductSearchRequestDto request
 	) {
-		List<ProductSearchResultDto> response = productQueryService.search(request.toQuery());
-		
 		
 		
 		return null;

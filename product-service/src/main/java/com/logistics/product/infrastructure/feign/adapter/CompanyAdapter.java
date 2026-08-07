@@ -1,5 +1,6 @@
 package com.logistics.product.infrastructure.feign.adapter;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -29,6 +30,13 @@ public class CompanyAdapter implements CompanyPort {
 				response.companyManagerId(),
 				response.exists()
 		);
+	}
+
+	@Override
+	public List<UUID> companyIdsByHubIdRequest(UUID hubID) {
+		List<UUID> companyIds = companyClient.getCompanyIdsByHubId(hubID).getData();
+		
+		return companyIds;
 	}
 
 }

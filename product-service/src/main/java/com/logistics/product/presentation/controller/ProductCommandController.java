@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductDeleteCommand;
 import com.logistics.product.application.dto.result.ProductCreateResultDto;
 import com.logistics.product.application.dto.result.ProductUpdateResultDto;
-import com.logistics.product.application.facade.ProductFacade;
+import com.logistics.product.application.facade.ProductCommandPacade;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductCommandController {
 
-	private final ProductFacade productFacade;
+	private final ProductCommandPacade productFacade;
 	
 	// 상품 생성
 	@PostMapping
