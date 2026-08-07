@@ -41,7 +41,7 @@ class SlackCommandServiceTest {
     private final UUID slackMessageId = UUID.randomUUID();
     private final Long senderId = 1L;
     private final Long receiverId = 2L;
-    private final Long referenceId = 100L;
+    private final UUID referenceId = UUID.randomUUID();
     @Mock
     private SlackCommandRepository slackCommandRepository;
 

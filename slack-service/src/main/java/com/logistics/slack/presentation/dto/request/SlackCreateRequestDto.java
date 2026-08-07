@@ -14,6 +14,6 @@ public record SlackCreateRequestDto(
         @Size(max = 5000)
         String message,
 
-        Long referenceId
+        UUID referenceId
 ) {
 }
