@@ -10,6 +10,7 @@ import com.logistics.delivery.presentation.controller.dto.response.DeliveryStatu
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,8 +23,8 @@ public class DeliveryStatusCommandController {
     @PatchMapping("/{deliveryId}")
     public ApiResponse<DeliveryStatusChangeResponse> changeStatus(
             @PathVariable UUID deliveryId, @Valid @RequestBody DeliveryStatusChangeRequest request) {
-        Delivery delivery = deliveryCommandService.changeStatus(deliveryId, request.toCommand());
-        return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(delivery));
+        var result = deliveryCommandService.changeStatus(deliveryId, request.toCommand());
+        return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(result));
     }
 
     @PatchMapping("/{deliveryId}/routes/{routeId}")
@@ -32,5 +33,11 @@ public class DeliveryStatusCommandController {
             @Valid @RequestBody DeliveryRouteStatusChangeRequest request) {
         var result = deliveryCommandService.changeRouteStatus(deliveryId, routeId, request.toCommand());
         return ApiResponse.success(200, "배송 경로 상태 변경 성공", DeliveryRouteStatusChangeResponse.of(result));
+    }
+
+    @DeleteMapping("/{deliveryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID deliveryId) {
+        deliveryCommandService.delete(deliveryId);
     }
 }

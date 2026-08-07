@@ -1,16 +1,18 @@
 package com.logistics.delivery.application.dto.query;
 
 import com.logistics.delivery.domain.entity.DeliveryStatus;
+import java.util.Set;
 import java.util.UUID;
 
 public record SearchDeliveryQuery(DeliveryStatus status, UUID hubId, String sort, int page, int size) {
 
     private static final int[] ALLOWED_SIZES = {10, 30, 50};
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("createdAt", "updatedAt");
 
     public static SearchDeliveryQuery of(DeliveryStatus status, UUID hubId, String sort, Integer page, Integer size) {
         int safePage = (page == null || page < 0) ? 0 : page;
         int safeSize = normalizeSize(size);
-        String safeSort = (sort == null || sort.isBlank()) ? "createdAt" : sort;
+        String safeSort = (sort != null && ALLOWED_SORT_FIELDS.contains(sort)) ? sort : "createdAt";
         return new SearchDeliveryQuery(status, hubId, safeSort, safePage, safeSize);
     }
 
