@@ -12,13 +12,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductDeleteCommand;
 import com.logistics.product.application.dto.result.ProductCreateResultDto;
+import com.logistics.product.application.dto.result.ProductUpdateResultDto;
 import com.logistics.product.application.facade.ProductFacade;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
 import com.logistics.product.presentation.dto.request.ProductUpdateRequestDto;
 import com.logistics.product.presentation.dto.response.ProductCreateResponseDto;
+import com.logistics.product.presentation.dto.response.ProductUpdateResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,17 +56,42 @@ public class ProductCommandController {
 	// 상품 수정
 	@PatchMapping
 	public ApiResponse<?> updateProduct(@Valid @RequestBody ProductUpdateRequestDto request) {
+		Long exampleUserId = 1L;
+		Role exampleRole = Role.HUB_MANAGER;
 		
+		ProductUpdateResultDto result = productFacade.updateProduct(
+				request.toCommand(exampleUserId, exampleRole)
+		);
 		
-		return null;
+		ProductUpdateResponseDto response = ProductUpdateResponseDto.from(result);
+		
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"상품 수정 성공",
+				response
+		);
 	}
 	
 	// 상품 삭제
 	@DeleteMapping("/{productId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public ApiResponse<Void> deleteProduct(@PathVariable("productId") UUID productId) {
+		Long exampleUserId = 1L;
+		Role exampleRole = Role.HUB_MANAGER;
 		
-		return null;
+		ProductDeleteCommand command = new ProductDeleteCommand(
+				productId,
+				exampleUserId,
+				exampleRole
+		);
+		
+		productFacade.deleteProduct(command);
+		
+		return ApiResponse.success(
+				HttpStatus.NO_CONTENT.value(),
+				"상품 삭제 성공",
+				null
+		);
 	}
 	
 }

@@ -2,8 +2,8 @@ package com.logistics.product.presentation.dto.request;
 
 import java.util.UUID;
 
-import com.logistics.product.application.dto.command.ProductCommand;
-import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
 import com.logistics.product.domain.entity.Role;
 
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +20,7 @@ public record ProductCreateRequestDto(
 ) {
 	
 	public ProductCreateCommand toCommand(Long userId, Role role) {
-		return new ProductCommand.ProductCreateCommand(
+		return new ProductGroupCommand.ProductCreateCommand(
 				companyId,
 				productName,
 				userId,

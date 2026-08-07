@@ -1,11 +1,12 @@
 package com.logistics.product.application.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
-import com.logistics.product.application.dto.command.ProductCommand.ProductDeleteCommand;
-import com.logistics.product.application.dto.command.ProductCommand.ProductUpdateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductUpdateCommand;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.repository.ProductCommandRepository;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -45,10 +46,10 @@ public class ProductCommandService {
 	}
 	
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteProduct(ProductDeleteCommand command) {
-		Product product = productQueryService.findProduct(command.productId());
+	public void deleteProduct(UUID productId, Long deletedBy) {
+		Product product = productQueryService.findProduct(productId);
 		
-		product.markDeleted(command.userId());
+		product.markDeleted(deletedBy);
 	}
 	
 }

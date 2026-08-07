@@ -19,7 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.logistics.product.application.dto.command.ProductCommand.ProductCreateCommand;
+import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
 import com.logistics.product.application.dto.internal.CompanyExistsResponseDto;
 import com.logistics.product.application.dto.result.ProductCreateResultDto;
 import com.logistics.product.application.facade.ProductFacade;
