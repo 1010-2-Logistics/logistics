@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS product_service.p_product (
     deleted_by BIGINT
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS UQ_P_COMPANY_PRODUCT_NAME_ACTIVE
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_P_PRODUCT_COMPANY_ID_PRODUCT_NAME
 ON product_service.p_product (company_id, product_name)
+WHERE deleted_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_P_COMPANY_HUB_ID_COMPANY_NAME
+ON company_service.p_company (hub_id, company_name)
 WHERE deleted_at IS NULL;
