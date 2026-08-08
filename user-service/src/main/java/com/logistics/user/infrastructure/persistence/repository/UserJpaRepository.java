@@ -72,4 +72,8 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
     );
 
     Optional<User> findByUsername(String username);
+
+    boolean existsByRoleAndDeletedAtIsNull(
+            UserRole role
+    );
 }
