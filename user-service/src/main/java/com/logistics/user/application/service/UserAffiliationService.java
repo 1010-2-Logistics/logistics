@@ -3,6 +3,7 @@ package com.logistics.user.application.service;
 import com.logistics.user.application.dto.command.ChangeUserAffiliationCommandDto;
 import com.logistics.user.application.dto.result.ChangeUserAffiliationResultDto;
 import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
@@ -32,6 +33,7 @@ public class UserAffiliationService {
             ChangeUserAffiliationCommandDto command
     ) {
         validateCommand(command);
+        validateAllowedRole(command.role());
 
         // 삭제되지 않은 사용자 조회
         User user = userQueryRepository
@@ -103,6 +105,16 @@ public class UserAffiliationService {
         if (sameRole && sameCompany && sameHub) {
             throw new CustomException(
                     UserErrorCode.USER_AFFILIATION_CONFLICT
+            );
+        }
+    }
+
+    private void validateAllowedRole(
+            UserRole role
+    ) {
+        if (role == UserRole.MASTER) {
+            throw new CustomException(
+                    UserErrorCode.USER_AFFILIATION_ROLE_NOT_ALLOWED
             );
         }
     }
