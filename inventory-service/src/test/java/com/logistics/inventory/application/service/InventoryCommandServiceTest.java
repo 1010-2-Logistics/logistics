@@ -6,6 +6,7 @@ import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
+import com.logistics.inventory.application.port.IdempotencyPort;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
 import com.logistics.inventory.global.exception.CustomException;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,6 +47,9 @@ class InventoryCommandServiceTest {
     @InjectMocks
     InventoryCommandService inventoryCommandService;
 
+    @Mock
+    IdempotencyPort idempotencyPort;
+
     @Nested
     @DisplayName("재고 차감")
     class Deduct {
@@ -63,7 +68,15 @@ class InventoryCommandServiceTest {
                     1
             );
 
-            given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.of(inventory));
+            given(idempotencyPort.acquire(
+                    eq("inventory:deduct:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
+
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(inventory));
 
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
@@ -72,6 +85,10 @@ class InventoryCommandServiceTest {
             assertThat(inventoryDeductionResultDto.stock()).isEqualTo(99);
             assertThat(inventory.getStock()).isEqualTo(99);
 
+            verify(inventoryCommandRepository).findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            );
             verify(inventoryCommandRepository).save(inventory);
         }
 
@@ -101,6 +118,30 @@ class InventoryCommandServiceTest {
                     .isInstanceOfSatisfying(CustomException.class,
                             exception -> assertThat(exception.getErrorCode())
                                     .isEqualTo(InventoryErrorCode.INVENTORY_INVALID_REQUEST));
+        }
+
+        @Test
+        @DisplayName("동일 주문의 재고 차감 요청이면 중복 처리 예외")
+        void inventory_deduct_duplicate_fail() {
+            InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    10
+            );
+
+            given(idempotencyPort.acquire(
+                    eq("inventory:deduct:" + orderId),
+                    any(Duration.class)
+            )).willReturn(false);
+
+            assertThatThrownBy(() -> inventoryCommandService.deductInventory(inventoryDeductionCommand))
+                    .isInstanceOfSatisfying(CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED));
+
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
         }
     }
 
