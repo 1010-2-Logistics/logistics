@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryInternalCommandController {
     private final InventoryCommandService inventoryCommandService;
 
-    // TODO : 동시 재고/복원 시 어떻게 처리할 건지에 대해 구상하기 -> 동일 재고에 대한 동시 수정 충돌이 빈번하지 않을 것으로 판단하여 낙관적 락 적용 예정
     @Operation(
             summary = "내부용 재고 차감"
     )
