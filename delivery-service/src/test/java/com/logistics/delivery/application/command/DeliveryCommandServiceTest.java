@@ -418,4 +418,27 @@ class DeliveryCommandServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
     }
+
+    @Test
+    void 정상_삭제되면_deletedAt이_채워진다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+
+        deliveryCommandService.delete(deliveryId);
+
+        assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 존재하지_않는_배송_삭제시_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
+    }
 }

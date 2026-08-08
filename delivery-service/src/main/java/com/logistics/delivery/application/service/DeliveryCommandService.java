@@ -144,4 +144,9 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
     }
+    public void delete(UUID deliveryId) {
+        Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+        delivery.markDeleted(TEMP_CREATED_BY);
+    }
 }
