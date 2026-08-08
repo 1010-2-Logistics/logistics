@@ -15,13 +15,13 @@ public record InventoryRestorationRequestDto(
 
         @NotNull(message = "복원 수량은 필수입니다.")
         @Min(value = 1, message = "복원 수량은 1 이상이어야 합니다.")
-        Integer stock
+        Integer quantity
 ) {
     public InventoryRestorationCommand toCommand() {
         return new InventoryRestorationCommand(
                 productId,
                 hubId,
-                stock()
+                quantity()
         );
     }
 }

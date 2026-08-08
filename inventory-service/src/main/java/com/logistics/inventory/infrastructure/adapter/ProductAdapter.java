@@ -1,6 +1,6 @@
 package com.logistics.inventory.infrastructure.adapter;
 
-import com.logistics.inventory.application.dto.internal.response.ProductExistsResponseDto;
+import com.logistics.inventory.application.dto.result.ProductExistsResponseDto;
 import com.logistics.inventory.application.port.ProductPort;
 import com.logistics.inventory.infrastructure.feign.client.ProductClient;
 import com.logistics.inventory.infrastructure.feign.response.ProductValidationResponse;

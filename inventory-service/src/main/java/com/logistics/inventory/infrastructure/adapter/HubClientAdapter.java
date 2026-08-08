@@ -1,6 +1,6 @@
 package com.logistics.inventory.infrastructure.adapter;
 
-import com.logistics.inventory.application.dto.internal.response.HubExistsResponseDto;
+import com.logistics.inventory.application.dto.result.HubExistsResponseDto;
 import com.logistics.inventory.application.port.HubPort;
 import com.logistics.inventory.infrastructure.feign.client.HubClient;
 import com.logistics.inventory.infrastructure.feign.response.HubValidationResponse;

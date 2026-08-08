@@ -85,7 +85,7 @@ public class InventoryCommandService {
         ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
         // 재고 도메인에 차감 요청
-        inventory.deduct(inventoryDeductionCommand.stock());
+        inventory.deduct(inventoryDeductionCommand.quantity());
         // 변경된 재고 저장
         Inventory savedInventory = inventoryCommandRepository.save(inventory);
         // 차감 후 결과 DTO 반환
@@ -100,7 +100,7 @@ public class InventoryCommandService {
                 inventoryRestorationCommand.hubId()
         ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-        inventory.restore(inventoryRestorationCommand.stock());
+        inventory.restore(inventoryRestorationCommand.quantity());
 
         Inventory savedInventory = inventoryCommandRepository.save(inventory);
 

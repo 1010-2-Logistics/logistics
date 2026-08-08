@@ -1,18 +1,14 @@
 package com.logistics.inventory.application.facade;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
-import com.logistics.inventory.application.dto.internal.response.HubExistsResponseDto;
-import com.logistics.inventory.application.dto.internal.response.ProductExistsResponseDto;
+import com.logistics.inventory.application.dto.result.HubExistsResponseDto;
+import com.logistics.inventory.application.dto.result.ProductExistsResponseDto;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.port.HubPort;
 import com.logistics.inventory.application.port.ProductPort;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.exception.CustomException;
 import com.logistics.inventory.global.exception.InventoryErrorCode;
-import com.logistics.inventory.infrastructure.feign.client.HubClient;
-import com.logistics.inventory.infrastructure.feign.client.ProductClient;
-import com.logistics.inventory.infrastructure.feign.response.HubValidationResponse;
-import com.logistics.inventory.infrastructure.feign.response.ProductValidationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

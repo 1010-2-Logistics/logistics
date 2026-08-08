@@ -15,13 +15,13 @@ public record InventoryDeductionRequestDto(
 
         @NotNull(message = "차감 수량은 필수입니다.")
         @Min(value = 1, message = "차감 수량은 1 이상이어야 합니다.")
-        Integer stock
+        Integer quantity
 ) {
     public InventoryDeductionCommand toCommand() {
         return new InventoryDeductionCommand(
                 productId,
                 hubId,
-                stock
+                quantity
         );
     }
 }
