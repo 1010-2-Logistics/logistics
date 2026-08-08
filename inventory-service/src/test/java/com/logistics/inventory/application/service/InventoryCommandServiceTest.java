@@ -61,7 +61,7 @@ class InventoryCommandServiceTest {
                     1
             );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.of(inventory));
 
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
@@ -120,7 +120,7 @@ class InventoryCommandServiceTest {
                     30
             );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
             InventoryRestorationResult inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
@@ -128,7 +128,7 @@ class InventoryCommandServiceTest {
             assertThat(inventoryRestorationResultDto.stock()).isEqualTo(130);
             assertThat(inventory.getStock()).isEqualTo(130);
 
-            verify(inventoryCommandRepository).findByProductAndHubId(
+            verify(inventoryCommandRepository).findByProductAndHubIdWithLock(
                     productId,
                     hubId
             );
@@ -145,7 +145,7 @@ class InventoryCommandServiceTest {
                             30
                     );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.empty());
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.empty());
 
             assertThatThrownBy(
                     () -> inventoryCommandService.restoreInventory(command)

@@ -79,7 +79,7 @@ public class InventoryCommandService {
     ) {
         // 상품 아이디와 허브 아이디로 재고 조회, 일단 임시로 만들 예정
         // 재고 없으면 예외
-        Inventory inventory = inventoryCommandRepository.findByProductAndHubId(
+        Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
                 inventoryDeductionCommand.productId(),
                 inventoryDeductionCommand.hubId()
         ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
@@ -95,7 +95,7 @@ public class InventoryCommandService {
     public InventoryRestorationResult restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        Inventory inventory = inventoryCommandRepository.findByProductAndHubId(
+        Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
                 inventoryRestorationCommand.productId(),
                 inventoryRestorationCommand.hubId()
         ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
