@@ -110,7 +110,7 @@ public class InventoryCommandService {
     public InventoryRestorationResult restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        String key = "inventory:deduct:" + inventoryRestorationCommand.orderId();
+        String key = "inventory:restore:" + inventoryRestorationCommand.orderId();
 
         boolean acquired = idempotencyPort.acquire(
                 key,

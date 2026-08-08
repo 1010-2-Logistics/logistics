@@ -143,6 +143,41 @@ class InventoryCommandServiceTest {
             verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
             verify(inventoryCommandRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("재고 차감 실패 시 멱등키 해제")
+        void inventory_deduct_fail_release_key() {
+            Inventory inventory = Inventory.create(
+                    productId,
+                    hubId,
+                    5
+            );
+
+            InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    10
+            );
+
+            String key = "inventory:deduct:" + orderId;
+
+            given(idempotencyPort.acquire(
+                    eq(key),
+                    any(Duration.class)
+            )).willReturn(true);
+
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(inventory));
+
+            assertThatThrownBy(() -> inventoryCommandService.deductInventory(inventoryDeductionCommand))
+                    .isInstanceOf(CustomException.class);
+
+            verify(idempotencyPort).release(key);
+            verify(inventoryCommandRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -164,6 +199,10 @@ class InventoryCommandServiceTest {
                     30
             );
 
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
             given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
@@ -190,6 +229,10 @@ class InventoryCommandServiceTest {
                             30
                     );
 
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
             given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.empty());
 
             assertThatThrownBy(
