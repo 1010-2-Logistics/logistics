@@ -18,16 +18,16 @@ class UserTest {
     void 생성하면_PENDING_상태로_시작한다() {
         // given
         UUID companyId = UUID.randomUUID();
+        UUID hubId = UUID.randomUUID();
 
         // when
-        // COMPANY_MANAGER는 companyId가 필수이고 hubId는 없어야 한다.
         User user = User.create(
                 "sample01",
                 "encoded-password",
                 "U0123456789",
                 UserRole.COMPANY_MANAGER,
                 companyId,
-                null
+                hubId
         );
 
         // then
@@ -50,7 +50,7 @@ class UserTest {
                 .isEqualTo(companyId);
 
         assertThat(user.getHubId())
-                .isNull();
+                .isEqualTo(hubId);
     }
 
     @Test
@@ -223,7 +223,29 @@ class UserTest {
     }
 
     @Test
-    void 업체_역할은_companyId만_가져야_한다() {
+    void 업체_역할은_companyId와_hubId가_모두_필요하다() {
+        // given
+        UUID companyId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(
+                () -> User.create(
+                        "sample01",
+                        "encoded-password",
+                        "U0123456789",
+                        UserRole.COMPANY_MANAGER,
+                        companyId,
+                        null
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(
+                        "업체 역할은 companyId와 hubId가 모두 필요합니다."
+                );
+    }
+
+    @Test
+    void 업체_역할은_companyId가_없으면_예외가_발생한다() {
         // given
         UUID hubId = UUID.randomUUID();
 
@@ -239,6 +261,8 @@ class UserTest {
                 )
         )
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("업체 역할은 companyId만 가져야 합니다.");
+                .hasMessage(
+                        "업체 역할은 companyId와 hubId가 모두 필요합니다."
+                );
     }
 }
