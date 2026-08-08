@@ -1,7 +1,11 @@
 package com.logistics.inventory.application.facade;
 
 import com.logistics.inventory.application.dto.command.InventoryCreateCommand;
+import com.logistics.inventory.application.dto.internal.response.HubExistsResponseDto;
+import com.logistics.inventory.application.dto.internal.response.ProductExistsResponseDto;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
+import com.logistics.inventory.application.port.HubPort;
+import com.logistics.inventory.application.port.ProductPort;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.exception.CustomException;
 import com.logistics.inventory.global.exception.InventoryErrorCode;
@@ -16,21 +20,21 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class InventoryFacade {
     private final InventoryCommandService inventoryCommandService;
-    private final HubClient hubClient;
-    private final ProductClient productClient;
+    private final HubPort hubPort;
+    private final ProductPort productPort;
 
     public InventoryCreateResult createInventory(
             InventoryCreateCommand createInventoryCommand
     ) {
-        ProductValidationResponse productValidationResponse = productClient.getProduct(createInventoryCommand.productId());
+        ProductExistsResponseDto productExistsResponseDto = productPort.getProduct(createInventoryCommand.productId());
 
-        if (!productValidationResponse.exists()) {
+        if (!productExistsResponseDto.exists()) {
             throw new CustomException(InventoryErrorCode.INVENTORY_PRODUCT_NOT_FOUND);
         }
 
-        HubValidationResponse hubValidationResponse = hubClient.getHub(createInventoryCommand.hubId());
+        HubExistsResponseDto hubExistsResponseDto = hubPort.getHub(createInventoryCommand.hubId());
 
-        if (!hubValidationResponse.exists()) {
+        if (!hubExistsResponseDto.exists()) {
             throw new CustomException(InventoryErrorCode.INVENTORY_HUB_NOT_FOUND);
         }
 

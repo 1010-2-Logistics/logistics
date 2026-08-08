@@ -14,10 +14,9 @@ import java.util.UUID;
 public class HubClientAdapter implements HubPort {
     private final HubClient hubClient;
 
-
     @Override
     public HubExistsResponseDto getHub(UUID hubId) {
-        HubValidationResponse hubValidationResponse = hubClient.getHub(hubId);
+        HubValidationResponse hubValidationResponse = hubClient.getHub(hubId).getData();
 
         return new HubExistsResponseDto(
                 hubValidationResponse.hubId(),

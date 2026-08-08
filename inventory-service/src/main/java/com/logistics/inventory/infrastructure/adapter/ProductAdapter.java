@@ -16,7 +16,7 @@ public class ProductAdapter implements ProductPort {
 
     @Override
     public ProductExistsResponseDto getProduct(UUID productId) {
-        ProductValidationResponse productValidationResponse = productClient.getProduct(productId);
+        ProductValidationResponse productValidationResponse = productClient.getProduct(productId).getData();
 
         return new ProductExistsResponseDto(
                 productValidationResponse.productId(),
