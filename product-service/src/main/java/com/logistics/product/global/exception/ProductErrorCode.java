@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ProductErrorCode implements ErrorCode {
 
+	PRODUCT_HUB_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 허브에 접근할 수 있는 권한이 없습니다."),
+	
   PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다."),
   
   PRODUCT_DELETED_CONFLICT(HttpStatus.CONFLICT, "삭제된 상품입니다."),

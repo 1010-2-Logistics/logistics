@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/logistics?currentSchema=ai_service
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+rabbitmq:
+  order-created:
+    exchange: order.created
+    queue: order-created.queue
+
+
+ai:
+  gemini:
+    url: http://
