@@ -3,6 +3,9 @@ package com.logistics.user.domain.repository;
 import com.logistics.user.domain.entity.User;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.domain.entity.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,7 +13,14 @@ public interface UserQueryRepository {
 
     Optional<User> findByIdAndDeletedAtIsNull(Long userId);
 
-    Page<User> search(String keyword, Pageable pageable);
+    Page<User> search(
+            String username,
+            UserStatus status,
+            UserRole role,
+            UUID hubId,
+            UUID companyId,
+            Pageable pageable
+    );
 
     /**
      * 삭제되지 않은 사용자 중 username 중복 여부 확인
