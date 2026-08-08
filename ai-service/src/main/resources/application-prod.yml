@@ -17,3 +17,8 @@ rabbitmq:
   order-created:
     exchange: order.created
     queue: order-created.queue
+
+
+ai:
+  gemini:
+    url: http://

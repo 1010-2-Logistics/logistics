@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
-import com.logistics.ai.application.port.out.DeliveryRoutPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.OrderPort;
 import com.logistics.ai.application.port.out.ProductPort;
@@ -19,8 +18,6 @@ public class DispatchDeadlineCommandService implements DispatchDeadlineUseCase {
 	private final OrderPort orderPort;
 	
 	private final DeliveryPort deliveryPort;
-	
-	private final DeliveryRoutPort deliveryRoutePort;
 	
 	private final ProductPort productPort;
 	
