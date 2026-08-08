@@ -1,10 +1,9 @@
 package com.logistics.delivery.presentation.controller;
 
 import com.logistics.delivery.application.service.DeliveryCommandService;
-import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.global.response.ApiResponse;
-import com.logistics.delivery.presentation.controller.dto.request.DeliveryCreateRequest;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryCreateResponse;
+import com.logistics.delivery.presentation.dto.request.DeliveryCreateRequest;
+import com.logistics.delivery.presentation.dto.response.DeliveryCreateResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

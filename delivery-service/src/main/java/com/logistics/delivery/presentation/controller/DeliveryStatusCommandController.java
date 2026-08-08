@@ -1,12 +1,11 @@
 package com.logistics.delivery.presentation.controller;
 
 import com.logistics.delivery.application.service.DeliveryCommandService;
-import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.global.response.ApiResponse;
-import com.logistics.delivery.presentation.controller.dto.request.DeliveryRouteStatusChangeRequest;
-import com.logistics.delivery.presentation.controller.dto.request.DeliveryStatusChangeRequest;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryRouteStatusChangeResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryStatusChangeResponse;
+import com.logistics.delivery.presentation.dto.request.DeliveryRouteStatusChangeRequest;
+import com.logistics.delivery.presentation.dto.request.DeliveryStatusChangeRequest;
+import com.logistics.delivery.presentation.dto.response.DeliveryRouteStatusChangeResponse;
+import com.logistics.delivery.presentation.dto.response.DeliveryStatusChangeResponse;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

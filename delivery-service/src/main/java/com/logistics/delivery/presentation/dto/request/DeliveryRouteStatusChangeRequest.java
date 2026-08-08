@@ -1,4 +1,4 @@
-package com.logistics.delivery.presentation.controller.dto.request;
+package com.logistics.delivery.presentation.dto.request;
 
 import com.logistics.delivery.application.dto.command.ChangeDeliveryRouteStatusCommand;
 import com.logistics.delivery.domain.entity.DeliveryRouteStatus;

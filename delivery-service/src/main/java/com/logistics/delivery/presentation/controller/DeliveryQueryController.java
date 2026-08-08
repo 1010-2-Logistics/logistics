@@ -2,13 +2,12 @@ package com.logistics.delivery.presentation.controller;
 
 import com.logistics.delivery.application.dto.query.SearchDeliveryQuery;
 import com.logistics.delivery.application.service.DeliveryQueryService;
-import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
 import com.logistics.delivery.global.response.ApiResponse;
 import com.logistics.delivery.global.response.PageResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryRouteListResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliverySummaryResponse;
+import com.logistics.delivery.presentation.dto.response.DeliveryResponse;
+import com.logistics.delivery.presentation.dto.response.DeliveryRouteListResponse;
+import com.logistics.delivery.presentation.dto.response.DeliverySummaryResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

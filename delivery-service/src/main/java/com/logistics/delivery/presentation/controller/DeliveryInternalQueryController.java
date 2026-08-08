@@ -2,7 +2,7 @@ package com.logistics.delivery.presentation.controller;
 
 import com.logistics.delivery.application.service.DeliveryQueryService;
 import com.logistics.delivery.global.response.ApiResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryInternalResponse;
+import com.logistics.delivery.presentation.dto.response.DeliveryInternalResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
