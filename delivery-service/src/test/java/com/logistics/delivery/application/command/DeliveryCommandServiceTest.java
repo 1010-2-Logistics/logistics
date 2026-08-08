@@ -18,6 +18,7 @@ import com.logistics.delivery.application.dto.result.DeliveryResults;
 import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCreateResult;
 import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.application.service.DeliveryCommandService;
 import com.logistics.delivery.application.service.DeliveryManagerAssignmentService;
 import com.logistics.delivery.domain.entity.Delivery;
@@ -30,8 +31,6 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.infrastructure.feign.client.HubRouteClient;
-import com.logistics.delivery.infrastructure.feign.response.HubRoutePathApiResponse;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,15 +60,13 @@ class DeliveryCommandServiceTest {
     private HubPort hubPort;
 
     @Mock
-    private HubRouteClient hubRouteClient;
+    private HubRoutePort hubRoutePort;
 
     @InjectMocks
     private DeliveryCommandService deliveryCommandService;
 
-    private HubRoutePathApiResponse singleStepResponse(UUID startHubId, UUID endHubId) {
-        var step = new HubRoutePathApiResponse.HubRoutePathResponse.Step(1, startHubId, endHubId, 1, BigDecimal.ONE);
-        var data = new HubRoutePathApiResponse.HubRoutePathResponse(startHubId, endHubId, 1, BigDecimal.ONE, List.of(step));
-        return new HubRoutePathApiResponse(true, 200, data, "허브 경로 조회 성공");
+    private List<HubRoutePort.HubRouteSegment> singleSegment(UUID startHubId, UUID endHubId) {
+        return List.of(new HubRoutePort.HubRouteSegment(startHubId, endHubId, BigDecimal.ONE, 1));
     }
 
     // ===== create =====
@@ -85,7 +82,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
-        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenReturn(singleSegment(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -116,7 +113,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
-        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenReturn(singleSegment(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -185,7 +182,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
-        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenReturn(singleSegment(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
@@ -213,10 +210,10 @@ class DeliveryCommandServiceTest {
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
         when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var step1 = new HubRoutePathApiResponse.HubRoutePathResponse.Step(1, startHubId, midHubId, 30, BigDecimal.TEN);
-        var step2 = new HubRoutePathApiResponse.HubRoutePathResponse.Step(2, midHubId, endHubId, 20, BigDecimal.valueOf(5));
-        var data = new HubRoutePathApiResponse.HubRoutePathResponse(startHubId, endHubId, 50, BigDecimal.valueOf(15), List.of(step1, step2));
-        when(hubRouteClient.findHubRoute(any())).thenReturn(new HubRoutePathApiResponse(true, 200, data, "허브 경로 조회 성공"));
+        List<HubRoutePort.HubRouteSegment> segments = List.of(
+                new HubRoutePort.HubRouteSegment(startHubId, midHubId, BigDecimal.TEN, 30),
+                new HubRoutePort.HubRouteSegment(midHubId, endHubId, BigDecimal.valueOf(5), 20));
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenReturn(segments);
 
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
                 .thenReturn(DeliveryManager.create(1L, null, "M01", ManagerType.HUB_DELIVERY_MANAGER, 0));
@@ -243,12 +240,35 @@ class DeliveryCommandServiceTest {
 
         FeignException feignException = mock(FeignException.class);
         lenient().when(feignException.getStackTrace()).thenReturn(new StackTraceElement[0]);
-        when(hubRouteClient.findHubRoute(any())).thenThrow(feignException);
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenThrow(feignException);
 
         assertThatThrownBy(() -> deliveryCommandService.create(command))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    void hub_route_경로가_없으면_DELIVERY_HUB_ROUTE_NOT_FOUND_예외가_발생한다() {
+        UUID orderId = UUID.randomUUID();
+        UUID startHubId = UUID.randomUUID();
+        UUID endHubId = UUID.randomUUID();
+        CreateDeliveryCommand command = new CreateDeliveryCommand(
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FeignException.NotFound notFound = mock(FeignException.NotFound.class);
+        lenient().when(notFound.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        when(hubRoutePort.findRoute(startHubId, endHubId)).thenThrow(notFound);
+
+        assertThatThrownBy(() -> deliveryCommandService.create(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
     }
 
     // ===== changeStatus =====
@@ -327,6 +347,28 @@ class DeliveryCommandServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+    }
+
+    @Test
+    void 이전_구간이_완료되지_않았으면_예외가_발생한다() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryRoute priorRoute = DeliveryRoute.create(
+                deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        priorRoute.changeStatus(DeliveryRouteStatus.HUB_MOVING);
+        DeliveryRoute route = DeliveryRoute.create(
+                deliveryId, 1, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(priorRoute, route));
+
+        assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null)))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+
+        verify(deliveryRepository, never()).findByIdAndDeletedAtIsNull(deliveryId);
     }
 
     @Test
