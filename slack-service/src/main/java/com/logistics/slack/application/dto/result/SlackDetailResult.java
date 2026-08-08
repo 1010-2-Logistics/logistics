@@ -15,7 +15,7 @@ public record SlackDetailResult(
         String errorMessage,
         Integer retryCount,
         LocalDateTime sentAt,
-        Long referenceId,
+        UUID referenceId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
