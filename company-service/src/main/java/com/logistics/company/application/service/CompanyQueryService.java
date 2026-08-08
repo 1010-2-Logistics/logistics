@@ -1,5 +1,6 @@
 package com.logistics.company.application.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,7 +15,6 @@ import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.repository.CompanyQueryRepository;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
-import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -56,6 +56,10 @@ public class CompanyQueryService {
 				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
 		
 		return OrderedCompanyInfoResultDto.from(orderedCompanyInfo);
+	}
+	
+	public List<UUID> findIdsByHubId(UUID hubId) {
+		return companyQueryRepository.findIdsByHubId(hubId);
 	}
 
 	public Page<Company> searchCompany(CompanySearchQuery query) {
