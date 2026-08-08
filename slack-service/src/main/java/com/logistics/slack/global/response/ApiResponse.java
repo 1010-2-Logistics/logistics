@@ -1,11 +1,12 @@
 package com.logistics.slack.global.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class ApiResponse<T> {
 
     @JsonProperty("SUCCESS")
