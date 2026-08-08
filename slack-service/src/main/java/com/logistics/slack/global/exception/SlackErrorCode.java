@@ -22,7 +22,9 @@ public enum SlackErrorCode implements ErrorCode {
     SLACK_DELETED_CONFLICT(
             HttpStatus.CONFLICT,
             "삭제된 Slack 메시지는 재발송할 수 없습니다."
-    );
+    ),
+    SLACK_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다."),
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;
