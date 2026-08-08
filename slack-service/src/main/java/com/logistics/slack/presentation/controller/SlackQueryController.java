@@ -4,21 +4,16 @@ import com.logistics.slack.application.dto.query.SlackSearchQuery;
 import com.logistics.slack.application.dto.result.SlackDetailResult;
 import com.logistics.slack.application.dto.result.SlackListResult;
 import com.logistics.slack.application.service.SlackQueryService;
-import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.global.response.ApiResponse;
 import com.logistics.slack.global.response.PageResponse;
+import com.logistics.slack.presentation.dto.request.SlackSearchRequestDto;
 import com.logistics.slack.presentation.dto.response.SlackDetailResponseDto;
 import com.logistics.slack.presentation.dto.response.SlackListResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -45,35 +40,10 @@ public class SlackQueryController {
 
     @GetMapping
     public ApiResponse<PageResponse<SlackListResponseDto>> getSlacks(
-            @RequestParam(required = false) SlackStatus status,
-            @RequestParam(required = false) Long senderId,
-            @RequestParam(required = false) Long receiverId,
-            @RequestParam(required = false) UUID referenceId,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime createdFrom,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime createdTo,
-
-            @PageableDefault(
-                    page = 0,
-                    size = 10,
-                    sort = "createdAt",
-                    direction = Sort.Direction.DESC
-            )
-            Pageable pageable
+            @ModelAttribute SlackSearchRequestDto slackSearchRequestDto
     ) {
-        SlackSearchQuery slackSearchQuery = SlackSearchQuery.of(
-                status,
-                senderId,
-                receiverId,
-                referenceId,
-                createdFrom,
-                createdTo,
-                pageable
+        SlackSearchQuery slackSearchQuery = SlackSearchQuery.from(
+                slackSearchRequestDto
         );
 
         Page<SlackListResult> slackListResultPage = slackQueryService.getSlacks(slackSearchQuery);

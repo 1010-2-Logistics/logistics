@@ -96,14 +96,16 @@ class SlackQueryServiceTest {
             LocalDateTime createdFrom = LocalDateTime.of(2030, 8, 1, 0, 0);
             LocalDateTime createdTo = LocalDateTime.of(2030, 8, 2, 0, 0);
             Pageable pageable = PageRequest.of(0, 10);
-            SlackSearchQuery slackSearchQuery = SlackSearchQuery.of(
+            SlackSearchQuery slackSearchQuery = new SlackSearchQuery(
                     SlackStatus.SUCCESS,
                     senderId,
                     receiverId,
                     referenceId,
                     createdFrom,
                     createdTo,
-                    pageable
+                    "createdAt",
+                    0,
+                    10
             );
             Slack slack = createSlack();
             Page<Slack> slackPage = new PageImpl<>(
