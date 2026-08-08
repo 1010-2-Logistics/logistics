@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.application.dto.command.CompanyUpdateCommand;
@@ -99,7 +100,7 @@ public class CompanyCommandServiceTest {
 					CompanyType.PRODUCER
 			);
 			
-			when(companyQueryService.checkCompanyName(hubId, companyName)).thenReturn(true);
+			when(companyQueryService.checkCompanyNameForCreate(hubId, companyName)).thenReturn(true);
 			
 			assertThatThrownBy(() -> companyCommandService.createCompany(command))
 			.isInstanceOf(CompanyException.class)
@@ -156,9 +157,10 @@ public class CompanyCommandServiceTest {
 			CompanyUpdateCommand command = new CompanyUpdateCommand(companyName);
 			
 			Company company = Company.create(hubId, companyName, companyName, CompanyType.PRODUCER);
+			ReflectionTestUtils.setField(company, "companyId", companyId);
 			when(companyQueryService.findByCompany(companyId)).thenReturn(company);
 			
-			when(companyQueryService.checkCompanyName(hubId, companyName)).thenReturn(true);
+			when(companyQueryService.checkCompanyNameForUpdate(hubId, companyName, companyId)).thenReturn(true);
 			
 			assertThatThrownBy(() -> companyCommandService.updateCompany(companyId, command))
 			.isInstanceOf(CompanyException.class)

@@ -71,8 +71,12 @@ public class CompanyQueryService {
 		);
 	}
 
-	public boolean checkCompanyName(UUID hubId, String companyName) {
+	public boolean checkCompanyNameForCreate(UUID hubId, String companyName) {
 		return companyQueryRepository.existsByHubIdAndCompanyNameAndDeletedAtIsNull(hubId, companyName);
+	}
+	
+	public boolean checkCompanyNameForUpdate(UUID hubId, String companyName, UUID companyId) {
+		return companyQueryRepository.existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(hubId, companyName, companyId);
 	}
 	
 }

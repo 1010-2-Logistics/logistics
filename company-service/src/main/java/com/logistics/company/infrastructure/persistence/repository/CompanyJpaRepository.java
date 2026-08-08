@@ -40,4 +40,6 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 
 	boolean existsByHubIdAndCompanyNameAndDeletedAtIsNull(UUID hubId, String companyName);
 
+	boolean existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(UUID hubId, String companyName, UUID companyId);
+
 }

@@ -26,7 +26,7 @@ public class CompanyCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public Company createCompany(CompanyCreateCommand command) {
-		boolean exists = companyQueryService.checkCompanyName(command.hubId(), command.companyName());
+		boolean exists = companyQueryService.checkCompanyNameForCreate(command.hubId(), command.companyName());
 		
 		if(exists) {
 			throw new CompanyException(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME);
@@ -62,7 +62,7 @@ public class CompanyCommandService {
 	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand command) {
 		Company entity = companyQueryService.findByCompany(companyId);
 		
-		boolean exists = companyQueryService.checkCompanyName(entity.getHubId(), command.companyName());
+		boolean exists = companyQueryService.checkCompanyNameForUpdate(entity.getHubId(), command.companyName(), entity.getCompanyId());
 		
 		if(exists) {
 			throw new CompanyException(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME);
