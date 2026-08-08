@@ -53,6 +53,10 @@ public class Product extends BaseEntity {
 		this.productName = productName;
 	}
 	
+	public void updateCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+	
 	/**
 	 * ture: 삭제된 상품
 	 * @return
