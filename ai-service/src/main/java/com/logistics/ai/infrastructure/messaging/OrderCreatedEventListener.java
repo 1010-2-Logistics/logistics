@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OrderCreatedEventListener {
 
-	@RabbitListener(queues = "${}")
+	@RabbitListener(queues = "${rabbitmq.order-created.queue}")
 	public void handle(OrderCreatedEvent event) {
 		
 	}
