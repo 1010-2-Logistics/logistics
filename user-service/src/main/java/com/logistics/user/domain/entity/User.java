@@ -331,9 +331,9 @@ public class User extends BaseEntity {
             }
 
             case COMPANY_MANAGER, COMPANY_DELIVERY_MANAGER -> {
-                if (companyId == null || hubId != null) {
+                if (companyId == null || hubId == null) {
                     throw new IllegalArgumentException(
-                            "업체 역할은 companyId만 가져야 합니다."
+                            "업체 역할은 companyId와 hubId가 모두 필요합니다."
                     );
                 }
             }
