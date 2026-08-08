@@ -17,7 +17,9 @@ public record ChangeApprovalCommandDto(
         /**
          * APPROVE 또는 REJECT.
          */
-        ApprovalDecision decision
+        ApprovalDecision decision,
+
+        String rejectionReason
 
 ) {
 }
