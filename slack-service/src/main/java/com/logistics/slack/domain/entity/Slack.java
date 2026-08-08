@@ -49,7 +49,7 @@ public class Slack extends BaseEntity {
     private LocalDateTime sentAt; // 실제 발송 완료 시간
 
     @Column(name = "reference_id")
-    private Long referenceId; // 관련 업무 식별자 (해당 주문·배송과 관련해 어떤 슬랙 메시지를 보냈는지)
+    private UUID referenceId; // 관련 업무 식별자 (해당 주문·배송과 관련해 어떤 슬랙 메시지를 보냈는지)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -59,7 +59,7 @@ public class Slack extends BaseEntity {
             Long senderId,
             Long receiverId,
             String message,
-            Long referenceId
+            UUID referenceId
     ) {
         Slack slack = new Slack();
         slack.senderId = senderId;

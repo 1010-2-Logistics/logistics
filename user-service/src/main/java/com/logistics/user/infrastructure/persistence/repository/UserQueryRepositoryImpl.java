@@ -1,8 +1,12 @@
 package com.logistics.user.infrastructure.persistence.repository;
 
 import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import java.util.Optional;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +24,23 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     }
 
     @Override
-    public Page<User> search(String keyword, Pageable pageable) {
-        return userJpaRepository.search(keyword, pageable);
+    public Page<User> search(
+            String username,
+            UserStatus status,
+            UserRole role,
+            UUID hubId,
+            UUID companyId,
+            Pageable pageable
+    ) {
+        return userJpaRepository.search(
+                username,
+                status,
+                role,
+                hubId,
+                companyId,
+                pageable
+        );
     }
-
     @Override
     public boolean existsByUsername(
             String username

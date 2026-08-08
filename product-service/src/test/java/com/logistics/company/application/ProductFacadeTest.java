@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.logistics.product.application.facade.ProductFacade;
+import com.logistics.product.application.facade.ProductCommandPacade;
 import com.logistics.product.application.port.CompanyPort;
 import com.logistics.product.application.port.HubPort;
 import com.logistics.product.application.service.ProductCommandService;
@@ -33,7 +33,7 @@ public class ProductFacadeTest {
 	private HubPort hubPort;
 	
 	@InjectMocks
-	private ProductFacade productFacade;
+	private ProductCommandPacade productFacade;
 	
 	@Nested
 	@DisplayName("상품 등록 테스트")
