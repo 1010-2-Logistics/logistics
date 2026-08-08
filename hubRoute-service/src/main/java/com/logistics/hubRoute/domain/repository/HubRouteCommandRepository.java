@@ -3,6 +3,7 @@ package com.logistics.hubRoute.domain.repository;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +20,7 @@ public interface HubRouteCommandRepository {
     boolean existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(UUID startHubId, UUID endHubId, UUID hubRouteId);
 
     boolean findByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId);
+
+    //허브 삭제시 해당  허브를 사용하는 허브 경로도 삭제
+    List<HubRoute> findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(UUID hubId, UUID hubId1);
 }

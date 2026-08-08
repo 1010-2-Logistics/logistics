@@ -131,4 +131,14 @@ public class HubRouteCommandService {
     }
 
 
+    @CacheEvict(value = "hubRoute", allEntries = true)
+    public void deleteHubRoutesByHubId(UUID hubId, Long deletedBy) {
+        List<HubRoute> routes = hubRouteCommandRepository.findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(hubId, hubId);
+
+        System.out.println(">>> 조회된 연관 허브 경로 개수: " + routes.size());
+
+        for (HubRoute hubRoute : routes) {
+            hubRoute.markDeleted(deletedBy);
+        }
+    }
 }
