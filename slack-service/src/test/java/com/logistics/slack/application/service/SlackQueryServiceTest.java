@@ -14,10 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -95,7 +92,11 @@ class SlackQueryServiceTest {
         void slack_lise_empty() {
             LocalDateTime createdFrom = LocalDateTime.of(2030, 8, 1, 0, 0);
             LocalDateTime createdTo = LocalDateTime.of(2030, 8, 2, 0, 0);
-            Pageable pageable = PageRequest.of(0, 10);
+            Pageable pageable = PageRequest.of(
+                    0,
+                    10,
+                    Sort.by(Sort.Direction.DESC, "createdAt")
+            );
             SlackSearchQuery slackSearchQuery = new SlackSearchQuery(
                     SlackStatus.SUCCESS,
                     senderId,
@@ -114,7 +115,6 @@ class SlackQueryServiceTest {
                     1
             );
 
-
             given(slackQueryRepository.search(
                     SlackStatus.SUCCESS,
                     senderId,
@@ -125,6 +125,7 @@ class SlackQueryServiceTest {
                     pageable
             )).willReturn(slackPage);
             Page<SlackListResult> result = slackQueryService.getSlacks(slackSearchQuery);
+
             assertThat(result).hasSize(1);
 
             verify(slackQueryRepository).search(
