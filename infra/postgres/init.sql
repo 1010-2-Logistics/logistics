@@ -38,9 +38,6 @@ CREATE TABLE IF NOT EXISTS user_service.p_user (
     updated_by BIGINT,
     deleted_at TIMESTAMP,
 
-    CONSTRAINT uk_user_username UNIQUE (username),
-    CONSTRAINT uk_user_slack_id UNIQUE (slack_id),
-
     CONSTRAINT chk_user_status
      CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
 
