@@ -10,6 +10,7 @@ import com.logistics.hubRoute.application.service.HubRouteQueryService;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteQueryRepository;
 import com.logistics.hubRoute.global.exception.CustomException;
+import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteFindRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteFindResponseDto;
 
@@ -33,7 +34,7 @@ class HubRouteQueryServiceTest {
     private HubRouteQueryRepository hubRouteQueryRepository;
 
     @Mock
-    private HubPort hubPort; // 2. HubClient -> HubPort로 Mock 변경
+    private HubClient hubClient; // HubPort -> HubClient로 변경하여 서비스 필드와 일치시킴
 
     @InjectMocks
     private HubRouteQueryService hubRouteQueryService;
@@ -58,8 +59,8 @@ class HubRouteQueryServiceTest {
         UUID endHubId = UUID.randomUUID();
         HubRouteFindRequestDto requestDto = new HubRouteFindRequestDto(startHubId, endHubId);
 
-        // HubPort에서 출발 허브만 검증 성공하도록 반환 (도착 허브 누락)
-        when(hubPort.validateHubIds(anyList())).thenReturn(Set.of(startHubId));
+        // HubClient에서 출발 허브만 검증 성공하도록 설정
+        when(hubClient.validateHubIds(anyList())).thenReturn(Set.of(startHubId));
 
         // when & then
         assertThatThrownBy(() -> hubRouteQueryService.findHubRoute(requestDto))
@@ -75,7 +76,7 @@ class HubRouteQueryServiceTest {
         HubRouteFindRequestDto requestDto = new HubRouteFindRequestDto(startHubId, endHubId);
         HubRoute directRoute = HubRoute.create(startHubId, endHubId, 60, BigDecimal.valueOf(50.0), 1L);
 
-        when(hubPort.validateHubIds(anyList())).thenReturn(Set.of(startHubId, endHubId));
+        when(hubClient.validateHubIds(anyList())).thenReturn(Set.of(startHubId, endHubId));
         when(hubRouteQueryRepository.findByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId, endHubId))
                 .thenReturn(Optional.of(directRoute));
 
@@ -86,7 +87,7 @@ class HubRouteQueryServiceTest {
         assertThat(result.startHubId()).isEqualTo(startHubId);
         assertThat(result.endHubId()).isEqualTo(endHubId);
         assertThat(result.totalDuration()).isEqualTo(60);
-        assertThat(result.totalDistance()).isEqualTo(BigDecimal.valueOf(50.0));
+        assertThat(result.totalDistance()).isEqualByComparingTo(BigDecimal.valueOf(50.0));
         assertThat(result.steps()).hasSize(1);
     }
 
@@ -103,7 +104,7 @@ class HubRouteQueryServiceTest {
         HubRoute routeAB = HubRoute.create(hubA, hubB, 30, BigDecimal.valueOf(20.0), 1L);
         HubRoute routeBC = HubRoute.create(hubB, hubC, 40, BigDecimal.valueOf(30.0), 1L);
 
-        when(hubPort.validateHubIds(anyList())).thenReturn(Set.of(hubA, hubC));
+        when(hubClient.validateHubIds(anyList())).thenReturn(Set.of(hubA, hubC));
         when(hubRouteQueryRepository.findByStartHubIdAndEndHubIdAndDeletedAtIsNull(hubA, hubC))
                 .thenReturn(Optional.empty()); // 직통 경로 없음
         when(hubRouteQueryRepository.findAllByDeletedAtIsNull())
@@ -116,7 +117,7 @@ class HubRouteQueryServiceTest {
         assertThat(result.startHubId()).isEqualTo(hubA);
         assertThat(result.endHubId()).isEqualTo(hubC);
         assertThat(result.totalDuration()).isEqualTo(70); // 30 + 40
-        assertThat(result.totalDistance()).isEqualTo(BigDecimal.valueOf(50.0)); // 20.0 + 30.0
+        assertThat(result.totalDistance()).isEqualByComparingTo(BigDecimal.valueOf(50.0)); // 20.0 + 30.0
         assertThat(result.steps()).hasSize(2);
     }
 }
