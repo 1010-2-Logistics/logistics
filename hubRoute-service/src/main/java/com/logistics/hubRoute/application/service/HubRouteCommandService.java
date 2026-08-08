@@ -21,15 +21,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class HubRouteCommandService {
 
     private final HubRouteCommandRepository hubRouteCommandRepository;
     private final EventPublisher eventPublisher;
-
+    private final TransactionTemplate transactionTemplate;
     private final HubPort hubPort;
 
     //허브 경로 등록
@@ -43,34 +43,33 @@ public class HubRouteCommandService {
             throw new CustomException(HubRouteErrorCode.HUB_START_END_SAME);
         }
 
-        //출발허브 도착허브 존재하는지 체크
+        //출발허브 도착허브 존재하는지 체크 (트랜잭션 밖에서 외부 API 호출)
         validateHubs(List.of(startHubId, endHubId), startHubId, endHubId);
 
-        //중복 경로 탐색
-        if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId, endHubId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
-        }
+        // 실제 DB 조회 및 저장은 트랜잭션 안에서 수행
+        return transactionTemplate.execute(status -> {
+            //중복 경로 탐색
+            if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(startHubId, endHubId)) {
+                throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
+            }
 
-        HubRoute hubRoute = HubRoute.create(
-                startHubId,
-                endHubId,
-                hubRouteCreateCommand.duration(),
-                hubRouteCreateCommand.distance(),
-                hubRouteCreateCommand.createdBy()
-        );
+            HubRoute hubRoute = HubRoute.create(
+                    startHubId,
+                    endHubId,
+                    hubRouteCreateCommand.duration(),
+                    hubRouteCreateCommand.distance(),
+                    hubRouteCreateCommand.createdBy()
+            );
 
-        hubRouteCommandRepository.save(hubRoute);
+            hubRouteCommandRepository.save(hubRoute);
 
-        return new HubRouteCreateResponseDto(hubRoute.getHubRouteId());
+            return new HubRouteCreateResponseDto(hubRoute.getHubRouteId());
+        });
     }
 
     //허브 경로 수정
     @CacheEvict(value = "hubRoute", allEntries = true) // 경로 수정 시 캐시 무효
     public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
-
-        //수정 하려는 경로가 삭제되었는지 체크
-        HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId)
-                .orElseThrow(()->new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
 
         UUID startHubId = hubRouteUpdateRequestDto.startHubId();
         UUID endHubId = hubRouteUpdateRequestDto.endHubId();
@@ -80,26 +79,33 @@ public class HubRouteCommandService {
             throw new CustomException(HubRouteErrorCode.HUB_START_END_SAME);
         }
 
-        //출발허브 도착허브 존재하는지 체크
+        //출발허브 도착허브 존재하는지 체크 (트랜잭션 밖에서 외부 API 호출)
         validateHubs(List.of(startHubId, endHubId), startHubId, endHubId);
 
-        //중복 경로 탐색
-        if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(startHubId, endHubId,hubRouteId)) {
-            throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
-        }
+        // 실제 DB 조회 및 수정은 트랜잭션 안에서 수행
+        return transactionTemplate.execute(status -> {
+            //수정 하려는 경로가 삭제되었는지 체크
+            HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId)
+                    .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
 
-        hubRoute.update(
-                hubRouteUpdateRequestDto.startHubId(),
-                hubRouteUpdateRequestDto.endHubId(),
-                hubRouteUpdateRequestDto.duration(),
-                hubRouteUpdateRequestDto.distance()
-        );
+            //중복 경로 탐색
+            if (hubRouteCommandRepository.existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(startHubId, endHubId, hubRouteId)) {
+                throw new CustomException(HubRouteErrorCode.HUB_ROUTE_ALREADY_EXISTS);
+            }
 
+            hubRoute.update(
+                    hubRouteUpdateRequestDto.startHubId(),
+                    hubRouteUpdateRequestDto.endHubId(),
+                    hubRouteUpdateRequestDto.duration(),
+                    hubRouteUpdateRequestDto.distance()
+            );
 
-        return new HubRouteUpdateResponseDto(hubRoute.getHubRouteId());
+            return new HubRouteUpdateResponseDto(hubRoute.getHubRouteId());
+        });
     }
 
     //허브 경로 삭제
+    @Transactional
     @CacheEvict(value = "hubRoute", allEntries = true) //경로 삭제시 캐시 삭제
     public void deleteHubRoute(UUID hubRouteId, long deletedBy) {
         //경로가 이미 삭제되었는지 체크
@@ -113,6 +119,17 @@ public class HubRouteCommandService {
         hubRoute.markDeleted(deletedBy);
     }
 
+    @Transactional
+    @CacheEvict(value = "hubRoute", allEntries = true)
+    public void deleteHubRoutesByHubId(UUID hubId, Long deletedBy) {
+        List<HubRoute> routes = hubRouteCommandRepository.findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(hubId, hubId);
+
+        System.out.println(">>> 조회된 연관 허브 경로 개수: " + routes.size());
+
+        for (HubRoute hubRoute : routes) {
+            hubRoute.markDeleted(deletedBy);
+        }
+    }
 
     private void validateHubs(List<UUID> hubIds, UUID startHubId, UUID endHubId) {
         try {
@@ -130,15 +147,4 @@ public class HubRouteCommandService {
         }
     }
 
-
-    @CacheEvict(value = "hubRoute", allEntries = true)
-    public void deleteHubRoutesByHubId(UUID hubId, Long deletedBy) {
-        List<HubRoute> routes = hubRouteCommandRepository.findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(hubId, hubId);
-
-        System.out.println(">>> 조회된 연관 허브 경로 개수: " + routes.size());
-
-        for (HubRoute hubRoute : routes) {
-            hubRoute.markDeleted(deletedBy);
-        }
-    }
 }
