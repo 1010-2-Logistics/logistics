@@ -7,14 +7,12 @@ import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCre
 import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryDetailResult;
 import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.domain.entity.*;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.infrastructure.feign.client.HubRouteClient;
-import com.logistics.delivery.infrastructure.feign.request.HubRouteFindRequest;
-import com.logistics.delivery.infrastructure.feign.response.HubRoutePathApiResponse;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,7 +34,7 @@ public class DeliveryCommandService {
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
     private final HubPort hubPort;
-    private final HubRouteClient hubRouteClient;
+    private final HubRoutePort hubRoutePort;
 
     public DeliveryCreateResult create(CreateDeliveryCommand command) {
         Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
@@ -84,10 +82,11 @@ public class DeliveryCommandService {
 
     private List<RouteSegment> resolveRouteSegments(UUID startHubId, UUID endHubId) {
         try {
-            HubRoutePathApiResponse response = hubRouteClient.findHubRoute(new HubRouteFindRequest(startHubId, endHubId));
-            return response.data().steps().stream()
-                    .map(step -> new RouteSegment(step.startHubId(), step.endHubId(), step.distance(), step.duration()))
+            return hubRoutePort.findRoute(startHubId, endHubId).stream()
+                    .map(seg -> new RouteSegment(seg.startHubId(), seg.endHubId(), seg.distance(), seg.duration()))
                     .toList();
+        } catch (FeignException.NotFound e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
         } catch (FeignException e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
@@ -115,6 +114,7 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
         }
         validateRouteTransition(route.getStatus(), command.status());
+        validateSequentialProgress(deliveryId, route.getSequence());
 
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
@@ -149,6 +149,18 @@ public class DeliveryCommandService {
         boolean valid = (current == DeliveryRouteStatus.HUB_MOVE_WAITING && target == DeliveryRouteStatus.HUB_MOVING)
                 || (current == DeliveryRouteStatus.HUB_MOVING && target == DeliveryRouteStatus.DEST_HUB_ARRIVED);
         if (!valid) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+        }
+    }
+
+    private void validateSequentialProgress(UUID deliveryId, int sequence) {
+        if (sequence == 0) {
+            return;
+        }
+        boolean allPriorCompleted = deliveryRouteRepository.findAllByDeliveryId(deliveryId).stream()
+                .filter(r -> r.getSequence() < sequence)
+                .allMatch(r -> r.getStatus() == DeliveryRouteStatus.DEST_HUB_ARRIVED);
+        if (!allPriorCompleted) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
     }

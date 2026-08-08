@@ -18,7 +18,8 @@ public enum DeliveryErrorCode implements ErrorCode {
     DELIVERY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 배송입니다."),
     DELIVERY_INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 상태 전이입니다."),
     DELIVERY_ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 배송 경로입니다."),
-    DELIVERY_LOCK_TIMEOUT(HttpStatus.SERVICE_UNAVAILABLE, "배정 처리가 지연되고 있습니다. 잠시 후 다시 시도해주세요.");;
+    DELIVERY_LOCK_TIMEOUT(HttpStatus.SERVICE_UNAVAILABLE, "배정 처리가 지연되고 있습니다. 잠시 후 다시 시도해주세요."),
+    DELIVERY_HUB_ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "허브 간 연결된 경로를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String message;
