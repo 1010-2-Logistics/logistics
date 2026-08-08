@@ -245,6 +245,30 @@ class InventoryCommandServiceTest {
 
             verify(inventoryCommandRepository, never()).save(any(Inventory.class));
         }
+
+        @Test
+        @DisplayName("동일 주문의 재고 복원 요청 예외")
+        void inventory_restore_duplicate_fail() {
+            InventoryRestorationCommand command = new InventoryRestorationCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    30
+            );
+
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(false);
+
+            assertThatThrownBy(() -> inventoryCommandService.restoreInventory(command))
+                    .isInstanceOfSatisfying(CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED));
+
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
+        }
     }
 
     @Nested
