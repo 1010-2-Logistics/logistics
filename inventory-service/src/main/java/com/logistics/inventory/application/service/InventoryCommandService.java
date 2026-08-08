@@ -80,11 +80,20 @@ public class InventoryCommandService {
             InventoryDeductionCommand inventoryDeductionCommand
     ) {
         String key = "inventory:deduct:" + inventoryDeductionCommand.orderId();
+        Duration ttl = Duration.ofMinutes(10);
 
-        boolean acquired = idempotencyPort.acquire(
+        // 핵심 코드 : 이 주문 예전에 성공한 적 있어? 있으면 그때 결과 다시 줘
+        Optional<InventoryDeductionResult> previousResult = idempotencyPort.getResult(
                 key,
-                Duration.ofMinutes(10)
+                InventoryDeductionResult.class
         );
+        if (previousResult.isPresent()) {
+            return previousResult.get();
+        }
+
+        // 내가 이 요청 처리해도 되는 첫 번째임 ? yes : no
+        boolean acquired = idempotencyPort.acquire(key, ttl);
+
         if (!acquired) {
             throw new CustomException(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED);
         }
@@ -97,9 +106,12 @@ public class InventoryCommandService {
 
             inventory.deduct(inventoryDeductionCommand.quantity());
             Inventory savedInventory = inventoryCommandRepository.save(inventory);
+            InventoryDeductionResult result = InventoryDeductionResult.from(savedInventory);
 
-            return InventoryDeductionResult.from(savedInventory);
+            // 이 주문 처리 성공했으니까 결과를 Redis에 저장해둬
+            idempotencyPort.complete(key, result, ttl);
 
+            return result;
         } catch (RuntimeException e) {
             idempotencyPort.release(key);
 
@@ -111,10 +123,20 @@ public class InventoryCommandService {
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
         String key = "inventory:restore:" + inventoryRestorationCommand.orderId();
+        Duration ttl = Duration.ofMinutes(10);
+
+        Optional<InventoryRestorationResult> previousResult = idempotencyPort.getResult(
+                key,
+                InventoryRestorationResult.class
+        );
+
+        if (previousResult.isPresent()) {
+            return previousResult.get();
+        }
 
         boolean acquired = idempotencyPort.acquire(
                 key,
-                Duration.ofMinutes(10)
+                ttl
         );
         if (!acquired) {
             throw new CustomException(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED);
@@ -129,7 +151,11 @@ public class InventoryCommandService {
             inventory.restore(inventoryRestorationCommand.quantity());
             Inventory savedInventory = inventoryCommandRepository.save(inventory);
 
-            return InventoryRestorationResult.from(savedInventory);
+            InventoryRestorationResult result = InventoryRestorationResult.from(savedInventory);
+
+            idempotencyPort.complete(key, result, ttl);
+
+            return result;
 
         } catch (RuntimeException e) {
             idempotencyPort.release(key);

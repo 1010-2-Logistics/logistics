@@ -178,6 +178,12 @@ class InventoryCommandServiceTest {
             verify(idempotencyPort).release(key);
             verify(inventoryCommandRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("동일 주문의 재고 차감 요청이면 이전 결과 반환")
+        void inventory_deduct_duplicate_return_result(){
+
+        }
     }
 
     @Nested
