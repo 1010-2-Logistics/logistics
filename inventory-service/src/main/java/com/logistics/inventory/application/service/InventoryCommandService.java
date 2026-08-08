@@ -6,6 +6,7 @@ import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
+import com.logistics.inventory.application.port.IdempotencyPort;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
 import com.logistics.inventory.global.exception.CustomException;
@@ -14,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class InventoryCommandService {
     private final InventoryCommandRepository inventoryCommandRepository;
     private final EventPublisher eventPublisher;
+    private final IdempotencyPort idempotencyPort;
 
     public InventoryCreateResult createInventory(
             InventoryCreateCommand createInventoryCommand
@@ -77,33 +79,62 @@ public class InventoryCommandService {
     public InventoryDeductionResult deductInventory(
             InventoryDeductionCommand inventoryDeductionCommand
     ) {
-        // 상품 아이디와 허브 아이디로 재고 조회, 일단 임시로 만들 예정
-        // 재고 없으면 예외
-        Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
-                inventoryDeductionCommand.productId(),
-                inventoryDeductionCommand.hubId()
-        ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+        String key = "inventory:deduct:" + inventoryDeductionCommand.orderId();
 
-        // 재고 도메인에 차감 요청
-        inventory.deduct(inventoryDeductionCommand.quantity());
-        // 변경된 재고 저장
-        Inventory savedInventory = inventoryCommandRepository.save(inventory);
-        // 차감 후 결과 DTO 반환
-        return InventoryDeductionResult.from(savedInventory);
+        boolean acquired = idempotencyPort.acquire(
+                key,
+                Duration.ofMinutes(10)
+        );
+        if (!acquired) {
+            throw new CustomException(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED);
+        }
+
+        try {
+            Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    inventoryDeductionCommand.productId(),
+                    inventoryDeductionCommand.hubId()
+            ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+
+            inventory.deduct(inventoryDeductionCommand.quantity());
+            Inventory savedInventory = inventoryCommandRepository.save(inventory);
+
+            return InventoryDeductionResult.from(savedInventory);
+
+        } catch (RuntimeException e) {
+            idempotencyPort.release(key);
+
+            throw e;
+        }
     }
 
     public InventoryRestorationResult restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
-                inventoryRestorationCommand.productId(),
-                inventoryRestorationCommand.hubId()
-        ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
+        String key = "inventory:deduct:" + inventoryRestorationCommand.orderId();
 
-        inventory.restore(inventoryRestorationCommand.quantity());
+        boolean acquired = idempotencyPort.acquire(
+                key,
+                Duration.ofMinutes(10)
+        );
+        if (!acquired) {
+            throw new CustomException(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED);
+        }
 
-        Inventory savedInventory = inventoryCommandRepository.save(inventory);
+        try {
+            Inventory inventory = inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    inventoryRestorationCommand.productId(),
+                    inventoryRestorationCommand.hubId()
+            ).orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-        return InventoryRestorationResult.from(savedInventory);
+            inventory.restore(inventoryRestorationCommand.quantity());
+            Inventory savedInventory = inventoryCommandRepository.save(inventory);
+
+            return InventoryRestorationResult.from(savedInventory);
+
+        } catch (RuntimeException e) {
+            idempotencyPort.release(key);
+
+            throw e;
+        }
     }
 }

@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record InventoryRestorationRequestDto(
+        @NotNull(message = "주문 ID는 필수입니다.")
+        UUID orderId,
+
         @NotNull(message = "상품 ID는 필수입니다.")
         UUID productId,
 
@@ -19,6 +22,7 @@ public record InventoryRestorationRequestDto(
 ) {
     public InventoryRestorationCommand toCommand() {
         return new InventoryRestorationCommand(
+                orderId,
                 productId,
                 hubId,
                 quantity()

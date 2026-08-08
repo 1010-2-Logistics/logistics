@@ -33,6 +33,7 @@ class InventoryCommandServiceTest {
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
     UUID inventoryId = UUID.randomUUID();
+    UUID orderId = UUID.randomUUID();
     Long deletedBy = 1L;
 
     @Mock
@@ -56,6 +57,7 @@ class InventoryCommandServiceTest {
                     100
             );
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
                     productId,
                     hubId,
                     1
@@ -115,6 +117,7 @@ class InventoryCommandServiceTest {
             );
 
             InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    orderId,
                     productId,
                     hubId,
                     30
@@ -140,6 +143,7 @@ class InventoryCommandServiceTest {
         void inventory_restore_not_found() {
             InventoryRestorationCommand command =
                     new InventoryRestorationCommand(
+                            orderId,
                             productId,
                             hubId,
                             30
