@@ -6,6 +6,7 @@ import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
 import com.logistics.inventory.application.dto.result.InventoryRestorationResult;
 import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
+import com.logistics.inventory.application.port.IdempotencyPort;
 import com.logistics.inventory.domain.entity.Inventory;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
 import com.logistics.inventory.global.exception.CustomException;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,6 +35,7 @@ class InventoryCommandServiceTest {
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
     UUID inventoryId = UUID.randomUUID();
+    UUID orderId = UUID.randomUUID();
     Long deletedBy = 1L;
 
     @Mock
@@ -43,6 +46,9 @@ class InventoryCommandServiceTest {
 
     @InjectMocks
     InventoryCommandService inventoryCommandService;
+
+    @Mock
+    IdempotencyPort idempotencyPort;
 
     @Nested
     @DisplayName("재고 차감")
@@ -56,12 +62,21 @@ class InventoryCommandServiceTest {
                     100
             );
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
                     productId,
                     hubId,
                     1
             );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
+            given(idempotencyPort.acquire(
+                    eq("inventory:deduct:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
+
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(inventory));
 
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
@@ -70,6 +85,10 @@ class InventoryCommandServiceTest {
             assertThat(inventoryDeductionResultDto.stock()).isEqualTo(99);
             assertThat(inventory.getStock()).isEqualTo(99);
 
+            verify(inventoryCommandRepository).findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            );
             verify(inventoryCommandRepository).save(inventory);
         }
 
@@ -100,6 +119,94 @@ class InventoryCommandServiceTest {
                             exception -> assertThat(exception.getErrorCode())
                                     .isEqualTo(InventoryErrorCode.INVENTORY_INVALID_REQUEST));
         }
+
+        @Test
+        @DisplayName("동일 주문의 재고 차감 요청이면 중복 처리 예외")
+        void inventory_deduct_duplicate_fail() {
+            InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    10
+            );
+
+            given(idempotencyPort.acquire(
+                    eq("inventory:deduct:" + orderId),
+                    any(Duration.class)
+            )).willReturn(false);
+
+            assertThatThrownBy(() -> inventoryCommandService.deductInventory(inventoryDeductionCommand))
+                    .isInstanceOfSatisfying(CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED));
+
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("재고 차감 실패 시 멱등키 해제")
+        void inventory_deduct_fail_release_key() {
+            Inventory inventory = Inventory.create(
+                    productId,
+                    hubId,
+                    5
+            );
+
+            InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    10
+            );
+
+            String key = "inventory:deduct:" + orderId;
+
+            given(idempotencyPort.acquire(
+                    eq(key),
+                    any(Duration.class)
+            )).willReturn(true);
+
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(inventory));
+
+            assertThatThrownBy(() -> inventoryCommandService.deductInventory(inventoryDeductionCommand))
+                    .isInstanceOf(CustomException.class);
+
+            verify(idempotencyPort).release(key);
+            verify(inventoryCommandRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("동일 주문의 재고 차감 요청이면 이전 결과 반환")
+        void inventory_deduct_duplicate_return_result() {
+            InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    10
+            );
+            InventoryDeductionResult inventoryDeductionResult = new InventoryDeductionResult(
+                    inventoryId,
+                    productId,
+                    90
+            );
+
+            given(idempotencyPort.getResult(
+                    eq("inventory:deduct:" + orderId),
+                    eq(InventoryDeductionResult.class)
+            )).willReturn(Optional.of(inventoryDeductionResult));
+
+            InventoryDeductionResult previousResult = inventoryCommandService.deductInventory(inventoryDeductionCommand);
+
+            assertThat(inventoryDeductionResult).isEqualTo(previousResult);
+
+            verify(idempotencyPort, never()).acquire(any(), any());
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -115,12 +222,20 @@ class InventoryCommandServiceTest {
             );
 
             InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    orderId,
                     productId,
                     hubId,
                     30
             );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.of(inventory));
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(
+                    productId,
+                    hubId
+            )).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
             InventoryRestorationResult inventoryRestorationResultDto = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
@@ -128,7 +243,7 @@ class InventoryCommandServiceTest {
             assertThat(inventoryRestorationResultDto.stock()).isEqualTo(130);
             assertThat(inventory.getStock()).isEqualTo(130);
 
-            verify(inventoryCommandRepository).findByProductAndHubId(
+            verify(inventoryCommandRepository).findByProductAndHubIdWithLock(
                     productId,
                     hubId
             );
@@ -140,12 +255,17 @@ class InventoryCommandServiceTest {
         void inventory_restore_not_found() {
             InventoryRestorationCommand command =
                     new InventoryRestorationCommand(
+                            orderId,
                             productId,
                             hubId,
                             30
                     );
 
-            given(inventoryCommandRepository.findByProductAndHubId(productId, hubId)).willReturn(Optional.empty());
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(true);
+            given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.empty());
 
             assertThatThrownBy(
                     () -> inventoryCommandService.restoreInventory(command)
@@ -156,6 +276,59 @@ class InventoryCommandServiceTest {
             );
 
             verify(inventoryCommandRepository, never()).save(any(Inventory.class));
+        }
+
+        @Test
+        @DisplayName("동일 주문의 재고 복원 요청 예외")
+        void inventory_restore_duplicate_fail() {
+            InventoryRestorationCommand command = new InventoryRestorationCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    30
+            );
+
+            given(idempotencyPort.acquire(
+                    eq("inventory:restore:" + orderId),
+                    any(Duration.class)
+            )).willReturn(false);
+
+            assertThatThrownBy(() -> inventoryCommandService.restoreInventory(command))
+                    .isInstanceOfSatisfying(CustomException.class,
+                            exception -> assertThat(exception.getErrorCode())
+                                    .isEqualTo(InventoryErrorCode.INVENTORY_ALREADY_PROCESSED));
+
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("동일 주문의 재고 복원 요청이면 이전 결과 반환")
+        void inventory_restore_duplicate_return_result() {
+            InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    orderId,
+                    productId,
+                    hubId,
+                    30
+            );
+            InventoryRestorationResult previousResult = new InventoryRestorationResult(
+                    inventoryId,
+                    productId,
+                    130
+            );
+
+            given(idempotencyPort.getResult(
+                    eq("inventory:restore:" + orderId),
+                    eq(InventoryRestorationResult.class)
+            )).willReturn(Optional.of(previousResult));
+
+            InventoryRestorationResult inventoryRestorationResult = inventoryCommandService.restoreInventory(inventoryRestorationCommand);
+
+            assertThat(inventoryRestorationResult).isEqualTo(previousResult);
+
+            verify(idempotencyPort, never()).acquire(any(), any());
+            verify(inventoryCommandRepository, never()).findByProductAndHubIdWithLock(any(), any());
+            verify(inventoryCommandRepository, never()).save(any());
         }
     }
 
