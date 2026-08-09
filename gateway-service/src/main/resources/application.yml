@@ -81,7 +81,7 @@ eureka:
   client:
     service-url:
       # Gateway가 접속할 Eureka Server 주소
-      defaultZone: http://localhost:19090/eureka/
+      defaultZone: http://${EUREKA_HOST:localhost}:19090/eureka/
 
   instance:
     # 호스트명 대신 IP 주소를 Eureka에 등록
