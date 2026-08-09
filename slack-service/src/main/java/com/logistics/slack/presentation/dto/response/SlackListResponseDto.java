@@ -14,7 +14,7 @@ public record SlackListResponseDto(
         SlackStatus status,
         Integer retryCount,
         LocalDateTime sentAt,
-        Long referenceId,
+        UUID referenceId,
         LocalDateTime createdAt
 ) {
     public static SlackListResponseDto from(

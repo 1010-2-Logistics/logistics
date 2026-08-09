@@ -2,6 +2,7 @@ package com.logistics.user.application.service;
 
 import com.logistics.user.application.dto.command.SignupCommandDto;
 import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.repository.UserCommandRepository;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
@@ -31,6 +32,9 @@ public class SignupService {
     private final PasswordEncoder passwordEncoder;
 
     public User signup(SignupCommandDto command) {
+        // MASTER 권한 회원가입 차단
+        validateSignupRole(command.role());
+
         // 1. 비밀번호 확인값이 같은지 검증
         validatePasswordConfirmation(command);
 
@@ -56,6 +60,19 @@ public class SignupService {
 
         // 6. 생성된 user 저장
         return userCommandRepository.save(user);
+    }
+
+    /**
+     * 일반 회원가입을 통한 MASTER 권한 신청 차단
+     */
+    private void validateSignupRole(
+            UserRole role
+    ) {
+        if (role == UserRole.MASTER) {
+            throw new CustomException(
+                    UserErrorCode.USER_MASTER_SIGNUP_NOT_ALLOWED
+            );
+        }
     }
 
     //비밀번호 충돌 검증

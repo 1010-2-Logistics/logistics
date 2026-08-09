@@ -8,7 +8,7 @@ public record SlackCreateCommand(
         Long senderId,
         Long receiverId,
         String message,
-        Long referenceId
+        UUID referenceId
         // TODO : 중복 요청 방지 키
 //        String idempotencyKey
 ) {

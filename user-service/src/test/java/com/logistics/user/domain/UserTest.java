@@ -125,12 +125,49 @@ class UserTest {
                 null
         );
 
+        String rejectionReason = "가입 조건을 충족하지 않았습니다.";
+
         // when
-        user.reject();
+        user.reject(rejectionReason);
 
         // then
         assertThat(user.getStatus())
                 .isEqualTo(UserStatus.REJECTED);
+
+        assertThat(user.getRejectionReason())
+                .isEqualTo(rejectionReason);
+    }
+
+    @Test
+    void 거절_사유가_없으면_예외가_발생한다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        // when & then
+        assertThatThrownBy(
+                () -> user.reject(null)
+        )
+                .isInstanceOf(CustomException.class)
+                .satisfies(exception -> {
+                    CustomException customException =
+                            (CustomException) exception;
+
+                    assertThat(customException.getErrorCode())
+                            .isEqualTo(
+                                    UserErrorCode.USER_APPROVAL_INVALID_REQUEST
+                            );
+                });
+
+        // 실패했으므로 상태는 여전히 PENDING
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.PENDING);
     }
 
     @Test

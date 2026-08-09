@@ -1,5 +1,6 @@
 package com.logistics.product.infrastructure.feign.client;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.FeignClient;
@@ -15,4 +16,7 @@ public interface CompanyClient {
 
 	@GetMapping("/internal/v1/companies/{companyId}/exists")
 	ApiResponse<CompanyExistsClientResponseDto> getCompanyInfo(@PathVariable("companyId") UUID companyId);
+	
+	@GetMapping("/internal/v1/companies/ids/{hubId}")
+	ApiResponse<List<UUID>> getCompanyIdsByHubId(@PathVariable("hubId") UUID hubId);
 }

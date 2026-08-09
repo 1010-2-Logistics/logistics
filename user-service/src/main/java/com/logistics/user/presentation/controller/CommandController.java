@@ -153,15 +153,14 @@ public class CommandController {
             @Valid @RequestBody UserApprovalRequestDto request,
             Authentication authentication
     ) {
-
-        Long processedBy =
-                extractAuthenticatedUserId(authentication);
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
 
         ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(
                         request.toCommand(
                                 userId,
-                                processedBy
+                                currentUser.userId()
                         )
                 );
 
@@ -175,27 +174,5 @@ public class CommandController {
                 message,
                 UserApprovalResponseDto.from(result)
         );
-    }
-
-    private Long extractAuthenticatedUserId(
-            Authentication authentication
-    ) {
-        if (authentication == null
-                || !authentication.isAuthenticated()) {
-
-            throw new CustomException(
-                    AuthErrorCode.AUTH_UNAUTHORIZED
-            );
-        }
-
-        try {
-            return Long.valueOf(
-                    authentication.getName()
-            );
-        } catch (NumberFormatException exception) {
-            throw new CustomException(
-                    AuthErrorCode.AUTH_UNAUTHORIZED
-            );
-        }
     }
 }
