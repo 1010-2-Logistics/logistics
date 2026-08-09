@@ -72,6 +72,11 @@ public class OrderFacade {
                 receiverSlackId
         );
 
+        try {
+
+        }catch (RuntimeException e){
+
+        }
         DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
 
         return orderCommandService.createOrder(
