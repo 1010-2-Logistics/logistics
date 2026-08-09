@@ -1,0 +1,78 @@
+# =============================================================================
+# Data EC2 전용 — PostgreSQL / Redis / RabbitMQ (상태를 가지는 것 전부)
+# =============================================================================
+#
+# 사용법
+#   Data EC2     : docker compose -f docker-compose.data.yml up -d
+#   로컬 전체검증 : docker compose -f docker-compose.data.yml -f docker-compose.app.yml up
+#
+# 기존 docker-compose.yml은 팀원의 "미들웨어만 도커 + 앱은 IDE" 워크플로용으로
+# 그대로 둔다. 이 파일은 배포용이며, 로컬 검증도 배포와 동일한 파일로 수행해
+# "로컬에서만 되는 조합"이 생기지 않게 한다.
+#
+# 주의: ports를 호스트에 공개하는 이유는 App EC2가 프라이빗 IP로 접근하기
+# 때문이다. Data EC2는 프라이빗 서브넷에 있고 data-sg가 app-sg에서 오는
+# 트래픽만 허용하므로 외부 노출은 없다.
+
+name: logistics
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: logistics-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 최초 기동 시 1회만 실행된다. 알파벳 순이지만 각 .sql이 자기 스키마를
+      # CREATE SCHEMA IF NOT EXISTS로 만들므로 순서 의존성은 없다.
+      - ./infra/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks: [logistics]
+
+  redis:
+    image: redis:7
+    container_name: logistics-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [logistics]
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: logistics-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # 관리 UI. SG에서 app-sg만 허용
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
+    networks: [logistics]
+
+volumes:
+  # 명명 볼륨을 쓰면 EC2의 루트 EBS(20GB)에 저장되므로 EFS도 바인드 경로도
+  # 필요 없다. terminate 전까지 재시작·재부팅에 데이터가 보존된다.
+  pgdata:
+
+networks:
+  logistics:
+    driver: bridge

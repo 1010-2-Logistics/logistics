@@ -1,10 +1,9 @@
-# 실제 서비스로 복사할 때 :template-service 부분을 해당 서비스명으로 바꾸세요.
-FROM eclipse-temurin:21-jdk AS build
+FROM alpine:3 AS select
 WORKDIR /app
-COPY . .
-RUN ./gradlew :eureka-server:bootJar
+COPY eureka-server/build/libs/*.jar ./
+RUN rm -f *-plain.jar && mv *.jar app.jar
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/eureka-server/build/libs/*.jar app.jar
+COPY --from=select /app/app.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
