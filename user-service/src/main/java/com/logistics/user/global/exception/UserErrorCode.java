@@ -104,6 +104,19 @@ public enum UserErrorCode implements ErrorCode {
     USER_MASTER_SIGNUP_NOT_ALLOWED(
             HttpStatus.FORBIDDEN,
             "MASTER 권한으로 회원가입할 수 없습니다."
+    ),
+    USER_AFFILIATION_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "사용자 역할과 소속 정보가 일치하지 않습니다."
+    ),
+
+    USER_AFFILIATION_CONFLICT(
+            HttpStatus.CONFLICT,
+            "현재 소속 및 권한 정보와 동일합니다."
+    ),
+    USER_AFFILIATION_ROLE_NOT_ALLOWED(
+            HttpStatus.FORBIDDEN,
+            "내부 소속 변경 API에서는 MASTER 권한으로 변경할 수 없습니다."
     ),;
 
 
