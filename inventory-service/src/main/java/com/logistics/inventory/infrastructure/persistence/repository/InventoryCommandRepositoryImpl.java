@@ -31,8 +31,22 @@ public class InventoryCommandRepositoryImpl implements InventoryCommandRepositor
     }
 
     @Override
-    public Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(UUID productId, UUID hubId) {
+    public Optional<Inventory> findByProductIdAndHubIdAndDeletedAtIsNull(
+            UUID productId,
+            UUID hubId
+    ) {
         return inventoryJpaRepository.findByProductIdAndHubIdAndDeletedAtIsNull(
+                productId,
+                hubId
+        );
+    }
+
+    @Override
+    public Optional<Inventory> findByProductAndHubIdWithLock(
+            UUID productId,
+            UUID hubId
+    ) {
+        return inventoryJpaRepository.findByProductAndHubIdWithLock(
                 productId,
                 hubId
         );

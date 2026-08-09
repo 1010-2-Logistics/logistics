@@ -1,32 +1,68 @@
-# template-service
+# 물류 관리 및 배송 시스템 (Sparta Logistics)
 
-새 서비스를 만들 때 이 폴더를 복사해서 시작하는 템플릿입니다.
+## 재고 동시성 JMeter Test 요약 보고서
 
-## 사용 방법
+동일한 상품에 대해 여러 주문 요청이 동시에 발생하는 상황을 가정했다
 
-1. 폴더 전체를 복사해서 이름을 바꾸세요 (예: `order-service`, `delivery-service`)
-2. 패키지명을 `com.logistics.template` → `com.logistics.{service}`로 바꾸세요 (IDE 리팩터링 기능 사용 권장)
-3. `Sample` 관련 이름들을 실제 도메인 이름으로 바꾸세요
-   - `Sample.java` → `{Domain}.java`
-   - `SampleStatus.java` → `{Domain}Status.java`
-   - `SampleCommandService`, `SampleQueryService`, `SampleFacade` 등도 동일하게
-   - `SampleErrorCode` → `{Domain}ErrorCode` (네이밍 컨벤션: `{도메인명}_{에러타입}`)
-4. `settings.gradle`에 본인 서비스 include 라인 주석 해제
-5. `application.yml`의 `spring.application.name`, `server.port`, `application-local.yml`의 스키마명을 컨벤션 포트표에 맞게 수정
-6. `Dockerfile`의 `:template-service` 부분을 서비스명으로 수정
-7. `infrastructure/feign/client/HubClient.java`는 예시입니다 — 실제로 호출할 서비스에 맞게 수정/삭제하세요
+여러 요청이 동일한 재고 데이터를 동시에 조회·수정할 경우 재고 값이 정상적으로 반영되는지 확인하고, 동시성 제어 적용 전후의 재고 정합성을 비교했다
 
-## 구조
-```
-{service}/
-├── presentation/    HTTP 요청/응답 (Controller, Request/Response DTO)
-├── application/     유스케이스 조합 (Facade, CommandService/QueryService, Command/Query DTO, Event, Port)
-├── domain/          순수 비즈니스 로직 (Entity, Repository 인터페이스)
-├── infrastructure/  외부 연동 구현체 (JPA Repository 구현체, Feign, Messaging, Config)
-└── global/          이 서비스만의 공통 응답/예외/BaseEntity
-    (팀 공용 common 모듈은 사용하지 않기로 했으므로, 이 global 패키지를 각 서비스가 자체적으로 가집니다)
-```
+### 비관적 락 선택 이유
+재고는 요청 충돌 시 성능보다 정확한 수량 유지가 우선되는 데이터이므로, 충돌 발생 후 처리하는 방식보다 재고 수정 시 해당 row에 락을 걸어 다른 트랜잭션의 접근을 대기시키는 비관적 락(PESSIMISTIC_WRITE) 을 적용했다
 
-## 주의사항
-- `global` 패키지는 각 서비스마다 로컬로 복사해서 씁니다 (팀 common 모듈 미사용 결정에 따름).
-  나중에 `common`에서 뭔가 고쳐져도 자동으로 반영되지 않으니, 팀 공지 있으면 각자 반영하세요.
+---
+## 1. 재고 차감 동시성 테스트
+### 테스트 조건
+- 초기 재고: 100 
+- 동시 요청 수: 100 
+- 요청당 차감 수량: 1 
+- JMeter Synchronizing Timer 사용 
+- 기대 최종 재고: 0
+
+
+| 구분 | 동시 요청 수 | 평균 응답시간 | 오류율 | 기대 재고 | 실제 재고 |
+|---|---:|---:|---:|---:|---:|
+| 개선 전 | 100 | 121 ms | 0.67% | 0 | 2 |
+| 개선 후 | 100 | 1130 ms | 0% | 0 | 0 |
+
+개선 전에는 100개의 차감 요청 이후 재고가 0이 되어야 하지만 2가 남아,
+동시에 같은 재고를 수정하는 과정에서 일부 변경 내용이 유실되는 Lost Update가 발생했다
+
+비관적 락 적용 후 동일한 조건으로 재테스트한 결과 최종 재고가 기대값인 0과 일치하여,
+동시 차감 요청에서도 재고 정합성이 보장되는 것을 확인했다
+
+
+## 2. 재고 복원 동시성 테스트
+### 테스트 조건
+- 초기 재고: 100
+- 동시 요청 수: 100
+- 요청당 복원 수량: 1
+- JMeter Synchronizing Timer 사용
+- 기대 최종 재고: 200
+
+### 테스트 결과
+
+| 구분 | 동시 요청 수 | 평균 응답시간 | 오류율 | 기대 재고 | 실제 재고 |
+|---|---:|---:|---:|---:|---:|
+| 개선 전 | 100 | 206 ms | 0% | 200 | 111 |
+| 개선 후 | 100 | 1086 ms | 0% | 200 | 200 |
+
+개선 전에는 100개의 복원 요청 이후 재고가 200이 되어야 하지만 111에 그쳐,
+복원 과정에서도 Lost Update가 발생했다
+
+비관적 락 적용 후 동일한 조건으로 재테스트한 결과 최종 재고가 기대값인 200과 일치하여,
+동시 복원 요청에서도 재고 정합성이 보장되는 것을 확인했다
+
+
+## 결과
+
+비관적 락 적용을 통해 재고 차감과 복원 모두에서 발생하던 Lost Update를 해결하고
+동시 요청 상황에서도 재고 정합성을 보장할 수 있었다
+
+다만 동일한 재고 row에 대한 요청이 락 해제를 기다리며 순차적으로 처리되기 때문에
+평균 응답시간은 다음과 같이 증가했다
+
+- 차감: `121 ms → 1130 ms`
+- 복원: `206 ms → 1086 ms`
+
+따라서 이번 개선은 응답 성능보다 재고 데이터의 정합성을 우선한 선택이며,
+추후 트래픽 증가 시 락 경합과 응답시간을 함께 모니터링할 필요가 있다
