@@ -21,4 +21,9 @@ public interface InventoryCommandRepository {
             UUID productId,
             UUID hubId
     );
+
+    Optional<Inventory> findByProductAndHubIdWithLock(
+            UUID productId,
+            UUID hubId
+    );
 }

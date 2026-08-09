@@ -29,4 +29,8 @@ interface HubRouteJpaRepository extends JpaRepository<HubRoute, UUID> {
     List<HubRoute> findAllByDeletedAtIsNull();
 
     boolean existsByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId);
+
+    //허브가 삭제되면 해당 허브를 사용하는 허브 경로도 같이 삭제
+    @Query("SELECT h FROM HubRoute h WHERE (h.startHubId = :startHubId OR h.endHubId = :endHubId) AND h.deletedAt IS NULL")
+    List<HubRoute> findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(@Param("startHubId") UUID startHubId, @Param("endHubId") UUID endHubId);
 }

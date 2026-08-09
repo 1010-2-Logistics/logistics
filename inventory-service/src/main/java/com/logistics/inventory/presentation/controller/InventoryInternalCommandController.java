@@ -11,6 +11,8 @@ import com.logistics.inventory.presentation.dto.request.InventoryDeductionReques
 import com.logistics.inventory.presentation.dto.request.InventoryRestorationRequestDto;
 import com.logistics.inventory.presentation.dto.response.InventoryDeductionResponseDto;
 import com.logistics.inventory.presentation.dto.response.InventoryRestorationResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,13 +22,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name= "Inventory Internal")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/internal/v1/inventories")
 public class InventoryInternalCommandController {
     private final InventoryCommandService inventoryCommandService;
 
-    // TODO : 동시 재고/복원 시 어떻게 처리할 건지에 대해 구상하기 -> 동일 재고에 대한 동시 수정 충돌이 빈번하지 않을 것으로 판단하여 낙관적 락 적용 예정
+    @Operation(
+            summary = "내부용 재고 차감"
+    )
     @PostMapping("/deductions")
     public ResponseEntity<ApiResponse<InventoryDeductionResponseDto>> deductInventory(
             @Valid @RequestBody InventoryDeductionRequestDto inventoryDeductionRequestDto
@@ -44,6 +49,9 @@ public class InventoryInternalCommandController {
         ));
     }
 
+    @Operation(
+            summary = "내부용 재고 복원"
+    )
     @PostMapping("/restorations")
     public ResponseEntity<ApiResponse<InventoryRestorationResponseDto>> restoreInventory(
             @Valid @RequestBody InventoryRestorationRequestDto inventoryRestorationRequestDto
