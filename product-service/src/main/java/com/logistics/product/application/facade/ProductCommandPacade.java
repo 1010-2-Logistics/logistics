@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class ProductFacade {
+public class ProductCommandPacade {
 	
 	private final ProductCommandService productCommandService;
 	
