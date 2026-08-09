@@ -1,5 +1,7 @@
 package com.logistics.company.application.facade;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;

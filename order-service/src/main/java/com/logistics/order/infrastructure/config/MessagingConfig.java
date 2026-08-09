@@ -1,6 +1,18 @@
 package com.logistics.order.infrastructure.config;
 
-// RabbitMQ/Kafka를 실제로 쓸 때 Exchange/Queue/Binding Bean을 여기 등록하세요.
-// (도전기능 - 메시징 전환 시 사용, 지금은 자리만 잡아둔 상태입니다)
+
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
 public class MessagingConfig {
+    public static final String ORDER_EXCHANGE = "order.exchange";
+    public static final String ORDER_ROUTING_KEY = "order-created.queue";
+
+    @Bean
+    public DirectExchange orderExchange() {
+        return new DirectExchange(ORDER_EXCHANGE);
+    }
+
 }

@@ -7,7 +7,6 @@ import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCre
 import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryDetailResult;
 import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
 import com.logistics.delivery.application.port.HubPort;
-import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.domain.entity.*;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
@@ -28,13 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeliveryCommandService {
 
+    private static final BigDecimal PLACEHOLDER_DISTANCE = BigDecimal.ONE;
+    private static final int PLACEHOLDER_DURATION = 1;
     private static final Long TEMP_CREATED_BY = 1L; // TODO: 인증 붙으면 실제 로그인 사용자(호출자)로 교체
 
     private final DeliveryRepository deliveryRepository;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
     private final HubPort hubPort;
-    private final HubRoutePort hubRoutePort;
 
     public DeliveryCreateResult create(CreateDeliveryCommand command) {
         Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
@@ -80,16 +80,9 @@ public class DeliveryCommandService {
         }
     }
 
+    // TODO: hub-route 서비스 연동되면 실제 멀티홉 경로 계산으로 교체
     private List<RouteSegment> resolveRouteSegments(UUID startHubId, UUID endHubId) {
-        try {
-            return hubRoutePort.findRoute(startHubId, endHubId).stream()
-                    .map(seg -> new RouteSegment(seg.startHubId(), seg.endHubId(), seg.distance(), seg.duration()))
-                    .toList();
-        } catch (FeignException.NotFound e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
-        } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
-        }
+        return List.of(new RouteSegment(startHubId, endHubId, PLACEHOLDER_DISTANCE, PLACEHOLDER_DURATION));
     }
 
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
@@ -114,7 +107,6 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
         }
         validateRouteTransition(route.getStatus(), command.status());
-        validateSequentialProgress(deliveryId, route.getSequence());
 
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
@@ -152,19 +144,6 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
     }
-
-    private void validateSequentialProgress(UUID deliveryId, int sequence) {
-        if (sequence == 0) {
-            return;
-        }
-        boolean allPriorCompleted = deliveryRouteRepository.findAllByDeliveryId(deliveryId).stream()
-                .filter(r -> r.getSequence() < sequence)
-                .allMatch(r -> r.getStatus() == DeliveryRouteStatus.DEST_HUB_ARRIVED);
-        if (!allPriorCompleted) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
-        }
-    }
-
     public void delete(UUID deliveryId) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));

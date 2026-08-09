@@ -297,7 +297,8 @@ class LoginServiceTest {
          * 회원가입 직후 상태는 PENDING이므로
          * reject()를 호출해 REJECTED 상태로
          */
-        user.reject();
+        // 변경
+        user.reject("가입 조건을 충족하지 않았습니다.");
 
         LoginCommandDto command = new LoginCommandDto(
                 "delivery1",

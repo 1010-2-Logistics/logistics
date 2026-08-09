@@ -3,6 +3,7 @@ package com.logistics.user.presentation.dto.request;
 import com.logistics.user.application.dto.command.ChangeApprovalCommandDto;
 import com.logistics.user.domain.entity.ApprovalDecision;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * 사용자 가입 승인·거절 HTTP 요청 DTO.
@@ -17,7 +18,13 @@ public record UserApprovalRequestDto(
          * - REJECT
          */
         @NotNull(message = "가입 처리 결과는 필수입니다.")
-        ApprovalDecision decision
+        ApprovalDecision decision,
+
+        @Size(
+                max = 500,
+                message = "거절 사유는 최대 500자까지 입력할 수 있습니다."
+        )
+                String rejectionReason
 
 ) {
 
@@ -34,7 +41,8 @@ public record UserApprovalRequestDto(
         return new ChangeApprovalCommandDto(
                 targetUserId,
                 processedBy,
-                decision
+                decision,
+                rejectionReason
         );
     }
 }
