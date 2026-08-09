@@ -1,4 +1,4 @@
-package com.logistics.delivery.presentation.controller.dto.request;
+package com.logistics.delivery.presentation.dto.request;
 
 import java.util.UUID;
 
