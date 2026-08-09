@@ -1,15 +1,9 @@
-FROM eclipse-temurin:21-jdk AS build
-
+FROM alpine:3 AS select
 WORKDIR /app
+COPY company-service/build/libs/*.jar ./
+RUN rm -f *-plain.jar && mv *.jar app.jar
 
-COPY . .
-
-RUN ./gradlew :company-service:bootJar
-
-FROM eclipse-temurin:21-jre
-
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-COPY --from=build /app/company-service/build/libs/*.jar app.jar
-
+COPY --from=select /app/app.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
