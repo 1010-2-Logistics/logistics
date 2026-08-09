@@ -165,6 +165,8 @@ public class CompanyCommandServiceTest {
 			assertThatThrownBy(() -> companyCommandService.updateCompany(companyId, command))
 			.isInstanceOf(CompanyException.class)
 			.hasMessage(CompanyErrorCode.COMPANY_DUPLICATE_HUB_NAME.getMessage());
+			
+			verify(companyQueryService).checkCompanyNameForUpdate(hubId, companyName, companyId);
 		}
 		
 	}

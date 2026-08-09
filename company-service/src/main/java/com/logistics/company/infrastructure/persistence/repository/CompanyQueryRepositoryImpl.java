@@ -56,7 +56,7 @@ public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 
 	@Override
 	public boolean existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(UUID hubId, String companyName, UUID companyId) {
-		return jpaRepository.existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(hubId, companyName, companyId);
+		return jpaRepository.existsByHubIdAndCompanyNameAndCompanyIdNotAndDeletedAtIsNull(hubId, companyName, companyId);
 	}
   
   
