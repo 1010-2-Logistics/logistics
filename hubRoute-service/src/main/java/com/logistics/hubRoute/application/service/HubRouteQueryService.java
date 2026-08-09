@@ -7,10 +7,12 @@ import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteQueryRepository;
 import com.logistics.hubRoute.global.exception.CustomException;
 import com.logistics.hubRoute.global.exception.HubRouteErrorCode;
+import com.logistics.hubRoute.global.response.PageResponse;
 import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteFindRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteFindResponseDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteResponseDto;
+import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteSummaryResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -32,11 +34,21 @@ public class HubRouteQueryService {
                 .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
     }
 
-    public Page<HubRoute> search(SearchHubRouteQuery query) {
-        return hubRouteQueryRepository.search(query.hubRouteId(), query.pageable());
+
+    @Cacheable(
+            value = "hubRoute",
+            key = "'search:' + (#query.hubRouteId() != null ? #query.hubRouteId().toString() : 'all') + ':page:' + #query.pageable().pageNumber + ':size:' + #query.pageable().pageSize",
+            unless = "#result == null"
+    )
+    public PageResponse<HubRouteSummaryResponseDto> search(SearchHubRouteQuery query) {
+        // 기존 레포지터리 조회 로직 유지
+        Page<HubRoute> page = hubRouteQueryRepository.search(query.hubRouteId(), query.pageable());
+        Page<HubRouteSummaryResponseDto> responsePage = page.map(HubRouteSummaryResponseDto::from);
+
+        return PageResponse.of(responsePage);
     }
 
-    @Cacheable(value = "hubRouteCache", key = "#query.hubRouteId()")
+    @Cacheable(value = "hubRoute", key = "#query.hubRouteId()")
     public HubRouteResponseDto getCachedDto(GetHubRouteQuery query) {
         HubRoute hubRoute = get(query);
         return HubRouteResponseDto.from(hubRoute);

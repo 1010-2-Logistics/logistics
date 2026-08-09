@@ -10,6 +10,7 @@ import com.logistics.delivery.application.dto.result.DeliveryResults;
 import com.logistics.delivery.application.service.DeliveryQueryService;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryRoute;
+import com.logistics.delivery.domain.entity.DeliveryRouteStatus;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
@@ -129,5 +130,50 @@ class DeliveryQueryServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
+    }
+
+    @Test
+    void 경로_진행중이면_현재_구간_담당자를_반환한다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.HUB_MOVING);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+
+        DeliveryRoute route1 = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        route1.changeStatus(DeliveryRouteStatus.DEST_HUB_ARRIVED);
+        DeliveryRoute route2 = DeliveryRoute.create(deliveryId, 1, UUID.randomUUID(), UUID.randomUUID(), 2L, BigDecimal.TEN, 30, 1L);
+        route2.changeStatus(DeliveryRouteStatus.HUB_MOVING);
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(route1, route2));
+
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+
+        assertThat(result.currentManagerId()).isEqualTo(2L);
+    }
+
+    @Test
+    void 업체이동중이면_업체담당자를_현재담당자로_반환한다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+        delivery.assignCompanyDeliveryManager(9L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
+
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+
+        assertThat(result.currentManagerId()).isEqualTo(9L);
+    }
+
+    @Test
+    void 취소된_배송은_현재담당자가_없다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.CANCELLED);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
+
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+
+        assertThat(result.currentManagerId()).isNull();
     }
 }

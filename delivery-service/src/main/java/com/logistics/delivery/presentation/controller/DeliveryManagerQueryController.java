@@ -6,7 +6,7 @@ import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.domain.entity.ManagerType;
 import com.logistics.delivery.global.response.ApiResponse;
 import com.logistics.delivery.global.response.PageResponse;
-import com.logistics.delivery.presentation.controller.dto.response.DeliveryManagerResponse;
+import com.logistics.delivery.presentation.dto.response.DeliveryManagerResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

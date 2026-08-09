@@ -1,5 +1,7 @@
 package com.logistics.hub.application.facade;
 
+import com.logistics.hub.application.event.HubDeletedEvent;
+import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.application.service.HubQueryService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ public class HubFacade {
 
     private final HubCommandService hubCommandService;
     private final HubQueryService hubQueryService;
+    private final EventPublisher eventPublisher;
+
 
     public void deleteHub(UUID hubId,Long deletedBy){
         hubCommandService.deleteHub(hubId,deletedBy);
@@ -25,5 +29,7 @@ public class HubFacade {
         //허브 경로는 연동된 허브가 사라져서 다시 경로를 설정해주어야됨
         //주문 테이블 - 출발 허브나 도착 허브가 사라질 수 있음
         //특히 도착 허브가 사라진 경우 예외 처리가 필요할 것 같음
+
+        eventPublisher.publish(new HubDeletedEvent(hubId,deletedBy));
     }
 }
