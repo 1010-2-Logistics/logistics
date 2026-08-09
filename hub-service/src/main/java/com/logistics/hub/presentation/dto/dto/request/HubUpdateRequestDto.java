@@ -1,9 +1,7 @@
 package com.logistics.hub.presentation.dto.dto.request;
 
 import com.logistics.hub.application.dto.command.HubUpdateCommand;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
@@ -17,9 +15,15 @@ public record HubUpdateRequestDto(
         String hubAddress,
 
         @NotNull(message = "위도를 입력해 주세요")
+        @DecimalMin(value = "-90.0", message = "위도는 -90 이상이어야 합니다")
+        @DecimalMax(value = "90.0", message = "위도는 90 이하여야 합니다")
+        @Digits(integer = 3, fraction = 7, message = "위도는 정수 최대 3자리, 소수점 최대 7자리까지 입력 가능합니다")
         BigDecimal latitude,
 
         @NotNull(message = "경도를 입력해 주세요")
+        @DecimalMin(value = "-180.0", message = "경도는 -180 이상이어야 합니다")
+        @DecimalMax(value = "180.0", message = "경도는 180 이하여야 합니다")
+        @Digits(integer = 3, fraction = 7, message = "경도는 정수 최대 3자리, 소수점 최대 7자리까지 입력 가능합니다")
         BigDecimal longitude
 
 ) {

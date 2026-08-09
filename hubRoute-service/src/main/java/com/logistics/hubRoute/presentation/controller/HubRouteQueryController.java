@@ -34,9 +34,11 @@ public class HubRouteQueryController {
     public ApiResponse<PageResponse<HubRouteSummaryResponseDto>> search(
             @RequestParam(required = false) UUID hubRouteId,
             Pageable pageable) {
-        Page<HubRoute> page = hubRouteQueryService.search(new SearchHubRouteQuery(hubRouteId, pageable));
-        Page<HubRouteSummaryResponseDto> responsePage = page.map(HubRouteSummaryResponseDto::from);
-        return ApiResponse.success(200, "허브 경로 목록 조회 성공", PageResponse.of(responsePage));
+
+        // 기존 Query 객체 생성 방식 그대로 유지
+        PageResponse<HubRouteSummaryResponseDto> response = hubRouteQueryService.search(new SearchHubRouteQuery(hubRouteId, pageable));
+
+        return ApiResponse.success(200, "허브 경로 목록 조회 성공", response);
     }
 
     //허브 경로 탐색 (시작허브와 도착 허브를 받아서 검색 -> 연결되어 있지 않은 허브 경로 검색)

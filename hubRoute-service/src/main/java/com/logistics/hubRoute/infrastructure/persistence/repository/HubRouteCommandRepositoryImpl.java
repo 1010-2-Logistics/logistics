@@ -4,6 +4,7 @@ import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteCommandRepository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,12 @@ public class HubRouteCommandRepositoryImpl implements HubRouteCommandRepository 
     @Override
     public boolean findByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId) {
         return jpaRepository.existsByHubRouteIdAndDeletedAtIsNull(hubRouteId);
+    }
+
+    //허브 삭제시 허브 경로도 삭제
+    @Override
+    public List<HubRoute> findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(UUID starHubId, UUID endHubId) {
+        return jpaRepository.findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(starHubId, endHubId);
     }
 
 }

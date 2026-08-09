@@ -1,11 +1,15 @@
 package com.logistics.hubRoute.global.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageInfo {
 
     private String paginationType;
