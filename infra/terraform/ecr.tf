@@ -6,6 +6,11 @@ resource "aws_ecr_repository" "service" {
   name                 = "${var.project_prefix}/${each.value}"
   image_tag_mutability = "MUTABLE"
 
+  # 이미지가 남아 있는 리포지토리는 기본적으로 삭제가 거부된다
+  # (RepositoryNotEmptyException). 시연 종료 후 destroy가 중간에 멈추지 않도록
+  # 이미지째 삭제를 허용한다. 1주 시연용이라 보존할 이미지가 없다.
+  force_delete = true
+
   image_scanning_configuration {
     scan_on_push = true
   }
