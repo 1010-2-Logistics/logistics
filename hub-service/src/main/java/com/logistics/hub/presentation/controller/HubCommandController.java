@@ -3,6 +3,7 @@ package com.logistics.hub.presentation.controller;
 import com.logistics.hub.application.dto.command.HubCreateCommand;
 import com.logistics.hub.application.dto.command.HubUpdateCommand;
 import com.logistics.hub.application.facade.HubFacade;
+import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.global.response.ApiResponse;
 import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
@@ -26,6 +27,8 @@ public class HubCommandController {
     private final HubCommandService hubCommandService;
 
     private final HubFacade hubFacade;
+    private final EventPublisher eventPublisher;
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

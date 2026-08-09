@@ -1,4 +1,4 @@
-package com.logistics.delivery.presentation.controller.dto.response;
+package com.logistics.delivery.presentation.dto.response;
 
 import com.logistics.delivery.domain.entity.DeliveryManager;
 import java.util.UUID;
