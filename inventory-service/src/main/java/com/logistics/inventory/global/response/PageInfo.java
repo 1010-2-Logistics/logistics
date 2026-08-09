@@ -1,11 +1,12 @@
 package com.logistics.inventory.global.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import org.springframework.data.domain.Page;
 
 @Getter
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class PageInfo {
 
     private String paginationType;

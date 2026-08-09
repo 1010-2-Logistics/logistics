@@ -5,7 +5,7 @@ import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
-import com.logistics.order.application.port.EventPublisher;
+import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.entity.OrderStatus;
 import com.logistics.order.domain.repository.OrderCommandRepository;
@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -40,7 +41,7 @@ class OrderCommandServiceTest {
     private OrderCommandRepository orderCommandRepository;
 
     @Mock
-    private EventPublisher eventPublisher;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private OrderCommandService orderCommandService;
@@ -69,12 +70,20 @@ class OrderCommandServiceTest {
                     orderCreateCommand,
                     orderId,
                     deliveryId,
-                    deliveryId
+                    startCompanyId
             );
 
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
 
             verify(orderCommandRepository).save(orderCaptor.capture());
+            verify(applicationEventPublisher).publishEvent(
+                    new OrderCreatedEvent(
+                            orderId,
+                            deliveryId,
+                            productId,
+                            10
+                    )
+            );
 
             Order savedOrder = orderCaptor.getValue();
 

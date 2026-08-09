@@ -45,3 +45,9 @@ bin/
 ### OS ###
 .DS_Store
 Thumbs.db
+
+### Terraform ###
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars

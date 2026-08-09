@@ -1,9 +1,7 @@
 package com.logistics.hubRoute.presentation.dto.dto.request;
 
 import com.logistics.hubRoute.application.dto.command.HubRouteUpdateCommand;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -16,11 +14,12 @@ public record HubRouteUpdateRequestDto(
         UUID endHubId,
 
         @NotNull(message = "시간을 입력해주세요")
+        @Min(value = 1, message = "시간은 1분 이상이어야 합니다")
         Integer duration,
 
         @NotNull(message = "거리를 입력해 주세요")
+        @DecimalMin(value = "0.01", message = "거리는 0Km보다 커야 합니다.")
         BigDecimal distance
 
 ) {
-//    public HubRouteUpdateCommand toCommand(){return  new HubRouteUpdateCommand(hubName,hubAddress,latitude,longitude); }
 }

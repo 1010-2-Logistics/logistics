@@ -16,6 +16,8 @@ public enum CompanyErrorCode implements ErrorCode {
 	COMPANY_TYPE_FOR_ORDER(HttpStatus.CONFLICT, "출발 업체는 생산 업체여야 하며, 도착 업체는 수령 업체여야 합니다."),
 	
 	COMPANY_USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 회원입니다."),
+	
+	COMPANY_DUPLICATE_HUB_NAME(HttpStatus.CONFLICT, "소속 허브에 동일한 업체명이 존재합니다.")
 	;
 	
   private final HttpStatus httpStatus;

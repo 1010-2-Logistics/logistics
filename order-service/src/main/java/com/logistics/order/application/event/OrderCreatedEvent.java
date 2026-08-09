@@ -1,6 +1,11 @@
 package com.logistics.order.application.event;
 
-public record OrderCreatedEvent(
+import java.util.UUID;
 
+public record OrderCreatedEvent(
+        UUID orderId,
+        UUID deliveryId,
+        UUID productId,
+        Integer quantity
 ) {
 }
