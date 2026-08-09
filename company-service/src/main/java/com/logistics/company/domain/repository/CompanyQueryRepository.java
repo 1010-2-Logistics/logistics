@@ -13,6 +13,10 @@ import com.logistics.company.domain.entity.CompanyType;
 
 public interface CompanyQueryRepository {
 
+	boolean existsByHubIdAndCompanyNameAndDeletedAtIsNull(UUID hubId, String companyName);
+	
+	boolean existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(UUID hubId, String companyName, UUID companyId);
+	
 	Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId);
 	
 	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId);
