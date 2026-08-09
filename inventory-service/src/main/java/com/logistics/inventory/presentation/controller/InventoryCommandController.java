@@ -12,6 +12,8 @@ import com.logistics.inventory.presentation.dto.request.InventoryCreateRequestDt
 import com.logistics.inventory.presentation.dto.request.InventoryUpdateRequestDto;
 import com.logistics.inventory.presentation.dto.response.InventoryCreateResponseDto;
 import com.logistics.inventory.presentation.dto.response.InventoryUpdateResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Tag(name= "Inventory")
 @RestController
 @RequestMapping("/api/v1/inventories")
 @RequiredArgsConstructor
@@ -26,6 +29,14 @@ public class InventoryCommandController {
     private final InventoryFacade inventoryFacade;
     private final InventoryCommandService inventoryCommandService;
 
+    @Operation(
+            summary = "재고 생성",
+            description = """
+                     접근 권한:
+                    - MASTER: 모든 허브의 재고 생성 가능
+                    - HUB_MANAGER: 본인이 담당하는 허브의 재고만 생성 가능
+                    """
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<InventoryCreateResponseDto> createInventory(
@@ -44,6 +55,14 @@ public class InventoryCommandController {
         );
     }
 
+    @Operation(
+            summary = "재고 수정",
+            description = """
+                     접근 권한:
+                    - MASTER : 모든 허브의 재고 수정 가능
+                    - HUB_MANAGER : 담당 허브 재고만 수정 가능
+                    """
+    )
     @PutMapping("/{inventoryId}")
     public ApiResponse<InventoryUpdateResponseDto> updateInventory(
             @PathVariable("inventoryId") UUID inventoryId,
@@ -65,6 +84,14 @@ public class InventoryCommandController {
         );
     }
 
+    @Operation(
+            summary = "재고 삭제",
+            description = """
+                     접근 권한:
+                    - MASTER : 모든 허브의 재고 삭제 가능
+                    - HUB_MANAGER : 담당 허브 재고만 삭제 가능
+                    """
+    )
     @DeleteMapping("/{inventoryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(

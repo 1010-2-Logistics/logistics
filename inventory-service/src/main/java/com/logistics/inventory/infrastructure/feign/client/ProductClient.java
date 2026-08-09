@@ -1,6 +1,7 @@
 package com.logistics.inventory.infrastructure.feign.client;
 
 
+import com.logistics.inventory.global.response.ApiResponse;
 import com.logistics.inventory.infrastructure.config.FeignConfig;
 import com.logistics.inventory.infrastructure.feign.response.ProductValidationResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -15,7 +16,7 @@ import java.util.UUID;
 )
 public interface ProductClient {
     @GetMapping("/internal/v1/products/{productId}/exists")
-    ProductValidationResponse getProduct(
+    ApiResponse<ProductValidationResponse> getProduct(
             @PathVariable("productId") UUID productId
     );
 }
