@@ -1,10 +1,13 @@
 package com.logistics.delivery.application.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,9 +15,10 @@ import com.logistics.delivery.application.dto.command.ChangeDeliveryRouteStatusC
 import com.logistics.delivery.application.dto.command.ChangeDeliveryStatusCommand;
 import com.logistics.delivery.application.dto.command.CreateDeliveryCommand;
 import com.logistics.delivery.application.dto.result.DeliveryResults;
-import com.logistics.delivery.application.service.DeliveryCommandService;
 import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCreateResult;
 import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
+import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.service.DeliveryCommandService;
 import com.logistics.delivery.application.service.DeliveryManagerAssignmentService;
 import com.logistics.delivery.domain.entity.Delivery;
 import com.logistics.delivery.domain.entity.DeliveryManager;
@@ -26,7 +30,9 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
-import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.infrastructure.feign.client.HubRouteClient;
+import com.logistics.delivery.infrastructure.feign.response.HubRoutePathApiResponse;
+import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -54,12 +60,22 @@ class DeliveryCommandServiceTest {
     @Mock
     private HubPort hubPort;
 
+    @Mock
+    private HubRouteClient hubRouteClient;
+
     @InjectMocks
     private DeliveryCommandService deliveryCommandService;
 
+    private HubRoutePathApiResponse singleStepResponse(UUID startHubId, UUID endHubId) {
+        var step = new HubRoutePathApiResponse.HubRoutePathResponse.Step(1, startHubId, endHubId, 1, BigDecimal.ONE);
+        var data = new HubRoutePathApiResponse.HubRoutePathResponse(startHubId, endHubId, 1, BigDecimal.ONE, List.of(step));
+        return new HubRoutePathApiResponse(true, 200, data, "허브 경로 조회 성공");
+    }
+
+    // ===== create =====
+
     @Test
     void 배송이_정상적으로_생성된다() {
-        // given
         UUID orderId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -69,6 +85,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -78,10 +95,8 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.save(any(DeliveryRoute.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // when
         DeliveryCreateResult result = deliveryCommandService.create(command);
 
-        // then
         Delivery delivery = result.delivery();
         assertThat(delivery.getOrderId()).isEqualTo(orderId);
         assertThat(delivery.getStartHubId()).isEqualTo(startHubId);
@@ -92,7 +107,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 배송_생성시_배송_경로도_함께_생성되고_담당자가_배정된다() {
-        // given
         UUID orderId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -102,6 +116,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -113,10 +128,8 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.save(routeCaptor.capture()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // when
         deliveryCommandService.create(command);
 
-        // then
         DeliveryRoute savedRoute = routeCaptor.getValue();
         assertThat(savedRoute.getSequence()).isEqualTo(0);
         assertThat(savedRoute.getDeliveryManagerId()).isEqualTo(7L);
@@ -125,7 +138,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 유효하지_않은_허브면_예외가_발생한다() {
-        // given
         UUID orderId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -135,7 +147,6 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of());
 
-        // when & then
         assertThatThrownBy(() -> deliveryCommandService.create(command))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
@@ -146,7 +157,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 이미_존재하는_주문이면_기존_배송을_그대로_반환한다() {
-        // given
         UUID orderId = UUID.randomUUID();
         Delivery existing = Delivery.create(
                 orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
@@ -156,10 +166,8 @@ class DeliveryCommandServiceTest {
         CreateDeliveryCommand command = new CreateDeliveryCommand(
                 orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
 
-        // when
         DeliveryCreateResult result = deliveryCommandService.create(command);
 
-        // then
         assertThat(result.delivery()).isEqualTo(existing);
         assertThat(result.routeCount()).isEqualTo(1);
         verify(deliveryRepository, never()).save(any());
@@ -168,7 +176,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 배정_가능한_담당자가_없으면_예외가_전파되고_배송_경로는_저장되지_않는다() {
-        // given
         UUID orderId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -178,12 +185,12 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
         when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(hubRouteClient.findHubRoute(any())).thenReturn(singleStepResponse(startHubId, endHubId));
         when(deliveryRepository.save(any(Delivery.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
                 .thenThrow(new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE));
 
-        // when & then
         assertThatThrownBy(() -> deliveryCommandService.create(command))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
@@ -192,34 +199,81 @@ class DeliveryCommandServiceTest {
         verify(deliveryRouteRepository, never()).save(any());
     }
 
+    @Test
+    void 여러_구간이_반환되면_구간_수만큼_경로가_생성된다() {
+        UUID orderId = UUID.randomUUID();
+        UUID startHubId = UUID.randomUUID();
+        UUID midHubId = UUID.randomUUID();
+        UUID endHubId = UUID.randomUUID();
+        CreateDeliveryCommand command = new CreateDeliveryCommand(
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var step1 = new HubRoutePathApiResponse.HubRoutePathResponse.Step(1, startHubId, midHubId, 30, BigDecimal.TEN);
+        var step2 = new HubRoutePathApiResponse.HubRoutePathResponse.Step(2, midHubId, endHubId, 20, BigDecimal.valueOf(5));
+        var data = new HubRoutePathApiResponse.HubRoutePathResponse(startHubId, endHubId, 50, BigDecimal.valueOf(15), List.of(step1, step2));
+        when(hubRouteClient.findHubRoute(any())).thenReturn(new HubRoutePathApiResponse(true, 200, data, "허브 경로 조회 성공"));
+
+        when(deliveryManagerAssignmentService.assignNextManager(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(DeliveryManager.create(1L, null, "M01", ManagerType.HUB_DELIVERY_MANAGER, 0));
+        when(deliveryRouteRepository.save(any(DeliveryRoute.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DeliveryCreateResult result = deliveryCommandService.create(command);
+
+        assertThat(result.routeCount()).isEqualTo(2);
+        verify(deliveryRouteRepository, times(2)).save(any(DeliveryRoute.class));
+    }
+
+    @Test
+    void hub_route_서비스_호출_실패시_예외가_전파된다() {
+        UUID orderId = UUID.randomUUID();
+        UUID startHubId = UUID.randomUUID();
+        UUID endHubId = UUID.randomUUID();
+        CreateDeliveryCommand command = new CreateDeliveryCommand(
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+        when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
+        when(hubPort.validateHubIds(List.of(endHubId))).thenReturn(Set.of(endHubId));
+        when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        FeignException feignException = mock(FeignException.class);
+        lenient().when(feignException.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        when(hubRouteClient.findHubRoute(any())).thenThrow(feignException);
+
+        assertThatThrownBy(() -> deliveryCommandService.create(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+    }
+
     // ===== changeStatus =====
 
     @Test
     void COMPANY_MOVING_상태에서_DELIVERED로_변경된다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        // when
         DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
                 deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED));
 
-// then
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
     }
 
     @Test
     void COMPANY_MOVING이_아닌_상태에서_DELIVERED_요청하면_예외() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        // when & then
         assertThatThrownBy(() -> deliveryCommandService.changeStatus(
                 deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED)))
                 .isInstanceOf(CustomException.class)
@@ -243,7 +297,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 첫_구간이_HUB_MOVING이_되면_배송_상태도_HUB_MOVING으로_동기화된다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
@@ -254,25 +307,21 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        // when
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null));
 
-        // then
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.HUB_MOVING);
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.HUB_MOVING);
     }
 
     @Test
     void 잘못된_전이를_시도하면_예외() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
 
-        // when & then: HUB_MOVE_WAITING에서 DEST_HUB_ARRIVED로 건너뛰기 시도
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null)))
                 .isInstanceOf(CustomException.class)
@@ -282,7 +331,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 마지막_구간이_도착하면_업체담당자가_배정되고_배송상태가_COMPANY_MOVING이_된다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -300,11 +348,9 @@ class DeliveryCommandServiceTest {
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, endHubId))
                 .thenReturn(companyManager);
 
-        // when
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null));
 
-        // then
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.DEST_HUB_ARRIVED);
         assertThat(result.route().getActualDistance()).isEqualTo(route.getExpectedDistance());
         assertThat(result.route().getActualDuration()).isEqualTo(route.getExpectedDuration());
@@ -314,7 +360,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 마지막_구간이_아니면_업체담당자_배정_없이_구간_상태만_바뀐다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
@@ -325,13 +370,11 @@ class DeliveryCommandServiceTest {
 
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
-        when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(2); // 총 2구간 중 0번째
+        when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(2);
 
-        // when
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null));
 
-        // then
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.DEST_HUB_ARRIVED);
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.HUB_WAITING);
         verify(deliveryManagerAssignmentService, never()).assignNextManager(any(), any());
@@ -339,7 +382,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void actualDistance_actualDuration을_보내면_그_값이_그대로_기록된다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -355,12 +397,10 @@ class DeliveryCommandServiceTest {
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, endHubId))
                 .thenReturn(DeliveryManager.create(9L, endHubId, "M09", ManagerType.COMPANY_DELIVERY_MANAGER, 0));
 
-        // when
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId,
                 new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, new BigDecimal("158.40"), 115));
 
-        // then
         assertThat(result.route().getActualDistance()).isEqualByComparingTo("158.40");
         assertThat(result.route().getActualDuration()).isEqualTo(115);
     }
@@ -396,7 +436,6 @@ class DeliveryCommandServiceTest {
 
     @Test
     void 배정_가능한_업체담당자가_없으면_예외가_전파된다() {
-        // given
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
@@ -412,13 +451,14 @@ class DeliveryCommandServiceTest {
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, endHubId))
                 .thenThrow(new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE));
 
-        // when & then
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null)))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
     }
+
+    // ===== delete =====
 
     @Test
     void 정상_삭제되면_deletedAt이_채워진다() {
@@ -442,6 +482,8 @@ class DeliveryCommandServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
     }
+
+    // ===== cancel =====
 
     @Test
     void 배송이_있으면_CANCELLED로_변경된다() {
