@@ -1,0 +1,115 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# OIDC로 임시 자격증명을 받기 위해 필요하다. 롱리브드 액세스 키는 쓰지 않는다.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: 116971679055.dkr.ecr.ap-northeast-2.amazonaws.com/logistics
+  APP_INSTANCE_ID: i-0890295aa0f457bcb
+  DEPLOY_ROLE_ARN: arn:aws:iam::116971679055:role/logistics-github-actions-deploy
+
+jobs:
+  build-and-deploy:
+    name: Build, push, deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # ai-service를 포함해 12개 모듈이 빌드되지만, 이미지는 배포 대상 11개만 만든다.
+      - name: Build jars
+        run: ./gradlew build -x test
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+
+      - name: Build and push images
+        run: |
+          set -euo pipefail
+          # 이미지명 : Dockerfile 디렉터리 (hubRoute-service만 대소문자가 다르다 —
+          # 모듈 디렉터리는 hubRoute-service, ECR 리포/이미지명은 hubroute-service)
+          declare -A DOCKERFILE_DIR=(
+            [eureka-server]=eureka-server
+            [gateway-service]=gateway-service
+            [user-service]=user-service
+            [hub-service]=hub-service
+            [hubroute-service]=hubRoute-service
+            [company-service]=company-service
+            [product-service]=product-service
+            [order-service]=order-service
+            [inventory-service]=inventory-service
+            [delivery-service]=delivery-service
+            [slack-service]=slack-service
+          )
+          for svc in "${!DOCKERFILE_DIR[@]}"; do
+            dir="${DOCKERFILE_DIR[$svc]}"
+            docker build -f "$dir/Dockerfile" \
+              -t "${{ env.ECR_REGISTRY }}/$svc:latest" \
+              -t "${{ env.ECR_REGISTRY }}/$svc:${{ github.sha }}" \
+              .
+            docker push "${{ env.ECR_REGISTRY }}/$svc:latest"
+            docker push "${{ env.ECR_REGISTRY }}/$svc:${{ github.sha }}"
+          done
+
+      # SSH 키를 시크릿에 두지 않기 위해 SSM Send-Command로 배포한다.
+      # 실제 스크립트는 infra/scripts/deploy-app.sh — 11개를 한 번에 올리지 않고
+      # eureka → gateway → 3개씩 3배치로 순차 기동한다(Phase 6과 동일한 이유).
+      # 헬스체크도 App EC2 안(localhost)에서 수행한다 — app-sg의 19091은 본인
+      # IP로만 열려 있어 GitHub Actions 러너 IP에서는 애초에 접근할 수 없다.
+      - name: Deploy via SSM and health-check
+        run: |
+          set -euo pipefail
+          jq -Rs '{commands: [.]}' infra/scripts/deploy-app.sh > /tmp/ssm-params.json
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.APP_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "deploy ${{ github.sha }}" \
+            --parameters file:///tmp/ssm-params.json \
+            --query "Command.CommandId" --output text)
+
+          # aws ssm wait command-executed의 기본 타임아웃은 3배치 순차 기동 +
+          # 최종 헬스체크(최악의 경우 10분 이상)보다 짧을 수 있어 직접 폴링한다.
+          STATUS="InProgress"
+          for i in $(seq 1 90); do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
+              --query "Status" --output text 2>/dev/null || echo "Pending")
+            case "$STATUS" in
+              Success|Failed|Cancelled|TimedOut) break ;;
+            esac
+            sleep 10
+          done
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
+            --query "StandardOutputContent" --output text
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "SSM deploy command status: $STATUS"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
+              --query "StandardErrorContent" --output text
+            exit 1
+          fi
