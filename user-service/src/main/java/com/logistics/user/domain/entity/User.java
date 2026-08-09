@@ -306,7 +306,7 @@ public class User extends BaseEntity {
      *
      * 업체 역할:
      * - companyId 필수
-     * - hubId 없음
+     * - hubId 필수
      */
     private static void validateAffiliation(
             UserRole role,

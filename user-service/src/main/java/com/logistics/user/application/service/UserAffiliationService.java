@@ -68,7 +68,7 @@ public class UserAffiliationService {
                 || command.userId() <= 0) {
 
             throw new CustomException(
-                    UserErrorCode.USER_AFFILIATION_INVALID
+                    UserErrorCode.USER_INVALID_REQUEST
             );
         }
     }
