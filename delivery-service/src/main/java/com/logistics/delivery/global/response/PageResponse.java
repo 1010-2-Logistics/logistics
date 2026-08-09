@@ -1,12 +1,14 @@
 package com.logistics.delivery.global.response;
 
 import java.util.List;
-import lombok.Builder;
-import lombok.Getter;
+
+import lombok.*;
 import org.springframework.data.domain.Page;
 
 @Getter
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class PageResponse<T> {
 
     private List<T> content;
