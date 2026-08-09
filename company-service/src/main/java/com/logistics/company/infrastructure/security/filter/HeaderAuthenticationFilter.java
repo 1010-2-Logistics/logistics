@@ -36,7 +36,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 		
 		if(principal != null) {
 			List<SimpleGrantedAuthority> authorities = (principal.getRole() != null)
-					? List.of(new SimpleGrantedAuthority(principal.getRole().name()))
+					? List.of(new SimpleGrantedAuthority("ROLE_" + principal.getRole().name()))
 					: Collections.emptyList();
 			
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(principal, null, authorities);
