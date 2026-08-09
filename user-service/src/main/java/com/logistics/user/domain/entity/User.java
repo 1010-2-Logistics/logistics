@@ -83,6 +83,17 @@ public class User extends BaseEntity {
     private UserStatus status;
 
     /**
+     * 가장 최근 거절 사유.
+     *
+     * PENDING 또는 APPROVED 상태에서는 null
+     * REJECTED 상태일 때 마지막 거절 사유 저장
+     */
+    @Column(
+            name = "rejection_reason",
+            length = 500
+    )
+    private String rejectionReason;
+    /**
      * 시스템 내 사용자 권한.
      */
     @Enumerated(EnumType.STRING)
@@ -137,6 +148,7 @@ public class User extends BaseEntity {
         user.password = encodedPassword;
         user.slackId = slackId;
         user.status = UserStatus.PENDING;
+        user.rejectionReason=null;
         user.role = role;
         user.companyId = companyId;
         user.hubId = hubId;
@@ -175,19 +187,42 @@ public class User extends BaseEntity {
     }
 
     /**
-     * 가입 요청 승인
+     * 가입 요청 승인 메서드
+     * 승인 시 거절 사유 null로 변경.
      */
     public void approve() {
         validatePendingStatus();
+
         this.status = UserStatus.APPROVED;
+        this.rejectionReason = null;
     }
 
     /**
      * 가입 요청 거절
+     * 가장 최근 거절 사유 저장.
      */
-    public void reject() {
+    public void reject(
+            String rejectionReason
+    ) {
         validatePendingStatus();
+        validateRejectionReason(rejectionReason);
+
         this.status = UserStatus.REJECTED;
+        this.rejectionReason = rejectionReason;
+    }
+
+    // 거절 사유 입력됐는지 검증
+    private void validateRejectionReason(
+            String rejectionReason
+    ) {
+        if (rejectionReason == null
+                || rejectionReason.isBlank()
+                || rejectionReason.length() > 500) {
+
+            throw new CustomException(
+                    UserErrorCode.USER_APPROVAL_INVALID_REQUEST
+            );
+        }
     }
 
     /**

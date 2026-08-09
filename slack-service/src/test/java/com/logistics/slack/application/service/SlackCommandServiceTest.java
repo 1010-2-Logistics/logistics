@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -41,7 +40,7 @@ class SlackCommandServiceTest {
     private final UUID slackMessageId = UUID.randomUUID();
     private final Long senderId = 1L;
     private final Long receiverId = 2L;
-    private final Long referenceId = 100L;
+    private final UUID referenceId = UUID.randomUUID();
     @Mock
     private SlackCommandRepository slackCommandRepository;
 
@@ -243,6 +242,36 @@ class SlackCommandServiceTest {
             assertThat(slack.getStatus()).isEqualTo(SlackStatus.FAILED);
 
             verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("슬랙 메시지 삭제")
+    class slack_delete {
+        @Test
+        @DisplayName("슬랙 메시지 삭제 시 삭제 정보 기록")
+        void slack_delete_success() {
+            Slack slack = createFailedSlack();
+            Long deletedBy = 1L;
+
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
+
+            slackCommandService.deleteSlack(
+                    slackMessageId,
+                    deletedBy
+            );
+
+            assertThat(slack.getDeletedAt()).isNotNull();
+            assertThat(slack.getDeletedBy()).isEqualTo(deletedBy);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 메시지 삭제 시 예외")
+        void slack_delete_not_found() {
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> slackCommandService.deleteSlack(slackMessageId, 1L))
+                    .isInstanceOf(CustomException.class);
         }
     }
 }

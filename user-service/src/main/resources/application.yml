@@ -3,6 +3,8 @@ spring:
     name: user-service
   profiles:
     active: local
+  config:
+    import: optional:file:.env[.properties]
 
 server:
   port: 19092

@@ -2,6 +2,7 @@ package com.logistics.delivery.application.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -440,5 +441,38 @@ class DeliveryCommandServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
+    }
+
+    @Test
+    void 배송이_있으면_CANCELLED로_변경된다() {
+        UUID orderId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.of(delivery));
+
+        deliveryCommandService.cancel(orderId);
+
+        assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.CANCELLED);
+    }
+
+    @Test
+    void 배송이_이미_없어도_예외_없이_성공처리된다() {
+        UUID orderId = UUID.randomUUID();
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
+
+        assertThatCode(() -> deliveryCommandService.cancel(orderId))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void 이미_배송완료된_건은_취소할_수_없다() {
+        UUID orderId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.DELIVERED);
+        when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.of(delivery));
+
+        assertThatThrownBy(() -> deliveryCommandService.cancel(orderId))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
     }
 }

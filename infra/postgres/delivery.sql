@@ -34,7 +34,7 @@ CREATE UNIQUE INDEX uk_assignment_state_pool_global
 
 
 CREATE TABLE IF NOT EXISTS delivery_service.p_delivery (
-                                                           delivery_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    delivery_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     order_id UUID NOT NULL UNIQUE,
     start_hub_id UUID NOT NULL,
     end_hub_id UUID NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS delivery_service.p_delivery (
     );
 
 CREATE TABLE IF NOT EXISTS delivery_service.p_delivery_route (
-                                                                 delivery_route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    delivery_route_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     delivery_id UUID NOT NULL,
     sequence INTEGER NOT NULL,
     start_hub_id UUID NOT NULL,

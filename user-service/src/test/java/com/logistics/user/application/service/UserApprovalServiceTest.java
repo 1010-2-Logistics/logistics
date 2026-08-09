@@ -64,7 +64,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         1L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         /*
@@ -127,7 +128,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         1L,
-                        ApprovalDecision.REJECT
+                        ApprovalDecision.REJECT,
+                        "가입 조건을 충족하지 않았습니다."
                 );
 
         given(
@@ -175,7 +177,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         2L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -218,7 +221,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         2L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -273,7 +277,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         2L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -327,7 +332,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         3L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -379,7 +385,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         15L,
                         1L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -425,13 +432,14 @@ class UserApprovalServiceTest {
         /*
          * 대상 사용자를 먼저 거절 상태로 만든다.
          */
-        targetUser.reject();
+        targetUser.reject("기존 거절 사유");
 
         ChangeApprovalCommandDto command =
                 new ChangeApprovalCommandDto(
                         15L,
                         1L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -473,7 +481,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         999L,
                         1L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         given(
@@ -512,7 +521,8 @@ class UserApprovalServiceTest {
                 new ChangeApprovalCommandDto(
                         0L,
                         1L,
-                        ApprovalDecision.APPROVE
+                        ApprovalDecision.APPROVE,
+                        null
                 );
 
         // when & then

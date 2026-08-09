@@ -1,13 +1,17 @@
 package com.logistics.user;
 
+import com.logistics.user.global.config.MasterAccountProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-// 실제 서비스로 복사할 때 userServiceApplication -> {Service}Application 으로 이름 바꾸세요.
 @EnableJpaAuditing
 @EnableFeignClients
+@EnableConfigurationProperties(
+        MasterAccountProperties.class
+)
 @SpringBootApplication
 public class UserServiceApplication {
 

@@ -34,6 +34,7 @@ public class UserApprovalService {
     ) {
         // 1. 서비스 계층에서도 필수 입력값을 검증
         validateCommand(command);
+        validateRejectionReason(command);
 
         // 2. 요청을 수행한 관리자 조회
         User processor = userQueryRepository
@@ -66,7 +67,7 @@ public class UserApprovalService {
         // 6. User 도메인 객체에 상태 변경을 요청
         changeUserStatus(
                 targetUser,
-                command.decision()
+                command
         );
 
         // 7. 응답에 사용할 처리 시간 저장
@@ -83,6 +84,22 @@ public class UserApprovalService {
                 processor.getUserId(),
                 processedAt
         );
+    }
+
+    /**
+     * 거절 요청인 경우 거절 사유 필수
+     */
+    private void validateRejectionReason(
+            ChangeApprovalCommandDto command
+    ) {
+        if (command.decision() == ApprovalDecision.REJECT
+                && (command.rejectionReason() == null
+                || command.rejectionReason().isBlank())) {
+
+            throw new CustomException(
+                    UserErrorCode.USER_APPROVAL_INVALID_REQUEST
+            );
+        }
     }
 
     /**
@@ -159,13 +176,15 @@ public class UserApprovalService {
      */
     private void changeUserStatus(
             User targetUser,
-            ApprovalDecision decision
+            ChangeApprovalCommandDto command
     ) {
-        if (decision == ApprovalDecision.APPROVE) {
+        if (command.decision() == ApprovalDecision.APPROVE) {
             targetUser.approve();
             return;
         }
 
-        targetUser.reject();
+        targetUser.reject(
+                command.rejectionReason()
+        );
     }
 }
