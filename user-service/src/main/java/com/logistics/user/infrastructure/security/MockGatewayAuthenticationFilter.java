@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,18 +22,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Gateway가 아직 구현되지 않은 동안.
- *
- * 운영 환경에서는 Gateway가 다음 헤더를 만든다.
+ * Gateway가 검증 후 주입한 헤더를 읽어 Authentication을 생성한다.
  * - X-User-Id
  * - X-User-Role
  * - X-Hub-Id
  * - X-Company-Id
- *
- * 헤더를 읽어 Authentication을 생성한다.
  */
 @Component
-@Profile("local")
 @RequiredArgsConstructor
 public class MockGatewayAuthenticationFilter
         extends OncePerRequestFilter {
