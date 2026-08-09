@@ -1,5 +1,6 @@
 package com.logistics.company.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,4 +23,6 @@ public interface CompanyQueryRepository {
 			CompanyType companyType,
 			Pageable pageable
 	);
+
+	List<UUID> findIdsByHubId(UUID hubId);
 }

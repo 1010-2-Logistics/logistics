@@ -3,6 +3,13 @@ spring:
     url: jdbc:postgresql://localhost:5432/logistics?currentSchema=order_service
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: validate

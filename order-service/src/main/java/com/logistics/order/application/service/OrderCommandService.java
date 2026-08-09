@@ -1,18 +1,18 @@
 package com.logistics.order.application.service;
 
 
-import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
-import com.logistics.order.application.port.EventPublisher;
+import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderCommandRepository;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,9 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional
 public class OrderCommandService {
-
     private final OrderCommandRepository orderCommandRepository;
-    private final EventPublisher eventPublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
@@ -43,6 +42,15 @@ public class OrderCommandService {
         );
 
         Order savedOrder = orderCommandRepository.save(order);
+
+        applicationEventPublisher.publishEvent(
+                new OrderCreatedEvent(
+                        savedOrder.getOrderId(),
+                        savedOrder.getDeliveryId(),
+                        savedOrder.getProductId(),
+                        savedOrder.getQuantity()
+                )
+        );
 
         return OrderCreateResult.from(savedOrder);
     }

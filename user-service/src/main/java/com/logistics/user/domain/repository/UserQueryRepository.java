@@ -39,5 +39,8 @@ public interface UserQueryRepository {
      */
     Optional<User> findByUsername(String username);
 
-
+    //서비스 시작시 이미 MASTER가 존재하는가?
+    boolean existsByRole(
+            UserRole role
+    );
 }

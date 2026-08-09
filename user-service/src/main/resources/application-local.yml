@@ -21,3 +21,9 @@ eureka:
 
 jwt:
   secret: ${JWT_SECRET:local-jwt-secret-key-must-be-at-least-32-bytes-long} # 추후 Gateway에서 해당 secret으로 검증
+
+app:
+  master:
+    username: ${MASTER_USERNAME}
+    password: ${MASTER_PASSWORD}
+    slack-id: ${MASTER_SLACK_ID}

@@ -7,17 +7,17 @@ import com.logistics.product.domain.entity.Role;
 public class ProductGroupCommand {
 	
 	public record ProductCreateCommand(UUID companyId, String productName, Long userId, Role role)
-	implements ProductCommand {
+	implements ProductAuth {
 		
 	}
 	
 	public record ProductUpdateCommand(UUID productId, String productName, Long userId, Role role)
-	implements ProductCommand {
+	implements ProductAuth {
 		
 	}
 	
 	public record ProductDeleteCommand(UUID productId, Long userId, Role role)
-	implements ProductCommand {
+	implements ProductAuth {
 		
 	}
 

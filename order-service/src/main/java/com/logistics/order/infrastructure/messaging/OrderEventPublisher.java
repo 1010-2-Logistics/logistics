@@ -2,14 +2,22 @@ package com.logistics.order.infrastructure.messaging;
 
 import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.application.port.EventPublisher;
+import com.logistics.order.infrastructure.config.MessagingConfig;
+import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
-// port/EventPublisher.java 구현체. 지금은 로그만 남기고, RabbitMQ 붙이면 실제 발행 코드로 교체하세요.
 @Component
+@RequiredArgsConstructor
 public class OrderEventPublisher implements EventPublisher {
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     public void publish(OrderCreatedEvent event) {
-        // TODO: RabbitTemplate 등으로 실제 메시지 발행
+        rabbitTemplate.convertAndSend(
+                MessagingConfig.ORDER_EXCHANGE,
+                MessagingConfig.ORDER_ROUTING_KEY,
+                event
+        );
     }
 }
