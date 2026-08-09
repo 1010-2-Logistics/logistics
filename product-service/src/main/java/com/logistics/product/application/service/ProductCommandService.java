@@ -5,9 +5,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.logistics.product.application.dto.command.CompanyNameUpdateCommand;
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductCreateCommand;
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductUpdateCommand;
 import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
+import com.logistics.product.application.dto.result.CompanyNameUpdateResultDto;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.repository.ProductCommandRepository;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -45,6 +47,15 @@ public class ProductCommandService {
 		product.updateProductName(command.productName());
 		
 		return product;
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	public CompanyNameUpdateResultDto companyNameUpdate(CompanyNameUpdateCommand command) {
+		int updateTargetCount = productQueryService.countCompanyId(command.companyId());
+		
+		int updatedCount = productCommandRepository.companyNameUpdate(command.companyId(), command.companyName());
+		
+		return CompanyNameUpdateResultDto.from(updateTargetCount, updatedCount, command);
 	}
 	
 	@Transactional(rollbackFor = Exception.class)

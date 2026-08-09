@@ -75,8 +75,14 @@ public class SlackCommandService {
         return SlackRetryResult.from(slack);
     }
 
-    public void deleteSlack(UUID sampleId, String deletedBy) {
+    public void deleteSlack(
+            UUID slackMessageId,
+            Long deletedBy
+    ) {
+        Slack slack = slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
+        slack.markDeleted(deletedBy);
     }
 
     // 스프링이 제공하는 트랜잭션 유틸 클래스 친구들

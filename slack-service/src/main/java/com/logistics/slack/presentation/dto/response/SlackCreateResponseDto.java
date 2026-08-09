@@ -13,7 +13,7 @@ public record SlackCreateResponseDto(
         String message,
         SlackStatus status,
         Integer retryCount,
-        Long referenceId,
+        UUID referenceId,
         LocalDateTime createdAt
 ) {
     public static SlackCreateResponseDto from(

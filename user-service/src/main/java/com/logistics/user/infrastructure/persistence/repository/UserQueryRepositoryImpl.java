@@ -61,4 +61,12 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     ) {
         return userJpaRepository.findByUsername(username);
     }
+
+    @Override
+    public boolean existsByRole(
+            UserRole role
+    ) {
+        return userJpaRepository
+                .existsByRoleAndDeletedAtIsNull(role);
+    }
 }

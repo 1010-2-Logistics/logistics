@@ -2,6 +2,8 @@ package com.logistics.product.presentation.dto.request;
 
 import java.util.UUID;
 
+import com.logistics.product.application.dto.command.CompanyNameUpdateCommand;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,5 +15,10 @@ public record CompanyNameUpdateRequestDto(
 		@NotBlank(message = "업체명 수정시 업체명이 필요합니다.")
 		String companyName
 ) {
-	
+	public CompanyNameUpdateCommand toCommand() {
+		return new CompanyNameUpdateCommand(
+				companyId,
+				companyName
+		);
+	}
 }
