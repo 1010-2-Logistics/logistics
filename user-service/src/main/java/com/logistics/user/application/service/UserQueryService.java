@@ -4,6 +4,7 @@ import com.logistics.user.application.dto.query.GetMyInfoQueryDto;
 import com.logistics.user.application.dto.query.GetUserDetailQueryDto;
 import com.logistics.user.application.dto.query.GetUserQueryDto;
 import com.logistics.user.application.dto.query.SearchUserQueryDto;
+import com.logistics.user.application.dto.result.InternalUserResultDto;
 import com.logistics.user.application.dto.result.UserDetailResultDto;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
@@ -267,5 +268,24 @@ public class UserQueryService {
                     UserErrorCode.USER_ACCESS_DENIED
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public InternalUserResultDto getInternalUser(
+            Long userId
+    ) {
+        if (userId == null || userId <= 0) {
+            throw new CustomException(
+                    UserErrorCode.USER_INVALID_REQUEST
+            );
+        }
+
+        User user = UserQueryRepository
+                .findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new CustomException(
+                        UserErrorCode.USER_NOT_FOUND
+                ));
+
+        return InternalUserResultDto.from(user);
     }
 }
