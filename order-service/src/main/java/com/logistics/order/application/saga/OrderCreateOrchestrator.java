@@ -1,6 +1,8 @@
 package com.logistics.order.application.saga;
 
 
+import com.logistics.order.application.dto.command.OrderCreateSagaCommand;
+import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class OrderCreateOrchestrator {
-    
+
     // 1. application에 넣은 판단 기준 :
     // 여러 작업의 실행 순서를 조율하는 애플리케이션 로직이기 때문
 
@@ -23,4 +25,17 @@ public class OrderCreateOrchestrator {
     private final OrderCommandService orderCommandService;
     private final InventoryClient inventoryClient;
     private final DeliveryClient deliveryClient;
+
+    public OrderCreateResult execute(
+            OrderCreateSagaCommand orderCreateSagaCommand
+    ) {
+        //  재고 차감
+        // 배송 생성
+
+        // 주문 저장
+
+        // 실패 시 보상
+
+        return null;
+    }
 }
