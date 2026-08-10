@@ -1,6 +1,7 @@
 package com.logistics.hub.presentation.controller;
 
 import com.logistics.hub.application.service.HubQueryService;
+import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,5 +22,10 @@ public class HubInternalController {
     @GetMapping
     public Set<UUID> validateHubIds(@RequestParam("hubIds") List<UUID> hubIds) {
         return hubQueryService.findValidHubIdsIn(hubIds);
+    }
+
+    @GetMapping
+    public Set<HubResponseDto> getHubInfo(@RequestParam("hubIds") List<UUID> hubIds){
+        return hubQueryService.gethubsInternal(hubIds);
     }
 }

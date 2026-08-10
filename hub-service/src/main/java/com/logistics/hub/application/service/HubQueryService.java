@@ -6,14 +6,17 @@ import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubQueryRepository;
 import com.logistics.hub.global.exception.CustomException;
 import com.logistics.hub.global.exception.HubErrorCode;
+import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,5 +36,20 @@ public class HubQueryService {
 
     public Set<UUID> findValidHubIdsIn(List<UUID> hubIds) {
         return hubQueryRepository.findValidHubIdsIn(hubIds);
+    }
+
+
+    public Set<HubResponseDto> gethubsInternal(List<UUID> hubIds) {
+        List<Hub> hubs = hubQueryRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds);
+
+        //존재 하지 않는 허브ID가 있는지 확인 -> Id개수와 찾은 정보 개수 일치 하는지 확인
+        Set<UUID> requestedUniqueIds = new HashSet<>(hubIds);
+        if (hubs.size() != requestedUniqueIds.size()) {
+            throw new CustomException(HubErrorCode.HUB_NOT_FOUND);
+        }
+
+        return hubs.stream()
+                .map(HubResponseDto::from)
+                .collect(Collectors.toSet());
     }
 }
