@@ -7,6 +7,7 @@ import com.logistics.order.application.dto.result.CompanyOrderInfoResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.CompanyPort;
+import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
@@ -24,6 +25,7 @@ public class OrderUpdateOrchestrator {
     private final OrderCommandService orderCommandService;
     private final InventoryClient inventoryClient;
     private final CompanyPort companyPort;
+    private final InventoryPort inventoryPort;
 
     public OrderCreateResult execute(
             OrderUpdateSagaCommand orderUpdateSagaCommand
@@ -45,11 +47,44 @@ public class OrderUpdateOrchestrator {
             OrderUpdateSagaCommand orderUpdateSagaCommand,
             int quantityDifference
     ) {
-        return null;
+        try {
+            return updateOrder(orderUpdateSagaCommand);
+
+        } catch (RuntimeException originException) {
+            compensateInventory(
+                    operationId,
+                    orderUpdateSagaCommand.order(),
+                    orderUpdateSagaCommand.startHubId(),
+                    quantityDifference,
+                    originException
+            );
+            throw originException;
+        }
     }
 
-    public void adjustInventory() {
-
+    public void adjustInventory(
+            UUID operationId,
+            Order order,
+            UUID hubId,
+            int quantityDifference
+    ) {
+        if (quantityDifference > 0) {
+            deductInventory(
+                    operationId,
+                    order,
+                    hubId,
+                    quantityDifference
+            );
+            return;
+        }
+        if (quantityDifference < 0) {
+            restoreInventory(
+                    operationId,
+                    order,
+                    hubId,
+                    -quantityDifference
+            );
+        }
     }
 
     public void compensateInventory(
@@ -59,6 +94,34 @@ public class OrderUpdateOrchestrator {
             int quantityDifference,
             RuntimeException originalException
     ) {
+        try {
+            if (quantityDifference > 0) {
+                restoreInventory(
+                        operationId,
+                        order,
+                        hubId,
+                        quantityDifference
+                );
+                return;
+            }
+            if (quantityDifference < 0) {
+                deductInventory(
+                        operationId,
+                        order,
+                        hubId,
+                        -quantityDifference
+                );
+            }
+        } catch (RuntimeException compensationException) {
+            log.error(
+                    "[ERROR Order] 주문 수정 보상 중 재고 원복 실패. orderId={}, operationId={}",
+                    order.getOrderId(),
+                    operationId,
+                    compensationException
+            );
+
+            originalException.addSuppressed(compensationException);
+        }
 
     }
 
@@ -68,7 +131,13 @@ public class OrderUpdateOrchestrator {
             UUID hubId,
             int quantity
     ) {
-
+        inventoryPort.deductInventory(
+                operationId,
+                order.getOrderId(),
+                order.getProductId(),
+                hubId,
+                quantity
+        );
     }
 
     private void restoreInventory(
@@ -77,6 +146,12 @@ public class OrderUpdateOrchestrator {
             UUID hubId,
             int quantity
     ) {
-
+        inventoryPort.restoreInventory(
+                operationId,
+                order.getOrderId(),
+                order.getProductId(),
+                hubId,
+                quantity
+        );
     }
 }
