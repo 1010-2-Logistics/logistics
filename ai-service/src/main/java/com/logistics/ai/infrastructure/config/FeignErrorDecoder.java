@@ -28,6 +28,25 @@ public class FeignErrorDecoder implements ErrorDecoder {
 		
 		ErrorResponse errorResponse = read(response);
 		
+		if(isRetryStatus(response.status())) {
+			return new RetryRemoteException(
+					errorResponse != null
+					? errorResponse.getCode()
+					: String.valueOf(response.status()),
+					
+					errorResponse != null
+					? errorResponse.getMessage()
+					: "[AI-SERVICE]: 내부 서비스 일시적 장애"
+			);
+		}
+		
+		if(errorResponse == null) {
+			return new NonRetryRemoteException(
+					String.valueOf(response.status()),
+					"[AI-SERVICE]: 내부 서비스 요청 실패"
+			);
+		}
+		
 		RemoteErrorCode errorCode = RemoteErrorCode.from(errorResponse.getCode());
 		
 		if(errorCode != null && errorCode.isRetry()) {
@@ -57,5 +76,8 @@ public class FeignErrorDecoder implements ErrorDecoder {
 		return null;
 	}
 
+	private boolean isRetryStatus(int status) {
+		return status == 500 || status == 501 || status == 502 || status == 503 || status == 504;
+	}
 	
 }

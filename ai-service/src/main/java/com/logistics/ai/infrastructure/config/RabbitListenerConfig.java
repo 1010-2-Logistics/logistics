@@ -8,8 +8,9 @@ import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.logistics.ai.infrastructure.feign.exception.NonRetryRemoteException;
 import com.logistics.ai.infrastructure.feign.exception.RetryRemoteException;
+
+import feign.RetryableException;
 
 @Configuration
 public class RabbitListenerConfig {
@@ -20,7 +21,7 @@ public class RabbitListenerConfig {
 				.stateless()
 				.configureRetryPolicy(policy -> policy
 						.maxRetries(2) // 최초 1회 + 재시도 2회 = 총 3회
-						.includes(RetryRemoteException.class) // Retry 대상을 RetryRemoteException 계열로 한정
+						.includes(RetryRemoteException.class, RetryableException.class) // Retry 대상을 RetryRemoteException 계열로 한정
 				)
 				.backOffOptions(
 						1000,

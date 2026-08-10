@@ -3,6 +3,9 @@ package com.logistics.ai.application.dto.prompt;
 import java.util.List;
 import java.util.UUID;
 
+import com.logistics.ai.application.dto.internal.ProductInfo;
+import com.logistics.ai.application.event.OrderCreatedEvent;
+
 public class DeadlineRequestPrompt {
 	public static final String SYSTEM_PROMPT = """
 			===[역할]===
@@ -36,7 +39,6 @@ public class DeadlineRequestPrompt {
 			다음 주문 정보를 바탕으로 [담당자 안내 메시지]를 작성하세요.
 			
 			- 주문번호: %s
-			- 주문자이름: %s
 			- 주문자이메일: %s
 			- 주문시간: %s
 			- 상품정보: %s
@@ -82,5 +84,9 @@ public class DeadlineRequestPrompt {
 		);
 	}
 	
+	// 파라미터 타입 미확정
+	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product) {
+		return null;
+	}
 	
 }

@@ -8,6 +8,13 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum RemoteErrorCode {
+	// Delivery
+	DELIVERY_NOT_FOUND(false),
+	
+	// Hub
+	HUB_NOT_FOUND(false),
+	
+	
 	;
 	private final boolean retry;
 

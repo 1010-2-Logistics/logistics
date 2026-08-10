@@ -40,7 +40,6 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		UUID deliveryId = event.deliveryId();
 		UUID productId = event.productId();
 		Integer quantity = event.quantity();
-		String request = event.request();
 		
 		log.info("[AI-SERVICE]: OrderCreatedEvent 수신, orderId = {}, deliveryId = {}",
 				orderId,
@@ -89,6 +88,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// === 가져온 정보들로 조합 === //
 		// AI 에게 보낼 메세지 //
 		// ============================ //
+		
 		
 		
 		
