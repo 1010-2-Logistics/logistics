@@ -1,7 +1,7 @@
 package com.logistics.inventory.infrastructure.config;
 
-import com.logistics.company.infrastructure.security.filter.HeaderAuthenticationFilter;
 import com.logistics.inventory.domain.entity.Role;
+import com.logistics.inventory.infrastructure.security.filter.HeaderAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
-
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
