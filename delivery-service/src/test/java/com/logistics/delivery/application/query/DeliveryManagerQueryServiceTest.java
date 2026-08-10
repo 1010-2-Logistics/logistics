@@ -136,13 +136,18 @@ class DeliveryManagerQueryServiceTest {
     }
 
     @Test
-    void 배송담당자가_목록_조회시도하면_예외() {
+    void 배송담당자가_목록_조회하면_본인_정보만_반환된다() {
+        DeliveryManager me = DeliveryManager.create(20L, null, "U20", ManagerType.HUB_DELIVERY_MANAGER, 0);
+        when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(20L)).thenReturn(Optional.of(me));
         UserPrincipal deliveryManager = new UserPrincipal(20L, Role.HUB_DELIVERY_MANAGER, null, null);
+
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(null, null, 0, 10);
 
-        assertThatThrownBy(() -> deliveryManagerQueryService.search(query, deliveryManager))
-                .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+        Page<DeliveryManager> result = deliveryManagerQueryService.search(query, deliveryManager);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getDeliveryManagerId()).isEqualTo(20L);
+        org.mockito.Mockito.verify(deliveryManagerRepository, org.mockito.Mockito.never())
+                .search(any(), any(), any());
     }
 }
