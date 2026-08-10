@@ -89,4 +89,8 @@ public class DeadlineRequestPrompt {
 		return null;
 	}
 	
+	public static class PromptSupport {
+		
+	}
+	
 }

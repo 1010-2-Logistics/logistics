@@ -1,6 +1,7 @@
 package com.logistics.ai.application.facade;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -80,8 +81,24 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		
 		// === HubPort === // :내부 API 미구현
 		// 5. Set<UUID> 해서 각 경유 hubId 의 주소를 가져온다.
-		// /internal/v1/hubs?=hub_uuid_1,hub_uuid_2,hub_uuid_3,hub_uuid_4,hub_uuid_5
 		List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
+		
+		// RouteInfo의 Sequence 순서에 맞는 hubId 로 그 허브에 해당하는 hubName과 hubAddress 재배치
+		Map<UUID, HubInfo> hubMap = hubInfoList.stream()
+				.collect(Collectors.toMap(HubInfo::hubId, hub -> hub));
+		
+		String startHubName = getHubName(hubMap, routes.get(0).startHubId(), "출발지");
+		
+		String endHubName = getHubName(hubMap, routes.get(routes.size() - 1).endHubId(), "도착지");
+		
+		String transitHubNames = "경유지 없음";
+		if(hubWayPoint != 0) {
+			transitHubNames = getTransitHubNames(hubMap, routes);
+		}
+		
+		
+		
+		
 		
 		// === 가져온 정보들로 조합 === //
 		// AI 에게 보낼 메세지 //
@@ -94,6 +111,36 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// 제미나이 호출 //
 		//
 		
+	}
+	
+	private String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
+		StringBuilder hubNames = new StringBuilder();
+		
+		for (int i = 0; i < routes.size() - 1; i++) {
+			UUID transitHubId = routes.get(i).endHubId();
+			HubInfo transitHub = hubMap.get(transitHubId);
+			
+			if(transitHub != null) {
+				hubNames.append(transitHub.hubName() + ", ");
+			}
+			
+		}
+		
+		if(hubNames.length() > 0) {
+			hubNames.setLength(hubNames.length() - 2);
+		}
+		
+		return hubNames.toString();
+	}
+	
+	private String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId, String defaultMessage) {
+		if (hubId == null) return defaultMessage;
+		
+		HubInfo hub = hubMap.get(hubId);
+		
+		return (hub != null)
+				? hub.hubName()
+				: String.format("%s 정보 없음(서버 에러)", defaultMessage);
 	}
 	
 }
