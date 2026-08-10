@@ -1,5 +1,6 @@
 package com.logistics.order.application.service;
 
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 import com.logistics.order.application.dto.query.OrderSearchQuery;
 import com.logistics.order.application.dto.result.OrderDetailResult;
 import com.logistics.order.application.dto.result.OrderListResult;
@@ -23,7 +24,10 @@ import java.util.UUID;
 public class OrderQueryService {
     private final OrderQueryRepository orderQueryRepository;
 
-    public OrderDetailResult getOrder(UUID orderId) {
+    public OrderDetailResult getOrder(
+            UUID orderId,
+            AuthenticatedUser authenticatedUser
+    ) {
         Order order = orderQueryRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 

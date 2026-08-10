@@ -46,7 +46,8 @@ public class OrderFacade {
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
-            UUID idempotencyKey
+            UUID idempotencyKey,
+            AuthenticatedUser authenticatedUser
     ) {
         ProductGetResult productGetResult = productPort.getProduct(
                 orderCreateCommand.productId()
