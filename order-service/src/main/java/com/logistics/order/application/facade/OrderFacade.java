@@ -64,6 +64,7 @@ public class OrderFacade {
         return orderCreateOrchestrator.execute(orderCreateSagaCommand);
     }
 
+    // TODO : 멱등키, orderId 사용 시 주문 생성과 주문 수정이 서로 다른 업무인데, 같은 멱등키가 되어버림
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
     ) {
