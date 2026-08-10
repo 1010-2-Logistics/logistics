@@ -34,8 +34,9 @@ public class DeliveryStatusCommandController {
     )
     @PatchMapping("/{deliveryId}")
     public ApiResponse<DeliveryStatusChangeResponse> changeStatus(
-            @PathVariable UUID deliveryId, @Valid @RequestBody DeliveryStatusChangeRequest request) {
-        var result = deliveryCommandService.changeStatus(deliveryId, request.toCommand());
+            @PathVariable UUID deliveryId, @Valid @RequestBody DeliveryStatusChangeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        var result = deliveryCommandService.changeStatus(deliveryId, request.toCommand(), principal);
         return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(result));
     }
 
@@ -67,7 +68,7 @@ public class DeliveryStatusCommandController {
     )
     @DeleteMapping("/{deliveryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID deliveryId) {
-        deliveryCommandService.delete(deliveryId);
+    public void delete(@PathVariable UUID deliveryId, @AuthenticationPrincipal UserPrincipal principal) {
+        deliveryCommandService.delete(deliveryId, principal);
     }
 }
