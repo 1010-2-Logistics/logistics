@@ -140,10 +140,46 @@ class DeliveryQueryServiceTest {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(DeliveryStatus.HUB_WAITING, hubId, "createdAt", 0, 10);
 
         // when
-        Page<DeliveryResults.DeliveryDetailResult> result = deliveryQueryService.search(query);
+        Page<DeliveryResults.DeliveryDetailResult> result = deliveryQueryService.search(query, MASTER);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void HUB_MANAGER가_목록_조회하면_본인_허브로_강제_스코프된다() {
+        // given
+        UUID hubId = UUID.randomUUID();
+        Page<Delivery> page = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+        when(deliveryRepository.search(any(), any(), any())).thenReturn(page);
+        UserPrincipal hubManager = new UserPrincipal(5L, Role.HUB_MANAGER, hubId, null);
+
+        SearchDeliveryQuery query = SearchDeliveryQuery.of(null, UUID.randomUUID(), "createdAt", 0, 10);
+
+        // when
+        deliveryQueryService.search(query, hubManager);
+
+        // then: 쿼리에 넘긴 hubId가 아니라 principal의 hubId로 조회됐는지 확인
+        org.mockito.Mockito.verify(deliveryRepository).search(null, hubId, PageRequest.of(0, 10,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
+    }
+
+    @Test
+    void HUB_DELIVERY_MANAGER가_목록_조회하면_본인_배정건만_조회된다() {
+        // given
+        Page<Delivery> page = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+        when(deliveryRepository.searchByManager(any(), any(), any())).thenReturn(page);
+        UserPrincipal deliveryManager = new UserPrincipal(7L, Role.HUB_DELIVERY_MANAGER, null, null);
+
+        SearchDeliveryQuery query = SearchDeliveryQuery.of(null, null, "createdAt", 0, 10);
+
+        // when
+        deliveryQueryService.search(query, deliveryManager);
+
+        // then
+        org.mockito.Mockito.verify(deliveryRepository).searchByManager(null, 7L, PageRequest.of(0, 10,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
+        org.mockito.Mockito.verify(deliveryRepository, org.mockito.Mockito.never()).search(any(), any(), any());
     }
 
     @Test
