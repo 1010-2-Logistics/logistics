@@ -7,6 +7,6 @@ public record InventoryDeductionRequest(
         UUID orderId,
         UUID productId,
         UUID hubId,
-        Integer stock
+        Integer quantity
 ) {
 }

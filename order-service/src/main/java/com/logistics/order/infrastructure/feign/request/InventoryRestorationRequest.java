@@ -7,6 +7,6 @@ public record InventoryRestorationRequest(
         UUID orderId,
         UUID productId,
         UUID hubId,
-        Integer stock
+        Integer quantity
 ) {
 }
