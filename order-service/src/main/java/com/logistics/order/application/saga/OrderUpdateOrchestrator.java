@@ -23,17 +23,39 @@ import java.util.UUID;
 public class OrderUpdateOrchestrator {
 
     private final OrderCommandService orderCommandService;
-    private final InventoryClient inventoryClient;
-    private final CompanyPort companyPort;
     private final InventoryPort inventoryPort;
 
-    public OrderCreateResult execute(
+    public OrderUpdateResult execute(
             OrderUpdateSagaCommand orderUpdateSagaCommand
     ) {
-        return null;
+        UUID operationId = UUID.randomUUID();
+
+        Order order = orderUpdateSagaCommand.order();
+        Integer newQuantity = orderUpdateSagaCommand
+                .orderUpdateCommand()
+                .quantity();
+
+        if (newQuantity == null) {
+            return updateOrder(orderUpdateSagaCommand);
+        }
+
+        int quantityDifference = newQuantity - order.getQuantity();
+
+        adjustInventory(
+                operationId,
+                order,
+                orderUpdateSagaCommand.startHubId(),
+                quantityDifference
+        );
+
+        return updateOrderWithCompensation(
+                operationId,
+                orderUpdateSagaCommand,
+                quantityDifference
+        );
     }
 
-    public OrderUpdateResult updateOrder(
+    private OrderUpdateResult updateOrder(
             OrderUpdateSagaCommand orderUpdateSagaCommand
     ) {
         return orderCommandService.updateOrder(
