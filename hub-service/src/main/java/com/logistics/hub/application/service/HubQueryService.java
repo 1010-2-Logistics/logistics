@@ -40,9 +40,13 @@ public class HubQueryService {
 
 
     public Set<HubResponseDto> getHubsInternal(List<UUID> hubIds) {
+        if (hubIds == null || hubIds.isEmpty()) {
+            throw new CustomException(HubErrorCode.HUB_NOT_FOUND); // 프로젝트에 정의된 적절한 ErrorCode 사용
+        }
+
         List<Hub> hubs = hubQueryRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds);
 
-        //존재 하지 않는 허브ID가 있는지 확인 -> Id개수와 찾은 정보 개수 일치 하는지 확인
+        // 존재 하지 않는 허브ID가 있는지 확인 -> Id개수와 찾은 정보 개수 일치 하는지 확인
         Set<UUID> requestedUniqueIds = new HashSet<>(hubIds);
         if (hubs.size() != requestedUniqueIds.size()) {
             throw new CustomException(HubErrorCode.HUB_NOT_FOUND);
