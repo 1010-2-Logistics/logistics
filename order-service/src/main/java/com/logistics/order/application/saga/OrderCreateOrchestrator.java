@@ -2,7 +2,6 @@ package com.logistics.order.application.saga;
 
 
 import com.logistics.order.application.dto.command.OrderCreateSagaCommand;
-import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
@@ -36,14 +35,20 @@ public class OrderCreateOrchestrator {
     public OrderCreateResult execute(
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
-        //  재고 차감
-        // 배송 생성
+        UUID orderId = UUID.randomUUID();
 
-        // 주문 저장
+        deductInventory(orderId, orderCreateSagaCommand);
 
-        // 실패 시 보상
+        DeliveryCreateResponse deliveryCreateResponse = createDeliveryWithCompensation(
+                orderId,
+                orderCreateSagaCommand
+        );
 
-        return null;
+        return createOrderWithCompensation(
+                orderId,
+                orderCreateSagaCommand,
+                deliveryCreateResponse
+        );
     }
 
     private void deductInventory(
@@ -87,7 +92,7 @@ public class OrderCreateOrchestrator {
         }
     }
 
-    private OrderCancelResult createOrderWithCompensation(
+    private OrderCreateResult createOrderWithCompensation(
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand,
             DeliveryCreateResponse deliveryCreateResponse
