@@ -7,9 +7,9 @@ import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.port.ProductPort;
 import com.logistics.order.application.saga.OrderCreateOrchestrator;
+import com.logistics.order.application.saga.OrderUpdateOrchestrator;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
-import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,6 +22,8 @@ import java.util.UUID;
 public class OrderFacade {
     // Facade 구현체는 Repository를 직접 의존하면 안 된다
     private final OrderCreateOrchestrator orderCreateOrchestrator;
+    private final OrderUpdateOrchestrator orderUpdateOrchestrator;
+
     private final OrderCommandService orderCommandService;
     private final DeliveryPort deliveryPort;
     private final ProductPort productPort;
@@ -57,35 +59,36 @@ public class OrderFacade {
         return orderCreateOrchestrator.execute(orderCreateSagaCommand);
     }
 
-    // TODO : 멱등키, orderId 사용 시 주문 생성과 주문 수정이 서로 다른 업무인데, 같은 멱등키가 되어버림
-    // orderId = 주문 자체의 정체성
-    // 멱등키 = 이번 요청 하나의 정체성(이 작업 요청이 누구냐) 따라서 변경 필요
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
     ) {
         Order order = orderCommandService.findOrderForUpdate(
                 orderUpdateCommand.orderId()
         );
-        UUID operationId = UUID.randomUUID();
-        Integer changeQuantity = orderUpdateCommand.quantity();
 
-        if (changeQuantity != null) {
-            CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
-                    order.getStartCompanyId(),
-                    order.getEndCompanyId()
-            );
-
-            adjustInventory(
-                    operationId,
-                    order,
-                    companyOrderInfoResult.startHubId(),
-                    changeQuantity
+        if (orderUpdateCommand.quantity() == null) {
+            return orderUpdateOrchestrator.execute(
+                    new OrderUpdateSagaCommand(
+                            order,
+                            orderUpdateCommand,
+                            null
+                    )
             );
         }
 
-        return orderCommandService.updateOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
+                order.getStartCompanyId(),
+                order.getEndCompanyId()
+        );
+
+        OrderUpdateSagaCommand orderUpdateSagaCommand = new OrderUpdateSagaCommand(
                 order,
-                orderUpdateCommand
+                orderUpdateCommand,
+                companyOrderInfoResult.startHubId()
+        );
+
+        return orderUpdateOrchestrator.execute(
+                orderUpdateSagaCommand
         );
     }
 
@@ -140,63 +143,5 @@ public class OrderFacade {
         );
 
         return orderCommandService.cancelOrder(order);
-    }
-
-    private void adjustInventory(
-            UUID operationId,
-            Order order,
-            UUID hubId,
-            int newQuantity
-    ) {
-        int quantityDifference = newQuantity - order.getQuantity();
-
-        if (quantityDifference > 0) {
-            deductInventory(
-                    operationId,
-                    order,
-                    hubId,
-                    quantityDifference
-            );
-            return;
-        }
-
-        if (quantityDifference < 0) {
-            restoreInventory(
-                    operationId,
-                    order,
-                    hubId,
-                    -quantityDifference
-            );
-        }
-    }
-
-    private void deductInventory(
-            UUID operationId,
-            Order order,
-            UUID hubId,
-            int quantity
-    ) {
-        inventoryPort.deductInventory(
-                operationId,
-                order.getOrderId(),
-                order.getProductId(),
-                hubId,
-                quantity
-        );
-    }
-
-    private void restoreInventory(
-            UUID operationId,
-            Order order,
-            UUID hubId,
-            int quantity
-    ) {
-        inventoryPort.restoreInventory(
-                operationId,
-                order.getOrderId(),
-                order.getProductId(),
-                hubId,
-                quantity
-        );
     }
 }

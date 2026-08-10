@@ -1,16 +1,11 @@
 package com.logistics.order.application.saga;
 
 
-import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateSagaCommand;
-import com.logistics.order.application.dto.result.CompanyOrderInfoResult;
-import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
-import com.logistics.order.application.port.CompanyPort;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
-import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
