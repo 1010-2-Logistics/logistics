@@ -123,8 +123,9 @@ public class OrderCreateOrchestrator {
                 deliveryClient.cancelDelivery(orderId);
             } catch (RuntimeException compensationException) {
                 log.error(
-                        "주문 저장 실패 보상 중 배송 취소 실패. orderId={}",
+                        "[ERROR Order] 주문 저장 실패 보상 중 배송 취소 실패. orderId={}, perationId={}",
                         orderId,
+                        operationId,
                         compensationException
                 );
 
@@ -161,8 +162,9 @@ public class OrderCreateOrchestrator {
 
         } catch (RuntimeException compensationException) {
             log.error(
-                    "주문 생성 보상 중 재고 복원 실패. orderId={}",
+                    "[ERROR Order] 주문 생성 보상 중 재고 복원 실패. orderId={}, operationId={}",
                     orderId,
+                    operationId,
                     compensationException
             );
 
