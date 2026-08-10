@@ -1,4 +1,4 @@
-package com.logistics.template.sample.domain;
+package com.logistics.template.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -26,6 +26,6 @@ public class HubInternalController {
 
     @GetMapping
     public Set<HubResponseDto> getHubInfo(@RequestParam("hubIds") List<UUID> hubIds){
-        return hubQueryService.gethubsInternal(hubIds);
+        return hubQueryService.getHubsInternal(hubIds);
     }
 }

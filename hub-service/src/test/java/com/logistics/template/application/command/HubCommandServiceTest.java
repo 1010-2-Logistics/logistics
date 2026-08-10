@@ -1,4 +1,4 @@
-package com.logistics.template.sample.application.command;
+package com.logistics.template.application.command;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;

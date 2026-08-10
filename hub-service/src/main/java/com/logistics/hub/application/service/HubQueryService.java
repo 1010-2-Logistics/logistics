@@ -39,7 +39,7 @@ public class HubQueryService {
     }
 
 
-    public Set<HubResponseDto> gethubsInternal(List<UUID> hubIds) {
+    public Set<HubResponseDto> getHubsInternal(List<UUID> hubIds) {
         List<Hub> hubs = hubQueryRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds);
 
         //존재 하지 않는 허브ID가 있는지 확인 -> Id개수와 찾은 정보 개수 일치 하는지 확인
