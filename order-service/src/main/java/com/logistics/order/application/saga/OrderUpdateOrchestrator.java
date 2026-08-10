@@ -1,7 +1,7 @@
 package com.logistics.order.application.saga;
 
 
-import com.logistics.order.application.dto.command.OrderUpdateSagaCommand;
+import com.logistics.order.application.saga.command.OrderUpdateSagaCommand;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.service.OrderCommandService;

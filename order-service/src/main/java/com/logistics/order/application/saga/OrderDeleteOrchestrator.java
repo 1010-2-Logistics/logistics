@@ -1,7 +1,7 @@
 package com.logistics.order.application.saga;
 
 
-import com.logistics.order.application.dto.command.OrderDeleteSagaCommand;
+import com.logistics.order.application.saga.command.OrderDeleteSagaCommand;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
