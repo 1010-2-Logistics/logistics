@@ -35,6 +35,18 @@ public record SignupRequestDto(
                 message = "username은 영문 소문자와 숫자만 사용할 수 있습니다."
         )
         String username,
+        /**
+         * 실제 사용자 이름.
+         *
+         * 로그인 아이디(username)와 구분
+         * Slack 메시지나 내부 서비스 조회에서 표시 이름으로 사용
+         */
+        @NotBlank(message = "name은 필수입니다.")
+        @Size(
+                max = 50,
+                message = "name은 50자 이하여야 합니다."
+        )
+        String name,
 
         /**
          * 평문 비밀번호.
@@ -73,6 +85,7 @@ public record SignupRequestDto(
         public SignupCommandDto toCommand() {
                 return new SignupCommandDto(
                         username,
+                        name,
                         password,
                         passwordConfirm,
                         slackId,
