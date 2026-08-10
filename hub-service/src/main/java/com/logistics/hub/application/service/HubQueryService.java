@@ -41,7 +41,7 @@ public class HubQueryService {
 
     public Set<HubResponseDto> getHubsInternal(List<UUID> hubIds) {
         if (hubIds == null || hubIds.isEmpty()) {
-            throw new CustomException(HubErrorCode.HUB_NOT_FOUND); // 프로젝트에 정의된 적절한 ErrorCode 사용
+            throw new CustomException(HubErrorCode.HUB_NOT_FOUND);
         }
 
         List<Hub> hubs = hubQueryRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds);
