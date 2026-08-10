@@ -21,7 +21,17 @@ public class OrderDeleteOrchestrator {
     public void execute(
             OrderDeleteSagaCommand orderDeleteSagaCommand
     ) {
+        UUID operationId = UUID.randomUUID();
 
+        restoreInventory(
+                operationId,
+                orderDeleteSagaCommand
+        );
+
+        deleteOrderWithCompensation(
+                operationId,
+                orderDeleteSagaCommand
+        );
     }
 
     private void restoreInventory(
