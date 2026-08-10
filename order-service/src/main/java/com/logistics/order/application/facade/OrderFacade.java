@@ -1,12 +1,10 @@
 package com.logistics.order.application.facade;
 
-import com.logistics.order.application.dto.command.OrderCancelCommand;
-import com.logistics.order.application.dto.command.OrderCreateCommand;
-import com.logistics.order.application.dto.command.OrderDeleteCommand;
-import com.logistics.order.application.dto.command.OrderUpdateCommand;
+import com.logistics.order.application.dto.command.*;
 import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
+import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.infrastructure.feign.client.CompanyClient;
@@ -30,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderFacade {
     // Facade 구현체는 Repository를 직접 의존하면 안 된다
-
+    private final OrderCreateOrchestrator orderCreateOrchestrator;
     private final OrderCommandService orderCommandService;
     private final DeliveryClient deliveryClient;
     private final ProductClient productClient;
@@ -43,28 +41,19 @@ public class OrderFacade {
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
-    ) {
-        UUID orderId = UUID.randomUUID();
-        // 상품 조회
-        ProductGetResponse productGetResponse = productClient.getProduct(orderCreateCommand.productId()).getData();
-        // 업체 조회
+    ){
+        ProductGetResponse productGetResponse = productClient.getProduct(
+                orderCreateCommand.productId()
+        ).getData();
+
         CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
                 productGetResponse.companyId(),
                 orderCreateCommand.endCompanyId()
         ).getData();
-        // 재고
-        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
-                orderId,
-                orderCreateCommand.productId(),
-                companyOrderInfoResponse.startHubId(),
-                orderCreateCommand.quantity()
-        );
 
-        inventoryClient.deductInventory(inventoryDeductionRequest);
-        DeliveryCreateResponse deliveryCreateResponse;
-        // 배송
-        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
-                orderId,
+        OrderCreateSagaCommand orderCreateSagaCommand = new OrderCreateSagaCommand(
+                orderCreateCommand,
+                productGetResponse.companyId(),
                 companyOrderInfoResponse.startHubId(),
                 companyOrderInfoResponse.endHubId(),
                 companyOrderInfoResponse.endCompanyAddress(),
@@ -72,83 +61,117 @@ public class OrderFacade {
                 receiverSlackId
         );
 
-        try {
-            deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
-
-        } catch (RuntimeException originalException) {
-            // 배송 생성 실패 → 앞에서 차감한 재고 복원
-            try {
-                InventoryRestorationRequest restorationRequest =
-                        new InventoryRestorationRequest(
-                                orderId,
-                                orderCreateCommand.productId(),
-                                companyOrderInfoResponse.startHubId(),
-                                orderCreateCommand.quantity()
-                        );
-
-                inventoryClient.restoreInventory(restorationRequest);
-
-            } catch (RuntimeException compensationException) {
-                log.error(
-                        "배송 생성 실패 보상 중 재고 복원 실패. orderId={}",
-                        orderId,
-                        compensationException
-                );
-
-                originalException.addSuppressed(compensationException);
-            }
-
-            throw originalException;
-        }
-        // 주문 저장
-        try {
-            return orderCommandService.createOrder(
-                    orderCreateCommand,
-                    orderId,
-                    deliveryCreateResponse.deliveryId(),
-                    productGetResponse.companyId()
-            );
-
-        } catch (RuntimeException originalException) {
-            // 주문 저장 실패 → 이미 생성된 배송 취소
-            try {
-                deliveryClient.cancelDelivery(orderId);
-
-            } catch (RuntimeException compensationException) {
-                log.error(
-                        "주문 저장 실패 보상 중 배송 취소 실패. orderId={}",
-                        orderId,
-                        compensationException
-                );
-
-                originalException.addSuppressed(compensationException);
-            }
-
-            // 주문 저장 실패 → 이미 차감된 재고 복원
-            try {
-                InventoryRestorationRequest restorationRequest =
-                        new InventoryRestorationRequest(
-                                orderId,
-                                orderCreateCommand.productId(),
-                                companyOrderInfoResponse.startHubId(),
-                                orderCreateCommand.quantity()
-                        );
-
-                inventoryClient.restoreInventory(restorationRequest);
-
-            } catch (RuntimeException compensationException) {
-                log.error(
-                        "주문 저장 실패 보상 중 재고 복원 실패. orderId={}",
-                        orderId,
-                        compensationException
-                );
-
-                originalException.addSuppressed(compensationException);
-            }
-
-            throw originalException;
-        }
+        return orderCreateOrchestrator.execute(orderCreateSagaCommand);
     }
+
+//    public OrderCreateResult createOrder(
+//            OrderCreateCommand orderCreateCommand
+//    ) {
+//        UUID orderId = UUID.randomUUID();
+//        // 상품 조회
+//        ProductGetResponse productGetResponse = productClient.getProduct(orderCreateCommand.productId()).getData();
+//        // 업체 조회
+//        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+//                productGetResponse.companyId(),
+//                orderCreateCommand.endCompanyId()
+//        ).getData();
+//        // 재고
+//        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+//                orderId,
+//                orderCreateCommand.productId(),
+//                companyOrderInfoResponse.startHubId(),
+//                orderCreateCommand.quantity()
+//        );
+//
+//        inventoryClient.deductInventory(inventoryDeductionRequest);
+//        DeliveryCreateResponse deliveryCreateResponse;
+//        // 배송
+//        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
+//                orderId,
+//                companyOrderInfoResponse.startHubId(),
+//                companyOrderInfoResponse.endHubId(),
+//                companyOrderInfoResponse.endCompanyAddress(),
+//                receiverName,
+//                receiverSlackId
+//        );
+//
+//        try {
+//            deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
+//
+//        } catch (RuntimeException originalException) {
+//            // 배송 생성 실패 → 앞에서 차감한 재고 복원
+//            try {
+//                InventoryRestorationRequest restorationRequest =
+//                        new InventoryRestorationRequest(
+//                                orderId,
+//                                orderCreateCommand.productId(),
+//                                companyOrderInfoResponse.startHubId(),
+//                                orderCreateCommand.quantity()
+//                        );
+//
+//                inventoryClient.restoreInventory(restorationRequest);
+//
+//            } catch (RuntimeException compensationException) {
+//                log.error(
+//                        "배송 생성 실패 보상 중 재고 복원 실패. orderId={}",
+//                        orderId,
+//                        compensationException
+//                );
+//
+//                originalException.addSuppressed(compensationException);
+//            }
+//
+//            throw originalException;
+//        }
+//        // 주문 저장
+//        try {
+//            return orderCommandService.createOrder(
+//                    orderCreateCommand,
+//                    orderId,
+//                    deliveryCreateResponse.deliveryId(),
+//                    productGetResponse.companyId()
+//            );
+//
+//        } catch (RuntimeException originalException) {
+//            // 주문 저장 실패 → 이미 생성된 배송 취소
+//            try {
+//                deliveryClient.cancelDelivery(orderId);
+//
+//            } catch (RuntimeException compensationException) {
+//                log.error(
+//                        "주문 저장 실패 보상 중 배송 취소 실패. orderId={}",
+//                        orderId,
+//                        compensationException
+//                );
+//
+//                originalException.addSuppressed(compensationException);
+//            }
+//
+//            // 주문 저장 실패 → 이미 차감된 재고 복원
+//            try {
+//                InventoryRestorationRequest restorationRequest =
+//                        new InventoryRestorationRequest(
+//                                orderId,
+//                                orderCreateCommand.productId(),
+//                                companyOrderInfoResponse.startHubId(),
+//                                orderCreateCommand.quantity()
+//                        );
+//
+//                inventoryClient.restoreInventory(restorationRequest);
+//
+//            } catch (RuntimeException compensationException) {
+//                log.error(
+//                        "주문 저장 실패 보상 중 재고 복원 실패. orderId={}",
+//                        orderId,
+//                        compensationException
+//                );
+//
+//                originalException.addSuppressed(compensationException);
+//            }
+//
+//            throw originalException;
+//        }
+//    }
 
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
