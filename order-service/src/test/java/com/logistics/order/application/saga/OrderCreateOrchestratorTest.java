@@ -135,7 +135,9 @@ class OrderCreateOrchestratorTest {
                 eq(orderCreateCommand),
                 any(UUID.class),
                 eq(deliveryId),
-                eq(startCompanyId)
+                eq(startCompanyId),
+                eq("임시 수령인"),
+                eq("TEMP_SLACK_ID")
         )).willReturn(orderCreateResult);
 
         OrderCreateResult result = orderCreateOrchestrator.execute(command);

@@ -30,7 +30,9 @@ public class OrderCommandService {
             OrderCreateCommand orderCreateCommand,
             UUID orderId,
             UUID deliveryId,
-            UUID startCompanyId
+            UUID startCompanyId,
+            String receiverName,
+            String receiverSlackId
     ) {
         Order order = Order.create(
                 orderId,
@@ -50,6 +52,9 @@ public class OrderCommandService {
                         savedOrder.getDeliveryId(),
                         savedOrder.getProductId(),
                         savedOrder.getQuantity(),
+                        savedOrder.getRequest(),
+                        receiverName,
+                        receiverSlackId,
                         savedOrder.getCreatedAt()
                 )
         );

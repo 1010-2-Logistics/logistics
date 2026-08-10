@@ -8,6 +8,9 @@ public record OrderCreatedEvent(
         UUID deliveryId,
         UUID productId,
         Integer quantity,
+        String request,
+        String receiverName,
+        String receiverSlackId,
         LocalDateTime createdAt
 ) {
 }

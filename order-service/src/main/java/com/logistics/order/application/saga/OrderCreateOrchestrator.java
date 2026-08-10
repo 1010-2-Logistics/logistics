@@ -160,7 +160,9 @@ public class OrderCreateOrchestrator {
                     orderCreateSagaCommand.orderCommand(),
                     orderId,
                     deliveryCreateResult.deliveryId(),
-                    orderCreateSagaCommand.startCompanyId()
+                    orderCreateSagaCommand.startCompanyId(),
+                    orderCreateSagaCommand.receiverName(),
+                    orderCreateSagaCommand.receiverSlackId()
             );
 
         } catch (RuntimeException originalException) {

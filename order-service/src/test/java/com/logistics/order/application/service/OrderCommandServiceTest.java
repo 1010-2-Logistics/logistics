@@ -27,6 +27,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -71,7 +72,9 @@ class OrderCommandServiceTest {
                     orderCreateCommand,
                     orderId,
                     deliveryId,
-                    startCompanyId
+                    startCompanyId,
+                    "name",
+                    "slackId"
             );
 
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
@@ -178,6 +181,7 @@ class OrderCommandServiceTest {
         @Test
         @DisplayName("주문 삭제 성공")
         void order_delete_success() {
+            Long deletedBy = 1L;
             Order order = Order.create(
                     orderId,
                     deliveryId,
@@ -190,7 +194,10 @@ class OrderCommandServiceTest {
 
             given(orderCommandRepository.save(order)).willReturn(order);
 
-            orderCommandService.deleteOrder(order);
+            orderCommandService.deleteOrder(
+                    order,
+                    deletedBy
+            );
 
             verify(orderCommandRepository).save(order);
         }

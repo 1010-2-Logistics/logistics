@@ -36,6 +36,9 @@ class OrderEventPublisherTest {
                     UUID.randomUUID(),
                     UUID.randomUUID(),
                     3,
+                    "request",
+                    "name",
+                    "U123456",
                     LocalDateTime.of(2026, 8, 10, 17, 30)
             );
 

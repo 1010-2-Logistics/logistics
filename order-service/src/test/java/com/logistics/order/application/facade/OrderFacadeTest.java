@@ -1,5 +1,7 @@
 package com.logistics.order.application.facade;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderDeleteCommand;
@@ -7,6 +9,7 @@ import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.*;
 import com.logistics.order.application.port.CompanyPort;
 import com.logistics.order.application.port.ProductPort;
+import com.logistics.order.application.port.UserPort;
 import com.logistics.order.application.saga.OrderCancelOrchestrator;
 import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.saga.OrderDeleteOrchestrator;
@@ -17,6 +20,7 @@ import com.logistics.order.application.saga.command.OrderDeleteSagaCommand;
 import com.logistics.order.application.saga.command.OrderUpdateSagaCommand;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
+import com.logistics.order.domain.entity.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -44,30 +48,34 @@ class OrderFacadeTest {
     UUID endHubId = UUID.randomUUID();
     UUID idempotencyKey = UUID.randomUUID();
 
+    AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+            1L,
+            Role.MASTER,
+            null,
+            null
+    );
     @Mock
     private OrderCommandService orderCommandService;
 
     @Mock
-    private ProductPort productPort;
+    private OrderAuthorizationService orderAuthorizationService;
 
+    @Mock
+    private ProductPort productPort;
     @Mock
     private CompanyPort companyPort;
-
+    @Mock
+    private UserPort userPort;
     @Mock
     private OrderCreateOrchestrator orderCreateOrchestrator;
-
     @Mock
     private OrderUpdateOrchestrator orderUpdateOrchestrator;
-
     @Mock
     private OrderDeleteOrchestrator orderDeleteOrchestrator;
-
     @Mock
     private OrderCancelOrchestrator orderCancelOrchestrator;
-
     @InjectMocks
     private OrderFacade orderFacade;
-
 
     @Nested
     @DisplayName("주문 생성")
@@ -83,6 +91,7 @@ class OrderFacadeTest {
             );
             ProductGetResult productGetResult = mock(ProductGetResult.class);
             CompanyOrderInfoResult companyOrderInfoResult = mock(CompanyOrderInfoResult.class);
+            UserInfoResult userInfoResult = mock(UserInfoResult.class);
             OrderCreateResult orderCreateResult = mock(OrderCreateResult.class);
 
             given(productPort.getProduct(productId)).willReturn(productGetResult);
@@ -96,10 +105,14 @@ class OrderFacadeTest {
             given(companyOrderInfoResult.endHubId()).willReturn(endHubId);
             given(companyOrderInfoResult.endCompanyAddress()).willReturn("서울특별시 송파구");
             given(orderCreateOrchestrator.execute(any(OrderCreateSagaCommand.class))).willReturn(orderCreateResult);
+            given(userPort.getUser(authenticatedUser.userId())).willReturn(userInfoResult);
+            given(userInfoResult.name()).willReturn("name");
+            given(userInfoResult.slackId()).willReturn("U123456");
 
             orderFacade.createOrder(
                     orderCreateCommand,
-                    idempotencyKey
+                    idempotencyKey,
+                    authenticatedUser
             );
 
             verify(productPort).getProduct(productId);
@@ -107,6 +120,7 @@ class OrderFacadeTest {
                     startCompanyId,
                     endCompanyId
             );
+            verify(userPort).getUser(authenticatedUser.userId());
             verify(orderCreateOrchestrator).execute(any(OrderCreateSagaCommand.class));
         }
 
@@ -129,7 +143,10 @@ class OrderFacadeTest {
             );
             given(orderCommandService.findOrderForUpdate(orderId)).willReturn(order);
 
-            orderFacade.updateOrder(orderUpdateCommand);
+            orderFacade.updateOrder(
+                    orderUpdateCommand,
+                    authenticatedUser
+            );
 
             verify(orderCommandService).findOrderForUpdate(orderId);
             verify(orderUpdateOrchestrator).execute(any(OrderUpdateSagaCommand.class));
@@ -168,7 +185,10 @@ class OrderFacadeTest {
             given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
             given(orderUpdateOrchestrator.execute(any(OrderUpdateSagaCommand.class))).willReturn(orderUpdateResult);
 
-            orderFacade.updateOrder(orderUpdateCommand);
+            orderFacade.updateOrder(
+                    orderUpdateCommand,
+                    authenticatedUser
+            );
 
             verify(orderCommandService).findOrderForUpdate(orderId);
             verify(companyPort).getCompaniesForOrder(
@@ -205,7 +225,10 @@ class OrderFacadeTest {
 
             given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
 
-            orderFacade.deleteOrder(orderDeleteCommand);
+            orderFacade.deleteOrder(
+                    orderDeleteCommand,
+                    authenticatedUser
+            );
 
             verify(orderCommandService).findOrderForDelete(orderId);
             verify(companyPort).getCompaniesForOrder(
@@ -244,7 +267,10 @@ class OrderFacadeTest {
             given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
             given(orderCancelOrchestrator.execute(any(OrderCancelSagaCommand.class))).willReturn(orderCancelResult);
 
-            orderFacade.cancelOrder(orderCancelCommand);
+            orderFacade.cancelOrder(
+                    orderCancelCommand,
+                    authenticatedUser
+            );
 
             verify(orderCommandService).findOrderForCancel(orderId);
             verify(companyPort).getCompaniesForOrder(
