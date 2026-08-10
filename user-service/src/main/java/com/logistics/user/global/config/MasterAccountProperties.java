@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 )
 public record MasterAccountProperties(
         String username,
+        String name,
         String password,
         String slackId
 ) {

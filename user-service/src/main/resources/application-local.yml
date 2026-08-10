@@ -25,5 +25,6 @@ jwt:
 app:
   master:
     username: ${MASTER_USERNAME}
+    name: ${MASTER_NAME}
     password: ${MASTER_PASSWORD}
     slack-id: ${MASTER_SLACK_ID}

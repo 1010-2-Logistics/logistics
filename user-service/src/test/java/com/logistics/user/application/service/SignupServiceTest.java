@@ -73,6 +73,7 @@ class SignupServiceTest {
 
         SignupCommandDto command = new SignupCommandDto(
                 "user01",
+                "sample",
                 "Password1!",
                 "Password1!",
                 "U12345678",
@@ -204,6 +205,7 @@ class SignupServiceTest {
         // given
         SignupCommandDto command = new SignupCommandDto(
                 "user01",
+                "sample",
                 "Password1!",
                 "Different1!",
                 "U12345678",
@@ -337,6 +339,7 @@ class SignupServiceTest {
     private SignupCommandDto createHubManagerCommand() {
         return new SignupCommandDto(
                 "user01",
+                "sample",
                 "Password1!",
                 "Password1!",
                 "U12345678",

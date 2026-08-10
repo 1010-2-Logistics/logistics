@@ -23,6 +23,7 @@ class UserTest {
         // when
         User user = User.create(
                 "sample01",
+                "sample",
                 "encoded-password",
                 "U0123456789",
                 UserRole.COMPANY_MANAGER,
@@ -58,6 +59,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -78,6 +80,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "old-encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -98,6 +101,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -118,6 +122,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -143,6 +148,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -175,6 +181,7 @@ class UserTest {
         // given
         User user = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
@@ -211,6 +218,7 @@ class UserTest {
         assertThatThrownBy(
                 () -> User.create(
                         "sample01",
+                        "홍길동",
                         "encoded-password",
                         "U0123456789",
                         UserRole.MASTER,
@@ -231,6 +239,7 @@ class UserTest {
         assertThatThrownBy(
                 () -> User.create(
                         "sample01",
+                        "홍길동",
                         "encoded-password",
                         "U0123456789",
                         UserRole.COMPANY_MANAGER,
@@ -253,6 +262,7 @@ class UserTest {
         assertThatThrownBy(
                 () -> User.create(
                         "sample01",
+                        "홍길동",
                         "encoded-password",
                         "U0123456789",
                         UserRole.COMPANY_MANAGER,
