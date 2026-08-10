@@ -1,9 +1,11 @@
 package com.logistics.order.application.facade;
 
 import com.logistics.order.application.dto.command.OrderCreateCommand;
+import com.logistics.order.application.dto.command.OrderCreateSagaCommand;
 import com.logistics.order.application.dto.command.OrderDeleteCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCreateResult;
+import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.global.response.ApiResponse;
@@ -56,19 +58,18 @@ class OrderFacadeTest {
     @Mock
     private InventoryClient inventoryClient;
 
-    @Mock
-    private DeliveryClient deliveryClient;
-
     @InjectMocks
     private OrderFacade orderFacade;
+
+    @Mock
+    private OrderCreateOrchestrator orderCreateOrchestrator;
 
     @Nested
     @DisplayName("주문 생성")
     class order_create {
         @Test
-        @DisplayName("성공")
+        @DisplayName("주문 생성 요청 위임 성공")
         void order_create_success() {
-            // 상품 조회 → 업체 조회 → 재고 차감 → 배송 생성 → 주문 저장
             OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
                     endCompanyId,
                     productId,
@@ -78,12 +79,9 @@ class OrderFacadeTest {
 
             ProductGetResponse productGetResponse = mock(ProductGetResponse.class);
             CompanyOrderInfoResponse companyOrderInfoResponse = mock(CompanyOrderInfoResponse.class);
-            DeliveryCreateResponse deliveryCreateResponse = mock(DeliveryCreateResponse.class);
             OrderCreateResult orderCreateResult = mock(OrderCreateResult.class);
-
             ApiResponse<ProductGetResponse> productApiResponse = mock(ApiResponse.class);
             ApiResponse<CompanyOrderInfoResponse> companyApiResponse = mock(ApiResponse.class);
-            ApiResponse<DeliveryCreateResponse> deliveryApiResponse = mock(ApiResponse.class);
 
             given(productClient.getProduct(productId)).willReturn(productApiResponse);
             given(productApiResponse.getData()).willReturn(productGetResponse);
@@ -98,29 +96,16 @@ class OrderFacadeTest {
             given(companyOrderInfoResponse.endHubId()).willReturn(endHubId);
             given(companyOrderInfoResponse.endCompanyAddress()).willReturn("서울특별시 송파구");
 
-            given(deliveryClient.createDelivery(any(DeliveryCreateRequest.class))).willReturn(deliveryApiResponse);
-            given(deliveryApiResponse.getData()).willReturn(deliveryCreateResponse);
-            given(deliveryCreateResponse.deliveryId()).willReturn(deliveryId);
-
-            given(orderCommandService.createOrder(
-                    any(OrderCreateCommand.class),
-                    any(UUID.class),
-                    any(UUID.class),
-                    any(UUID.class)
-            )).willReturn(orderCreateResult);
+            given(orderCreateOrchestrator.execute(any(OrderCreateSagaCommand.class))).willReturn(orderCreateResult);
 
             orderFacade.createOrder(orderCreateCommand);
 
-            verify(inventoryClient).deductInventory(any(InventoryDeductionRequest.class));
-
-            verify(deliveryClient).createDelivery(any(DeliveryCreateRequest.class));
-
-            verify(orderCommandService).createOrder(
-                    any(OrderCreateCommand.class),
-                    any(UUID.class),
-                    any(UUID.class),
-                    any(UUID.class)
+            verify(productClient).getProduct(productId);
+            verify(companyClient).getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
             );
+            verify(orderCreateOrchestrator).execute(any(OrderCreateSagaCommand.class));
         }
 
         @Test
