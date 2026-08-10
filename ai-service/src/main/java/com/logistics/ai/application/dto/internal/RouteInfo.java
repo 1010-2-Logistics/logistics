@@ -8,6 +8,7 @@ public record RouteInfo(
 		Integer sequence,
 		UUID startHubId,
 		UUID endHubId,
+		Long startDeliveryManagerId,
 		BigDecimal expectedDistance,
 		Integer expectedDuration
 ) {

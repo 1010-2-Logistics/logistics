@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
+import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
@@ -45,13 +46,16 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				event.deliveryId()
 		);
 		
+		// 경유 허브 목록 조회
 		List<RouteInfo> routes = deliveryPort.getRoutes(event.deliveryId());
 		
+		// 경유 허브 목록의 허브 정보 조회
 		Set<UUID> hubIds = routes.stream()
 				.flatMap(route -> Stream.of(route.startHubId(), route.endHubId()))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
 		
+		// 경유 허브 수 계산
 		int hubWayPoint = Math.max(0, hubIds.size() -2);
 		
 		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubPointCount = {}",
@@ -59,6 +63,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				hubWayPoint
 		);
 		
+		// 상품 정보 조회
 		ProductInfo product = productPort.getProduct(event.productId());
 		
 		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
@@ -72,8 +77,11 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		
 		validateHubIdsMatch(hubMap, hubIds);
 		
-		
-		
+		// 첫 번째 허브 배송 기사 정보 조회
+		DeliveryManagerInfo deliveryManagerInfo = new DeliveryManagerInfo(
+				"임시 배송자",
+				"임시 배송 슬랙아이디"
+		);
 		
 		
 		

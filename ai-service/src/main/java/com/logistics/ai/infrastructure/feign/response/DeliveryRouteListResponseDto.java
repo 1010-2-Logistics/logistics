@@ -25,6 +25,7 @@ public record DeliveryRouteListResponseDto(List<RouteItem> routes) {
 					this.sequence,
 					this.startHubId,
 					this.endHubId,
+					this.deliveryManagerId,
 					this.expectedDistance,
 					this.expectedDuration
 			);

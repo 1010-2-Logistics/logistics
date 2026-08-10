@@ -13,5 +13,5 @@ public record OrderCreatedEvent(
 		String receiverSlackId,
 		LocalDateTime createdAt
 ) {
-
+	
 }

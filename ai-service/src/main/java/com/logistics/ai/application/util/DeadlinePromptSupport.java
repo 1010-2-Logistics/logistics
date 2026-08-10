@@ -1,14 +1,18 @@
-package com.logistics.ai.application.dto.prompt;
+package com.logistics.ai.application.util;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class DeadlinePromptSupport {
@@ -44,6 +48,7 @@ public class DeadlinePromptSupport {
 			다음 주문 정보를 바탕으로 [담당자 안내 메시지]를 작성하세요.
 			
 			- 주문번호: %s
+			- 주문자이름: %s
 			- 주문자이메일: %s
 			- 주문시간: %s
 			- 상품정보: %s
@@ -90,50 +95,95 @@ public class DeadlinePromptSupport {
 	}
 	
 	// 파라미터 타입 미확정
-	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes,int hubWayPoint) {
+	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
 		// 주문 기본 정보
-		String orderId = event.orderId().toString();
-		String customerName = event.receiverName();
-		String customerEmail = event.receiverSlackId();
-		String requestMessage = event.request();
+		PromptOrder orderPrompt = PromptOrder.from(event);
 		
-		return null;
+		// 허브 기본 정보
+		PromptHub hubPrompt = PromptHub.from(hubMap, routes, hubWayPoint);
+		
+		// 상품 기본 정보
+		String productInfo = String.format("%s %d EA", product.productName(), orderPrompt.quantity);
+		
+		return String.format(USER_PROMPT_TEMPLATE,
+				orderPrompt.getOrderId(),
+				orderPrompt.getCustomerName(),
+				orderPrompt.getCustomerEmail(),
+				orderPrompt.getOrderTime(),
+				productInfo,
+				orderPrompt.getRequestMessage(),
+				hubPrompt.getStartHubName(),
+				hubPrompt.getTransitHubNames(),
+				hubPrompt.getEndHubName(),
+				deliveryManagerInfo.deliveryManagerName(),
+				deliveryManagerInfo.deliveryManagerSlackId()
+		);
 	}
 	
 	@Getter
-	public static class PromptHubs {
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class PromptOrder {
+		private final String orderId;
+		
+		private final String customerName;
+		
+		private final String customerEmail;
+		
+		private final String requestMessage;
+		
+		private final String quantity;
+		
+		private final String orderTime;
+		
+		public static final PromptOrder from(OrderCreatedEvent event) {
+			String orderId = event.orderId().toString();
+			String customerName = event.receiverName();
+			String customerEmail = event.receiverSlackId();
+			String requestMessage = event.request();
+			String quantity = String.valueOf(event.quantity());
+			String orderTime = event.createdAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH시 mm분"));
+			
+			return new PromptOrder(
+					orderId,
+					customerName,
+					customerEmail,
+					requestMessage,
+					quantity,
+					orderTime
+			);
+		}
+	}
+	
+	@Getter
+	public static class PromptHub {
 		private final String startHubName;
 		
 		private final String endHubName;
 		
 		private final String transitHubNames;
 		
-		public static PromptHubs from(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
-			String startHubName = getHubName(hubMap, routes.get(0).startHubId(), "출발지");
-			String endHubName = getHubName(hubMap, routes.get(routes.size() - 1).endHubId(), "도착지");
+		public static final PromptHub from(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+			String startHubName = getHubName(hubMap, routes.get(0).startHubId());
+			String endHubName = getHubName(hubMap, routes.get(routes.size() - 1).endHubId());
 			String transitHubNames = "경유지 없음";
 			
 			if(hubWayPoint != 0) {
 				transitHubNames = getTransitHubNames(hubMap, routes);
 			}
 			
-			return new PromptHubs(startHubName, endHubName, transitHubNames);
+			return new PromptHub(startHubName, endHubName, transitHubNames);
 		}
 		
-		public PromptHubs(String startHubName, String endHubName, String transitHubNames) {
+		public PromptHub(String startHubName, String endHubName, String transitHubNames) {
 			this.startHubName = startHubName;
 			this.endHubName = endHubName;
 			this.transitHubNames = transitHubNames;
 		}
 		
-		private static String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId, String defaultMessage) {
-			if (hubId == null) return defaultMessage;
-			
+		private static String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId) {
 			HubInfo hub = hubMap.get(hubId);
 			
-			return (hub != null)
-					? hub.hubName()
-					: String.format("%s 정보 없음(서버 에러)", defaultMessage);
+			return hub.hubName();
 		}
 		
 		private static String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
