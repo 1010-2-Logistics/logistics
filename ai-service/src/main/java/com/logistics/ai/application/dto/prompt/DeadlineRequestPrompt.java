@@ -85,7 +85,7 @@ public class DeadlineRequestPrompt {
 	}
 	
 	// 파라미터 타입 미확정
-	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product) {
+	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, int hubWayPoint) {
 		return null;
 	}
 	

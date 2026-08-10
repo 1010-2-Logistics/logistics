@@ -37,8 +37,8 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	@Override
 	public void generate(OrderCreatedEvent event) {
 		log.info("[AI-SERVICE]: OrderCreatedEvent 수신, orderId = {}, deliveryId = {}",
-				event.orderId,
-				event.deliveryId
+				event.orderId(),
+				event.deliveryId()
 		);
 		
 		// === DeliveryPort === //
