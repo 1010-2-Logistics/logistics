@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
+import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
@@ -83,7 +84,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// === HubPort === // :내부 API 미구현
 		// 5. Set<UUID> 해서 각 경유 hubId 의 주소를 가져온다.
 		// /internal/v1/hubs?=hub_uuid_1,hub_uuid_2,hub_uuid_3,hub_uuid_4,hub_uuid_5
-		
+		List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
 		
 		// === 가져온 정보들로 조합 === //
 		// AI 에게 보낼 메세지 //
