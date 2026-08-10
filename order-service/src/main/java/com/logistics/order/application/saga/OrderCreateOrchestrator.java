@@ -8,10 +8,14 @@ import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
+import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
+import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -43,29 +47,106 @@ public class OrderCreateOrchestrator {
     }
 
     private void deductInventory(
+            UUID orderId,
+            OrderCreateSagaCommand orderCreateSagaCommand
+    ) {
+        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+                orderId,
+                orderCreateSagaCommand.orderCommand().productId(),
+                orderCreateSagaCommand.startHubId(),
+                orderCreateSagaCommand.orderCommand().quantity()
+        );
 
-    ){
-
+        inventoryClient.deductInventory(inventoryDeductionRequest);
     }
 
     private DeliveryCreateResponse createDeliveryWithCompensation(
+            UUID orderId,
+            OrderCreateSagaCommand orderCreateSagaCommand
+    ) {
+        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
+                orderId,
+                orderCreateSagaCommand.startHubId(),
+                orderCreateSagaCommand.endHubId(),
+                orderCreateSagaCommand.endCompanyAddress(),
+                orderCreateSagaCommand.receiverName(),
+                orderCreateSagaCommand.receiverSlackId()
+        );
 
-    ){
-        return null;
+        try {
+            return deliveryClient.createDelivery(deliveryCreateRequest).getData();
+
+        } catch (RuntimeException originalException) {
+            compensateInventoryRestoration(
+                    orderId,
+                    orderCreateSagaCommand,
+                    originalException
+            );
+
+            throw originalException;
+        }
     }
 
     private OrderCancelResult createOrderWithCompensation(
+            UUID orderId,
+            OrderCreateSagaCommand orderCreateSagaCommand,
+            DeliveryCreateResponse deliveryCreateResponse
+    ) {
+        try {
+            return orderCommandService.createOrder(
+                    orderCreateSagaCommand.orderCommand(),
+                    orderId,
+                    deliveryCreateResponse.deliveryId(),
+                    orderCreateSagaCommand.startCompanyId()
+            );
 
-    ){
-        return null;
+        } catch (RuntimeException originalException) {
+
+            try {
+                deliveryClient.cancelDelivery(orderId);
+            } catch (RuntimeException compensationException) {
+                log.error(
+                        "주문 저장 실패 보상 중 배송 취소 실패. orderId={}",
+                        orderId,
+                        compensationException
+                );
+
+                originalException.addSuppressed(compensationException);
+            }
+
+            compensateInventoryRestoration(
+                    orderId,
+                    orderCreateSagaCommand,
+                    originalException
+            );
+
+            throw originalException;
+        }
     }
 
     private void compensateInventoryRestoration(
+            UUID orderId,
+            OrderCreateSagaCommand orderCreateSagaCommand,
+            RuntimeException originalException
+    ) {
+        try {
+            InventoryRestorationRequest request = new InventoryRestorationRequest(
+                    orderId,
+                    orderCreateSagaCommand.orderCommand().productId(),
+                    orderCreateSagaCommand.startHubId(),
+                    orderCreateSagaCommand.orderCommand().quantity()
+            );
 
-    ){
+            inventoryClient.restoreInventory(request);
 
+        } catch (RuntimeException compensationException) {
+            log.error(
+                    "주문 생성 보상 중 재고 복원 실패. orderId={}",
+                    orderId,
+                    compensationException
+            );
 
+            originalException.addSuppressed(compensationException);
+        }
     }
-
-
 }
