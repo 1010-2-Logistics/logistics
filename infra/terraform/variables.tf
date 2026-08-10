@@ -19,10 +19,20 @@ variable "ssh_public_key" {
   type        = string
 }
 
-variable "github_repo" {
-  description = "GitHub Actions OIDC 신뢰관계를 맺을 owner/repo"
+# GitHub은 OIDC sub 클레임에 조직·리포지토리의 불변 ID를 포함한 형식을 사용한다.
+#   repo:{owner}@{orgId}/{repo}@{repoId}
+# owner/repo 문자열만으로 조건을 걸면 실제 토큰과 매칭되지 않아
+# sts:AssumeRoleWithWebIdentity가 거부된다.
+#
+# 확인 방법:
+#   gh api repos/{owner}/{repo}/actions/oidc/customization/sub --jq .sub_claim_prefix
+#
+# ID 기반이라 조직·리포지토리 이름이 바뀌어도 그대로 동작하고,
+# 같은 이름의 다른 리포지토리에는 권한이 넘어가지 않아 더 안전하다.
+variable "github_sub_prefix" {
+  description = "GitHub Actions OIDC sub 클레임 접두사 (불변 ID 포함 형식)"
   type        = string
-  default     = "1010-2-Logistics/logistics"
+  default     = "repo:1010-2-Logistics@312060404/logistics@1320049011"
 }
 
 variable "service_names" {
