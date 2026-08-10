@@ -56,10 +56,10 @@ public class UserQueryRepositoryImpl implements UserQueryRepository {
     }
 
     @Override
-    public Optional<User> findByUsername(
+    public Optional<User> findActiveByUsername(
             String username
     ) {
-        return userJpaRepository.findByUsername(username);
+        return userJpaRepository.findByUsernameAndDeletedAtIsNull(username);
     }
 
     @Override

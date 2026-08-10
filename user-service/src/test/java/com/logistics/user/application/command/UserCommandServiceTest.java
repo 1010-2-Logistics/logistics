@@ -46,6 +46,7 @@ class UserCommandServiceTest {
 
         CreateUserCommandDto command = new CreateUserCommandDto(
                 "sample01",
+                "sample02",
                 "encoded-password",
                 "U0123456789",
                 UserRole.COMPANY_MANAGER,

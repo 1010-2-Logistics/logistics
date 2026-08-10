@@ -57,6 +57,9 @@ public class User extends BaseEntity {
     )
     private String username;
 
+    @Column(nullable = false, length = 50)
+    private String name;
+
     /**
      * BCrypt로 암호화된 비밀번호 해시값.
      */
@@ -124,6 +127,7 @@ public class User extends BaseEntity {
      */
     public static User create(
             String username,
+            String name,
             String encodedPassword,
             String slackId,
             UserRole role,
@@ -145,6 +149,7 @@ public class User extends BaseEntity {
 
         User user = new User();
         user.username = username;
+        user.name = name;
         user.password = encodedPassword;
         user.slackId = slackId;
         user.status = UserStatus.PENDING;

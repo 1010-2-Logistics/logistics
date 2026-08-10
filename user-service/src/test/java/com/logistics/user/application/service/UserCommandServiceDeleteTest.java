@@ -66,6 +66,7 @@ class UserCommandServiceDeleteTest {
          */
         User targetUser = User.create(
                 "sample01",
+                "홍길동",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,
