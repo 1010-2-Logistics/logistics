@@ -2,10 +2,13 @@ package com.logistics.order.application.saga;
 
 
 import com.logistics.order.application.dto.command.OrderCreateSagaCommand;
+import com.logistics.order.application.dto.result.OrderCancelResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
+import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
+import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,4 +41,31 @@ public class OrderCreateOrchestrator {
 
         return null;
     }
+
+    private void deductInventory(
+
+    ){
+
+    }
+
+    private DeliveryCreateResponse createDeliveryWithCompensation(
+
+    ){
+        return null;
+    }
+
+    private OrderCancelResult createOrderWithCompensation(
+
+    ){
+        return null;
+    }
+
+    private void compensateInventoryRestoration(
+
+    ){
+
+
+    }
+
+
 }
