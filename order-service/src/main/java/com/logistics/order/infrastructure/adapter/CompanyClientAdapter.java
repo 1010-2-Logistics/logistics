@@ -8,10 +8,12 @@ import com.logistics.order.infrastructure.feign.client.CompanyClient;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CompanyClientAdapter implements CompanyPort {
@@ -41,6 +43,12 @@ public class CompanyClientAdapter implements CompanyPort {
                     OrderErrorCode.ORDER_REFERENCE_NOT_FOUND
             );
         } catch (FeignException e) {
+            log.error(
+                    "Company service 호출 실패. status={}, response={}",
+                    e.status(),
+                    e.contentUTF8(),
+                    e
+            );
             throw new CustomException(
                     OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
             );

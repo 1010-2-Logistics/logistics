@@ -2,13 +2,13 @@ package com.logistics.order.application.service;
 
 import com.logistics.order.application.authorization.OrderAuthorizationService;
 import com.logistics.order.application.dto.auth.AuthenticatedUser;
-import com.logistics.order.application.dto.query.OrderReadScope;
 import com.logistics.order.application.dto.query.OrderSearchQuery;
 import com.logistics.order.application.dto.result.DeliveryGetResult;
 import com.logistics.order.application.dto.result.OrderDetailResult;
 import com.logistics.order.application.dto.result.OrderListResult;
 import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.domain.entity.Order;
+import com.logistics.order.domain.entity.Role;
 import com.logistics.order.domain.repository.OrderQueryRepository;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
@@ -62,14 +62,23 @@ public class OrderQueryService {
                 size,
                 Sort.by(Sort.Direction.DESC, sortProperty)
         );
-        OrderReadScope readScope = orderAuthorizationService.resolveReadScope(authenticatedUser);
 
-        Page<Order> orders = orderQueryRepository.search(
-                orderSearchQuery.productId(),
-                orderSearchQuery.endCompanyId(),
-                readScope,
-                pageable
-        );
+        Page<Order> orders;
+
+        if (authenticatedUser.role() == Role.COMPANY_MANAGER) {
+            orders = orderQueryRepository.searchByCreatedBy(
+                    authenticatedUser.userId(),
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+        } else {
+            orders = orderQueryRepository.search(
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+        }
 
         return OrderListResult.from(orders);
     }

@@ -8,10 +8,12 @@ import com.logistics.order.infrastructure.feign.request.InventoryDeductionReques
 import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class InventoryClientAdapter implements InventoryPort {
@@ -41,6 +43,12 @@ public class InventoryClientAdapter implements InventoryPort {
                     OrderErrorCode.ORDER_OUT_OF_STOCK
             );
         } catch (FeignException e) {
+            log.error(
+                    "Inventory service 호출 실패. status={}, response={}",
+                    e.status(),
+                    e.contentUTF8(),
+                    e
+            );
             throw new CustomException(
                     OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
             );

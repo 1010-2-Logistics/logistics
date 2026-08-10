@@ -14,7 +14,6 @@ public interface DeliveryPort {
             String receiverName,
             String receiverSlackId
     );
-
     DeliveryGetResult getDelivery(UUID deliveryId);
 
     void cancelDelivery(UUID orderId);

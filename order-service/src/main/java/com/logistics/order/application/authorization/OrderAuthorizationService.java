@@ -2,7 +2,7 @@ package com.logistics.order.application.authorization;
 
 
 import com.logistics.order.application.dto.auth.AuthenticatedUser;
-import com.logistics.order.application.dto.query.OrderReadScope;
+import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.entity.Role;
 import com.logistics.order.global.exception.CommonErrorCode;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderAuthorizationService {
     // 접근 가능한 역할인 건 알겠는데, 이 HUB_MANAGER가 이 주문의 담당 허브관리자가 맞나? 역할임
-
+    private final DeliveryPort deliveryPort;
     // 수정/삭제/취소용 HUB_MANAGER 검증
     public void validateHubAccess(
             AuthenticatedUser authenticatedUser,
@@ -65,27 +65,5 @@ public class OrderAuthorizationService {
         throw new CustomException(
                 CommonErrorCode.AUTH_FORBIDDEN
         );
-    }
-
-    public OrderReadScope resolveReadScope(
-            AuthenticatedUser user
-    ) {
-        if (user.role() == Role.MASTER) {
-            return OrderReadScope.allOrders();
-        }
-
-        if (user.role() == Role.COMPANY_MANAGER) {
-            return OrderReadScope.company(user.companyId());
-        }
-
-        if (user.role() == Role.HUB_MANAGER) {
-            return OrderReadScope.hub(user.hubId());
-        }
-
-        if (user.role() == Role.COMPANY_DELIVERY_MANAGER) {
-            return OrderReadScope.deliveryManager(user.userId());
-        }
-
-        throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
     }
 }
