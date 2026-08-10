@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public record InventoryRestorationCommand(
         UUID operationId,
+        UUID orderId,
         UUID productId,
         UUID hubId,
         Integer quantity
