@@ -32,4 +32,9 @@ public class HubQueryRepositoryImpl implements HubQueryRepository {
     public Set<UUID> findValidHubIdsIn(List<UUID> hubIds) {
         return jpaRepository.findValidHubIdsIn(hubIds);
     }
+
+    @Override
+    public List<Hub> findAllByHubIdInAndDeletedAtIsNull(List<UUID> hubIds) {
+        return jpaRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds);
+    }
 }

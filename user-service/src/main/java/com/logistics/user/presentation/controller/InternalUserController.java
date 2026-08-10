@@ -2,12 +2,15 @@ package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.command.ChangeUserAffiliationCommandDto;
 import com.logistics.user.application.dto.result.ChangeUserAffiliationResultDto;
+import com.logistics.user.application.dto.result.InternalUserResultDto;
 import com.logistics.user.application.service.UserAffiliationService;
+import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.presentation.dto.request.ChangeUserAffiliationRequestDto;
 import com.logistics.user.presentation.dto.response.ChangeUserAffiliationResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.logistics.user.presentation.dto.response.InternalUserResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class InternalUserController {
 
     private final UserAffiliationService userAffiliationService;
+    private final UserQueryService userQueryService;
 
     /**
      * 사용자의 소속 및 권한 변경
@@ -51,4 +55,22 @@ public class InternalUserController {
                 ChangeUserAffiliationResponseDto.from(result)
         );
     }
+
+    @Operation(
+            summary="사용자 정보 조회 내부 API"
+    )
+    @GetMapping("/{userId}")
+    public ApiResponse<InternalUserResponseDto> getUser(
+            @PathVariable Long userId
+    ) {
+        InternalUserResultDto result =
+                userQueryService.getInternalUser(userId);
+
+        return ApiResponse.success(
+                HttpStatus.OK.value(),
+                "내부 사용자 정보 조회 성공",
+                InternalUserResponseDto.from(result)
+        );
+    }
+
 }

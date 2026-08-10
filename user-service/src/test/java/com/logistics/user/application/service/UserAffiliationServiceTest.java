@@ -55,6 +55,7 @@ class UserAffiliationServiceTest {
 
         User user = User.create(
                 "sample01",
+                "sample02",
                 "encoded-password",
                 "U0123456789",
                 UserRole.HUB_MANAGER,
@@ -125,6 +126,7 @@ class UserAffiliationServiceTest {
          */
         User user = User.create(
                 "sample01",
+                "sample02",
                 "encoded-password",
                 "U0123456789",
                 UserRole.HUB_MANAGER,
@@ -232,6 +234,7 @@ class UserAffiliationServiceTest {
 
         User user = User.create(
                 "sample01",
+                "sample02",
                 "encoded-password",
                 "U0123456789",
                 UserRole.COMPANY_MANAGER,
@@ -303,6 +306,7 @@ class UserAffiliationServiceTest {
 
         User user = User.create(
                 "sample01",
+                "sample",
                 "encoded-password",
                 "U0123456789",
                 UserRole.HUB_MANAGER,
