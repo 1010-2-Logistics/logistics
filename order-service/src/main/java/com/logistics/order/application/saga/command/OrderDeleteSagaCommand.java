@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record OrderDeleteSagaCommand(
         Order order,
-        UUID startHubId
+        UUID startHubId,
+        Long deletedBy
 ) {
 }

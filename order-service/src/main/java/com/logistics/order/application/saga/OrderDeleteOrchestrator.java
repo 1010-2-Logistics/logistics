@@ -55,7 +55,8 @@ public class OrderDeleteOrchestrator {
     ) {
         try {
             orderCommandService.deleteOrder(
-                    orderDeleteSagaCommand.order()
+                    orderDeleteSagaCommand.order(),
+                    orderDeleteSagaCommand.deletedBy()
             );
         } catch (RuntimeException originException) {
             compensateInventoryDeduction(

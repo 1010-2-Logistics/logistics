@@ -1,5 +1,7 @@
 package com.logistics.order.application.facade;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderDeleteCommand;
@@ -32,7 +34,9 @@ public class OrderFacade {
     private final OrderDeleteOrchestrator orderDeleteOrchestrator;
     private final OrderCancelOrchestrator orderCancelOrchestrator;
 
+    private final OrderAuthorizationService orderAuthorizationService;
     private final OrderCommandService orderCommandService;
+
     private final ProductPort productPort;
     private final CompanyPort companyPort;
 
@@ -68,7 +72,8 @@ public class OrderFacade {
     }
 
     public OrderUpdateResult updateOrder(
-            OrderUpdateCommand orderUpdateCommand
+            OrderUpdateCommand orderUpdateCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForUpdate(
                 orderUpdateCommand.orderId()
@@ -89,6 +94,11 @@ public class OrderFacade {
                 order.getEndCompanyId()
         );
 
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
+        );
+
         OrderUpdateSagaCommand orderUpdateSagaCommand = new OrderUpdateSagaCommand(
                 order,
                 orderUpdateCommand,
@@ -101,7 +111,8 @@ public class OrderFacade {
     }
 
     public void deleteOrder(
-            OrderDeleteCommand orderDeleteCommand
+            OrderDeleteCommand orderDeleteCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForDelete(
                 orderDeleteCommand.orderId()
@@ -111,9 +122,16 @@ public class OrderFacade {
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
         );
+
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
+        );
+
         OrderDeleteSagaCommand orderDeleteSagaCommand = new OrderDeleteSagaCommand(
                 order,
-                companyOrderInfoResult.startHubId()
+                companyOrderInfoResult.startHubId(),
+                authenticatedUser.userId()
         );
 
         orderDeleteOrchestrator.execute(
@@ -122,7 +140,8 @@ public class OrderFacade {
     }
 
     public OrderCancelResult cancelOrder(
-            OrderCancelCommand orderCancelCommand
+            OrderCancelCommand orderCancelCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForCancel(
                 orderCancelCommand.orderId()
@@ -131,6 +150,11 @@ public class OrderFacade {
         CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
+        );
+
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
         );
 
         OrderCancelSagaCommand orderCancelSagaCommand = new OrderCancelSagaCommand(

@@ -5,6 +5,7 @@ import com.logistics.order.global.exception.CommonErrorCode;
 import com.logistics.order.global.exception.CustomException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 
 import java.util.UUID;
 
@@ -81,5 +82,14 @@ public class UserPrincipal {
         if ((this.role == Role.COMPANY_MANAGER || this.role == Role.COMPANY_DELIVERY_MANAGER)
                 && (this.hubId == null || this.companyId == null)
         ) throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+    }
+
+    public AuthenticatedUser toAuthenticatedUser() {
+        return new AuthenticatedUser(
+                userId,
+                role,
+                hubId,
+                companyId
+        );
     }
 }

@@ -9,6 +9,7 @@ import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.facade.OrderFacade;
 import com.logistics.order.global.response.ApiResponse;
+import com.logistics.order.infrastructure.security.principal.UserPrincipal;
 import com.logistics.order.presentation.dto.request.OrderCreateRequestDto;
 import com.logistics.order.presentation.dto.request.OrderUpdateRequestDto;
 import com.logistics.order.presentation.dto.response.OrderCancelResponseDto;
@@ -17,6 +18,7 @@ import com.logistics.order.presentation.dto.response.OrderUpdateResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -56,6 +58,7 @@ public class CommandController {
 
     @PatchMapping("/{orderId}")
     public ApiResponse<OrderUpdateResponseDto> updateOrder(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("orderId") UUID orderId,
             @Valid @RequestBody OrderUpdateRequestDto orderUpdateRequestDto
     ) {
@@ -65,7 +68,10 @@ public class CommandController {
                 orderUpdateRequestDto.request()
         );
 
-        OrderUpdateResult orderUpdateResult = orderFacade.updateOrder(orderUpdateCommand);
+        OrderUpdateResult orderUpdateResult = orderFacade.updateOrder(
+                orderUpdateCommand,
+                principal.toAuthenticatedUser()
+        );
 
         OrderUpdateResponseDto orderUpdateResponseDto = OrderUpdateResponseDto.from(orderUpdateResult);
 
@@ -79,21 +85,28 @@ public class CommandController {
     @DeleteMapping("/{orderId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrder(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("orderId") UUID orderId
     ) {
         OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
 
-        orderFacade.deleteOrder(orderDeleteCommand);
+        orderFacade.deleteOrder(
+                orderDeleteCommand,
+                principal.toAuthenticatedUser()
+        );
     }
 
     @PatchMapping("/{orderId}/cancel")
     public ApiResponse<OrderCancelResponseDto> cancelOrder(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("orderId") UUID orderId
     ) {
         OrderCancelCommand orderCancelCommand = new OrderCancelCommand(orderId);
 
-        OrderCancelResult orderCancelResult =
-                orderFacade.cancelOrder(orderCancelCommand);
+        OrderCancelResult orderCancelResult = orderFacade.cancelOrder(
+                orderCancelCommand,
+                principal.toAuthenticatedUser()
+        );
 
         OrderCancelResponseDto orderCancelResponseDto = OrderCancelResponseDto.from(orderCancelResult);
 

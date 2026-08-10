@@ -88,10 +88,10 @@ public class OrderCommandService {
     }
 
     public void deleteOrder(
-            Order order
+            Order order,
+            Long deletedBy
     ) {
-        // TODO : 인증 구현 후 실사용자 ID로 변경
-        order.delete(null);
+        order.delete(deletedBy);
         orderCommandRepository.save(order);
     }
 
