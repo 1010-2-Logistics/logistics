@@ -20,10 +20,12 @@ import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoRespons
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
@@ -43,26 +45,24 @@ public class OrderFacade {
             OrderCreateCommand orderCreateCommand
     ) {
         UUID orderId = UUID.randomUUID();
-
         // 상품 조회
         ProductGetResponse productGetResponse = productClient.getProduct(orderCreateCommand.productId()).getData();
-
         // 업체 조회
         CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
                 productGetResponse.companyId(),
                 orderCreateCommand.endCompanyId()
         ).getData();
-
         // 재고
         InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+                orderId,
                 orderCreateCommand.productId(),
                 companyOrderInfoResponse.startHubId(),
                 orderCreateCommand.quantity()
         );
 
         inventoryClient.deductInventory(inventoryDeductionRequest);
-
-        // 배달
+        DeliveryCreateResponse deliveryCreateResponse;
+        // 배송
         DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
                 orderId,
                 companyOrderInfoResponse.startHubId(),
@@ -73,18 +73,81 @@ public class OrderFacade {
         );
 
         try {
+            deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
 
-        }catch (RuntimeException e){
+        } catch (RuntimeException originalException) {
+            // 배송 생성 실패 → 앞에서 차감한 재고 복원
+            try {
+                InventoryRestorationRequest restorationRequest =
+                        new InventoryRestorationRequest(
+                                orderId,
+                                orderCreateCommand.productId(),
+                                companyOrderInfoResponse.startHubId(),
+                                orderCreateCommand.quantity()
+                        );
 
+                inventoryClient.restoreInventory(restorationRequest);
+
+            } catch (RuntimeException compensationException) {
+                log.error(
+                        "배송 생성 실패 보상 중 재고 복원 실패. orderId={}",
+                        orderId,
+                        compensationException
+                );
+
+                originalException.addSuppressed(compensationException);
+            }
+
+            throw originalException;
         }
-        DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
+        // 주문 저장
+        try {
+            return orderCommandService.createOrder(
+                    orderCreateCommand,
+                    orderId,
+                    deliveryCreateResponse.deliveryId(),
+                    productGetResponse.companyId()
+            );
 
-        return orderCommandService.createOrder(
-                orderCreateCommand,
-                orderId,
-                deliveryCreateResponse.deliveryId(),
-                productGetResponse.companyId()
-        );
+        } catch (RuntimeException originalException) {
+            // 주문 저장 실패 → 이미 생성된 배송 취소
+            try {
+                deliveryClient.cancelDelivery(orderId);
+
+            } catch (RuntimeException compensationException) {
+                log.error(
+                        "주문 저장 실패 보상 중 배송 취소 실패. orderId={}",
+                        orderId,
+                        compensationException
+                );
+
+                originalException.addSuppressed(compensationException);
+            }
+
+            // 주문 저장 실패 → 이미 차감된 재고 복원
+            try {
+                InventoryRestorationRequest restorationRequest =
+                        new InventoryRestorationRequest(
+                                orderId,
+                                orderCreateCommand.productId(),
+                                companyOrderInfoResponse.startHubId(),
+                                orderCreateCommand.quantity()
+                        );
+
+                inventoryClient.restoreInventory(restorationRequest);
+
+            } catch (RuntimeException compensationException) {
+                log.error(
+                        "주문 저장 실패 보상 중 재고 복원 실패. orderId={}",
+                        orderId,
+                        compensationException
+                );
+
+                originalException.addSuppressed(compensationException);
+            }
+
+            throw originalException;
+        }
     }
 
     public OrderUpdateResult updateOrder(
@@ -128,6 +191,7 @@ public class OrderFacade {
         ).getData();
 
         InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                order.getOrderId(),
                 order.getProductId(),
                 companyOrderInfoResponse.startHubId(),
                 order.getQuantity()
@@ -155,6 +219,7 @@ public class OrderFacade {
         );
 
         InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                order.getOrderId(),
                 order.getProductId(),
                 companyOrderInfoResponse.startHubId(),
                 order.getQuantity()
@@ -191,6 +256,7 @@ public class OrderFacade {
             int quantity
     ) {
         InventoryDeductionRequest request = new InventoryDeductionRequest(
+                order.getOrderId(),
                 order.getProductId(),
                 hubId,
                 quantity
@@ -205,6 +271,7 @@ public class OrderFacade {
             int quantity
     ) {
         InventoryRestorationRequest request = new InventoryRestorationRequest(
+                order.getOrderId(),
                 order.getProductId(),
                 hubId,
                 quantity
@@ -212,5 +279,4 @@ public class OrderFacade {
 
         inventoryClient.restoreInventory(request);
     }
-
 }
