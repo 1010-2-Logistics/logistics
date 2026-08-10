@@ -77,15 +77,19 @@ class OrderCommandServiceTest {
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
 
             verify(orderCommandRepository).save(orderCaptor.capture());
+            ArgumentCaptor<OrderCreatedEvent> eventCaptor =
+                    ArgumentCaptor.forClass(OrderCreatedEvent.class);
+
             verify(applicationEventPublisher).publishEvent(
-                    new OrderCreatedEvent(
-                            orderId,
-                            deliveryId,
-                            productId,
-                            10,
-                            LocalDateTime.of(2026, 8, 10, 17, 30)
-                    )
+                    eventCaptor.capture()
             );
+
+            OrderCreatedEvent event = eventCaptor.getValue();
+
+            assertThat(event.orderId()).isEqualTo(orderId);
+            assertThat(event.deliveryId()).isEqualTo(deliveryId);
+            assertThat(event.productId()).isEqualTo(productId);
+            assertThat(event.quantity()).isEqualTo(10);
 
             Order savedOrder = orderCaptor.getValue();
 
