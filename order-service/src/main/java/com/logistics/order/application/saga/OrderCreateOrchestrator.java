@@ -8,10 +8,14 @@ import com.logistics.order.application.port.IdempotencyPort;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.saga.command.OrderCreateSagaCommand;
 import com.logistics.order.application.service.OrderCommandService;
+import com.logistics.order.global.exception.CustomException;
+import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -44,30 +48,64 @@ public class OrderCreateOrchestrator {
         UUID idempotencyKey = orderCreateSagaCommand.idempotencyKey();
 
         String key = "order:create:" + idempotencyKey;
+        Duration ttl = Duration.ofMinutes(10);
 
-        //  idempotencyKey 기준으로 주문 생성 요청 완료 여부 확인
+        // 같은 주문 생성 요청이 전에 성공했는지 확인
+        Optional<OrderCreateResult> previousResult = idempotencyPort.getResult(
+                key,
+                OrderCreateResult.class
+        );
+        if (previousResult.isPresent()) {
+            return previousResult.get();
+        }
 
+        // 동일 요청 동시 실행 방지
+        boolean acquired = idempotencyPort.acquire(
+                key,
+                ttl
+        );
+        if (!acquired) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_ALREADY_PROCESSING
+            );
+        }
+
+        // 이번 Saga 실행 및 주문 생성을 위한 식별자 생성
         UUID operationId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
 
-        deductInventory(
-                operationId,
-                orderId,
-                orderCreateSagaCommand
-        );
+        try {
+            deductInventory(
+                    operationId,
+                    orderId,
+                    orderCreateSagaCommand
+            );
 
-        DeliveryCreateResult deliveryCreateResult = createDeliveryWithCompensation(
-                operationId,
-                orderId,
-                orderCreateSagaCommand
-        );
+            DeliveryCreateResult deliveryCreateResult = createDeliveryWithCompensation(
+                    operationId,
+                    orderId,
+                    orderCreateSagaCommand
+            );
 
-        return createOrderWithCompensation(
-                operationId,
-                orderId,
-                orderCreateSagaCommand,
-                deliveryCreateResult
-        );
+            OrderCreateResult orderCreateResult = createOrderWithCompensation(
+                    operationId,
+                    orderId,
+                    orderCreateSagaCommand,
+                    deliveryCreateResult
+            );
+
+            idempotencyPort.complete(
+                    key,
+                    orderCreateResult,
+                    ttl
+            );
+
+            return orderCreateResult;
+
+        } catch (RuntimeException e) {
+            idempotencyPort.release(key);
+            throw e;
+        }
     }
 
     private void deductInventory(
