@@ -46,9 +46,10 @@ public class DeliveryQueryController {
             @RequestParam(required = false) UUID hubId,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @AuthenticationPrincipal UserPrincipal principal) {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(status, hubId, sort, page, size);
-        Page<DeliverySummaryResponse> result = deliveryQueryService.search(query).map(DeliverySummaryResponse::from);
+        Page<DeliverySummaryResponse> result = deliveryQueryService.search(query, principal).map(DeliverySummaryResponse::from);
         return ApiResponse.success(200, "배송 목록 조회 성공", PageResponse.of(result));
     }
 
