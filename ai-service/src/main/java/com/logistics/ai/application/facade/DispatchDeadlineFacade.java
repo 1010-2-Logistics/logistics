@@ -36,14 +36,9 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 
 	@Override
 	public void generate(OrderCreatedEvent event) {
-		UUID orderId = event.orderId();
-		UUID deliveryId = event.deliveryId();
-		UUID productId = event.productId();
-		Integer quantity = event.quantity();
-		
 		log.info("[AI-SERVICE]: OrderCreatedEvent 수신, orderId = {}, deliveryId = {}",
-				orderId,
-				deliveryId
+				event.orderId,
+				event.deliveryId
 		);
 		
 		// === DeliveryPort === //
@@ -60,21 +55,24 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// DeliveryRoute.startHubId가 DeliveryPort에서 받아온 startHubId와 같은걸 1번
 		// 그 1번의 endHubId가 다음 startHubId 인걸로 2번 ... 정렬해야 함.
 		// ErrorDecoder
-		List<RouteInfo> routes = deliveryPort.getRoutes(deliveryId);
-		
-		log.info("[AI-SERVICE]: 경유 허브 조회, routeCount = {}",
-				routes.size()
-		);
+		List<RouteInfo> routes = deliveryPort.getRoutes(event.deliveryId());
 		
 		Set<UUID> hubIds = routes.stream()
 				.flatMap(route -> Stream.of(route.startHubId(), route.endHubId()))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
 		
+		int hubWayPoint = Math.max(0, hubIds.size() -2);
+		
+		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubPointCount = {}",
+				hubIds.size(),
+				hubWayPoint
+		);
+		
 		// === ProductPort === //
 		// 4. OrderPort에서 받아온 productId 를 통해 상품 정보 조회
 		// /internal/v1/products/{productId}
-		ProductInfo product = productPort.getProduct(productId);
+		ProductInfo product = productPort.getProduct(event.productId());
 		
 		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
 				product.productId()
