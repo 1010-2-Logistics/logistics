@@ -1,20 +1,15 @@
 package com.logistics.order.application.facade;
 
 import com.logistics.order.application.dto.command.*;
-import com.logistics.order.application.dto.result.OrderCancelResult;
-import com.logistics.order.application.dto.result.OrderCreateResult;
-import com.logistics.order.application.dto.result.OrderUpdateResult;
+import com.logistics.order.application.dto.result.*;
+import com.logistics.order.application.port.CompanyPort;
+import com.logistics.order.application.port.DeliveryPort;
+import com.logistics.order.application.port.InventoryPort;
+import com.logistics.order.application.port.ProductPort;
 import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
-import com.logistics.order.infrastructure.feign.client.CompanyClient;
-import com.logistics.order.infrastructure.feign.client.DeliveryClient;
-import com.logistics.order.infrastructure.feign.client.InventoryClient;
-import com.logistics.order.infrastructure.feign.client.ProductClient;
-import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
-import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
-import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,10 +23,10 @@ public class OrderFacade {
     // Facade 구현체는 Repository를 직접 의존하면 안 된다
     private final OrderCreateOrchestrator orderCreateOrchestrator;
     private final OrderCommandService orderCommandService;
-    private final DeliveryClient deliveryClient;
-    private final ProductClient productClient;
-    private final InventoryClient inventoryClient;
-    private final CompanyClient companyClient;
+    private final DeliveryPort deliveryPort;
+    private final ProductPort productPort;
+    private final InventoryPort inventoryPort;
+    private final CompanyPort companyPort;
 
     // TODO: User 내부 조회 API 구현 후 실제 수령인 정보로 교체
     String receiverName = "임시 수령인";
@@ -40,21 +35,21 @@ public class OrderFacade {
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
     ) {
-        ProductGetResponse productGetResponse = productClient.getProduct(
+        ProductGetResult productGetResult = productPort.getProduct(
                 orderCreateCommand.productId()
-        ).getData();
+        );
 
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
-                productGetResponse.companyId(),
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
+                productGetResult.companyId(),
                 orderCreateCommand.endCompanyId()
-        ).getData();
+        );
 
         OrderCreateSagaCommand orderCreateSagaCommand = new OrderCreateSagaCommand(
                 orderCreateCommand,
-                productGetResponse.companyId(),
-                companyOrderInfoResponse.startHubId(),
-                companyOrderInfoResponse.endHubId(),
-                companyOrderInfoResponse.endCompanyAddress(),
+                productGetResult.companyId(),
+                companyOrderInfoResult.startHubId(),
+                companyOrderInfoResult.endHubId(),
+                companyOrderInfoResult.endCompanyAddress(),
                 receiverName,
                 receiverSlackId
         );
@@ -75,15 +70,15 @@ public class OrderFacade {
         Integer changeQuantity = orderUpdateCommand.quantity();
 
         if (changeQuantity != null) {
-            CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+            CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                     order.getStartCompanyId(),
                     order.getEndCompanyId()
-            ).getData();
+            );
 
             adjustInventory(
                     operationId,
                     order,
-                    companyOrderInfoResponse.startHubId(),
+                    companyOrderInfoResult.startHubId(),
                     changeQuantity
             );
         }
@@ -103,20 +98,17 @@ public class OrderFacade {
                 orderDeleteCommand.orderId()
         );
 
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
-        ).getData();
-
-        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+        );
+        inventoryPort.restoreInventory(
                 operationId,
                 order.getOrderId(),
                 order.getProductId(),
-                companyOrderInfoResponse.startHubId(),
+                companyOrderInfoResult.startHubId(),
                 order.getQuantity()
         );
-        // TODO : 보상트랜잭션 순서는 차감 후 주문 실패로 한다
-        inventoryClient.restoreInventory(inventoryRestorationRequest);
 
         orderCommandService.deleteOrder(order);
     }
@@ -130,26 +122,21 @@ public class OrderFacade {
                 orderCancelCommand.orderId()
         );
 
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
-        ).getData();
-
-        deliveryClient.cancelDelivery(
-                order.getOrderId()
         );
 
-        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+        deliveryPort.cancelDelivery(
+                order.getOrderId()
+        );
+        // 실패 시
+        inventoryPort.restoreInventory(
                 operationId,
                 order.getOrderId(),
                 order.getProductId(),
-                companyOrderInfoResponse.startHubId(),
+                companyOrderInfoResult.startHubId(),
                 order.getQuantity()
-        );
-
-        // 실패 시
-        inventoryClient.restoreInventory(
-                inventoryRestorationRequest
         );
 
         return orderCommandService.cancelOrder(order);
@@ -189,15 +176,13 @@ public class OrderFacade {
             UUID hubId,
             int quantity
     ) {
-        InventoryDeductionRequest request = new InventoryDeductionRequest(
+        inventoryPort.deductInventory(
                 operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 hubId,
                 quantity
         );
-
-        inventoryClient.deductInventory(request);
     }
 
     private void restoreInventory(
@@ -206,14 +191,12 @@ public class OrderFacade {
             UUID hubId,
             int quantity
     ) {
-        InventoryRestorationRequest request = new InventoryRestorationRequest(
+        inventoryPort.restoreInventory(
                 operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 hubId,
                 quantity
         );
-
-        inventoryClient.restoreInventory(request);
     }
 }
