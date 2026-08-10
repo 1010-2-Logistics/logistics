@@ -11,11 +11,12 @@ import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import com.logistics.order.infrastructure.feign.response.DeliveryResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DeliveryClientAdapter implements DeliveryPort {
@@ -47,6 +48,12 @@ public class DeliveryClientAdapter implements DeliveryPort {
                     deliveryCreateResponse.routeCount()
             );
         } catch (FeignException e) {
+            log.error(
+                    "Delivery service 호출 실패. status={}, response={}",
+                    e.status(),
+                    e.contentUTF8(),
+                    e
+            );
             throw new CustomException(
                     OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
             );
@@ -57,14 +64,27 @@ public class DeliveryClientAdapter implements DeliveryPort {
     public DeliveryGetResult getDelivery(
             UUID deliveryId
     ) {
-        DeliveryResponse deliveryResponse = deliveryClient.getDelivery(deliveryId).getData();
+        try {
+            DeliveryResponse deliveryResponse = deliveryClient.getDelivery(deliveryId).getData();
 
-        return new DeliveryGetResult(
-                deliveryResponse.deliveryId(),
-                deliveryResponse.startHubId(),
-                deliveryResponse.endHubId(),
-                deliveryResponse.deliveryManagerId()
-        );
+            return new DeliveryGetResult(
+                    deliveryResponse.deliveryId(),
+                    deliveryResponse.startHubId(),
+                    deliveryResponse.endHubId(),
+                    deliveryResponse.deliveryManagerId()
+            );
+        } catch (FeignException e) {
+            log.error(
+                    "Delivery service 호출 실패. status={}, response={}",
+                    e.status(),
+                    e.contentUTF8(),
+                    e
+            );
+
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 
     @Override
@@ -85,6 +105,12 @@ public class DeliveryClientAdapter implements DeliveryPort {
             );
 
         } catch (FeignException e) {
+            log.error(
+                    "Delivery service 호출 실패. status={}, response={}",
+                    e.status(),
+                    e.contentUTF8(),
+                    e
+            );
             throw new CustomException(
                     OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
             );
