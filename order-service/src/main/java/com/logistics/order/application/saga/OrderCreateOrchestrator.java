@@ -36,15 +36,22 @@ public class OrderCreateOrchestrator {
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
         UUID orderId = UUID.randomUUID();
+        UUID operationId = UUID.randomUUID();
 
-        deductInventory(orderId, orderCreateSagaCommand);
+        deductInventory(
+                operationId,
+                orderId,
+                orderCreateSagaCommand
+        );
 
         DeliveryCreateResponse deliveryCreateResponse = createDeliveryWithCompensation(
+                operationId,
                 orderId,
                 orderCreateSagaCommand
         );
 
         return createOrderWithCompensation(
+                operationId,
                 orderId,
                 orderCreateSagaCommand,
                 deliveryCreateResponse
@@ -52,10 +59,12 @@ public class OrderCreateOrchestrator {
     }
 
     private void deductInventory(
+            UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
         InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+                operationId,
                 orderId,
                 orderCreateSagaCommand.orderCommand().productId(),
                 orderCreateSagaCommand.startHubId(),
@@ -66,6 +75,7 @@ public class OrderCreateOrchestrator {
     }
 
     private DeliveryCreateResponse createDeliveryWithCompensation(
+            UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
@@ -83,6 +93,7 @@ public class OrderCreateOrchestrator {
 
         } catch (RuntimeException originalException) {
             compensateInventoryRestoration(
+                    operationId,
                     orderId,
                     orderCreateSagaCommand,
                     originalException
@@ -93,6 +104,7 @@ public class OrderCreateOrchestrator {
     }
 
     private OrderCreateResult createOrderWithCompensation(
+            UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand,
             DeliveryCreateResponse deliveryCreateResponse
@@ -120,6 +132,7 @@ public class OrderCreateOrchestrator {
             }
 
             compensateInventoryRestoration(
+                    operationId,
                     orderId,
                     orderCreateSagaCommand,
                     originalException
@@ -130,12 +143,14 @@ public class OrderCreateOrchestrator {
     }
 
     private void compensateInventoryRestoration(
+            UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand,
             RuntimeException originalException
     ) {
         try {
             InventoryRestorationRequest request = new InventoryRestorationRequest(
+                    operationId,
                     orderId,
                     orderCreateSagaCommand.orderCommand().productId(),
                     orderCreateSagaCommand.startHubId(),

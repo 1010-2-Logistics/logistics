@@ -11,11 +11,9 @@ import com.logistics.order.infrastructure.feign.client.CompanyClient;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.client.ProductClient;
-import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
-import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +39,7 @@ public class OrderFacade {
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
-    ){
+    ) {
         ProductGetResponse productGetResponse = productClient.getProduct(
                 orderCreateCommand.productId()
         ).getData();
@@ -65,13 +63,15 @@ public class OrderFacade {
     }
 
     // TODO : 멱등키, orderId 사용 시 주문 생성과 주문 수정이 서로 다른 업무인데, 같은 멱등키가 되어버림
+    // orderId = 주문 자체의 정체성
+    // 멱등키 = 이번 요청 하나의 정체성(이 작업 요청이 누구냐) 따라서 변경 필요
     public OrderUpdateResult updateOrder(
             OrderUpdateCommand orderUpdateCommand
     ) {
         Order order = orderCommandService.findOrderForUpdate(
                 orderUpdateCommand.orderId()
         );
-
+        UUID operationId = UUID.randomUUID();
         Integer changeQuantity = orderUpdateCommand.quantity();
 
         if (changeQuantity != null) {
@@ -81,6 +81,7 @@ public class OrderFacade {
             ).getData();
 
             adjustInventory(
+                    operationId,
                     order,
                     companyOrderInfoResponse.startHubId(),
                     changeQuantity
@@ -96,6 +97,8 @@ public class OrderFacade {
     public void deleteOrder(
             OrderDeleteCommand orderDeleteCommand
     ) {
+        UUID operationId = UUID.randomUUID();
+
         Order order = orderCommandService.findOrderForDelete(
                 orderDeleteCommand.orderId()
         );
@@ -106,6 +109,7 @@ public class OrderFacade {
         ).getData();
 
         InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 companyOrderInfoResponse.startHubId(),
@@ -120,6 +124,8 @@ public class OrderFacade {
     public OrderCancelResult cancelOrder(
             OrderCancelCommand orderCancelCommand
     ) {
+        UUID operationId = UUID.randomUUID();
+
         Order order = orderCommandService.findOrderForCancel(
                 orderCancelCommand.orderId()
         );
@@ -134,6 +140,7 @@ public class OrderFacade {
         );
 
         InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 companyOrderInfoResponse.startHubId(),
@@ -149,6 +156,7 @@ public class OrderFacade {
     }
 
     private void adjustInventory(
+            UUID operationId,
             Order order,
             UUID hubId,
             int newQuantity
@@ -156,21 +164,33 @@ public class OrderFacade {
         int quantityDifference = newQuantity - order.getQuantity();
 
         if (quantityDifference > 0) {
-            deductInventory(order, hubId, quantityDifference);
+            deductInventory(
+                    operationId,
+                    order,
+                    hubId,
+                    quantityDifference
+            );
             return;
         }
 
         if (quantityDifference < 0) {
-            restoreInventory(order, hubId, -quantityDifference);
+            restoreInventory(
+                    operationId,
+                    order,
+                    hubId,
+                    -quantityDifference
+            );
         }
     }
 
     private void deductInventory(
+            UUID operationId,
             Order order,
             UUID hubId,
             int quantity
     ) {
         InventoryDeductionRequest request = new InventoryDeductionRequest(
+                operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 hubId,
@@ -181,11 +201,13 @@ public class OrderFacade {
     }
 
     private void restoreInventory(
+            UUID operationId,
             Order order,
             UUID hubId,
             int quantity
     ) {
         InventoryRestorationRequest request = new InventoryRestorationRequest(
+                operationId,
                 order.getOrderId(),
                 order.getProductId(),
                 hubId,
