@@ -20,6 +20,8 @@ import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
+import com.logistics.ai.application.util.DeadlinePromptSupport;
+import com.logistics.ai.domain.entity.AiHistory;
 import com.logistics.ai.global.exception.AiErrorCode;
 import com.logistics.ai.global.exception.AiException;
 
@@ -30,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
-	
-	private static final String DELIVERY_MANAGER_WORK_TIME = "09:00 ~ 18:00";
 	
 	private final DeliveryPort deliveryPort;
 	
@@ -83,12 +83,22 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				"임시 배송 슬랙아이디"
 		);
 		
+		// AI 요청 프롬프트 생성
+		String requestPrompt = DeadlinePromptSupport.generatedPrompt(
+				event,
+				product,
+				deliveryManagerInfo,
+				hubMap,
+				routes,
+				hubWayPoint
+		);
 		
-		
-		// === 가져온 정보들로 조합 === //
-		// AI 에게 보낼 메세지 //
-		// ============================ //
-		
+		AiHistory aiHistory = AiHistory.create(
+				event.orderId(),
+				event.deliveryId(),
+				requestPrompt,
+				DeadlinePromptSupport.aiModelSelector(hubWayPoint)
+		);
 		
 		
 		

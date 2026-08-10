@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class DeadlinePromptSupport {
-	public static final String SYSTEM_PROMPT = """
+	private static final String SYSTEM_PROMPT = """
 			===[역할]===
 			당신은 물류 배송 관리 전문 AI 입니다.
 			전달받은 주문 데이터와 경로 정보, '배송담당자 근무시간: {배송담당자근무시간}'을 고려하여
@@ -42,11 +42,12 @@ public class DeadlinePromptSupport {
 			배송담당자 : {배송담당자이름} / {배송담당자이메일}
 			
 			최종 발송 시한 : {AI 계산한 일시 및 사유}
+			
+			===[데이터 정보]===
+			%s
 	""";
 	
 	private static final String USER_PROMPT_TEMPLATE = """
-			다음 주문 정보를 바탕으로 [담당자 안내 메시지]를 작성하세요.
-			
 			- 주문번호: %s
 			- 주문자이름: %s
 			- 주문자이메일: %s
@@ -61,41 +62,52 @@ public class DeadlinePromptSupport {
 			- 배송담당자근무시간: 09:00 ~ 18:00
 	""";
 	
-	public static String bindingPrompt(
-			UUID orderId,
-			String customerName,
-			String customerEmail,
-			String orderTime,
-			String productInfo,
-			String requestMessage,
-			String startHubName,
-			List<String> transitHubs,
-			String endHubName,
-			String deliveryManagerName,
-			String deliveryManagerEmail
-	) {
-		
-		String transitHubString = (transitHubs == null || transitHubs.isEmpty())
-				? "경유지 없음"
-				: String.join(", ", transitHubs);
-		
-		return String.format(USER_PROMPT_TEMPLATE,
-				orderId.toString(),
-				customerName,
-				customerEmail,
-				orderTime,
-				productInfo,
-				requestMessage,
-				startHubName,
-				transitHubString,
-				endHubName,
-				deliveryManagerName,
-				deliveryManagerEmail
-		);
+//	public static String bindingPrompt(
+//			UUID orderId,
+//			String customerName,
+//			String customerEmail,
+//			String orderTime,
+//			String productInfo,
+//			String requestMessage,
+//			String startHubName,
+//			List<String> transitHubs,
+//			String endHubName,
+//			String deliveryManagerName,
+//			String deliveryManagerEmail
+//	) {
+//		
+//		String transitHubString = (transitHubs == null || transitHubs.isEmpty())
+//				? "경유지 없음"
+//				: String.join(", ", transitHubs);
+//		
+//		return String.format(USER_PROMPT_TEMPLATE,
+//				orderId.toString(),
+//				customerName,
+//				customerEmail,
+//				orderTime,
+//				productInfo,
+//				requestMessage,
+//				startHubName,
+//				transitHubString,
+//				endHubName,
+//				deliveryManagerName,
+//				deliveryManagerEmail
+//		);
+//	}
+	
+	public static String generatedPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+		return String.format(SYSTEM_PROMPT, bindingPrompt(
+				event,
+				product,
+				deliveryManagerInfo,
+				hubMap,
+				routes,
+				hubWayPoint
+		));
 	}
 	
 	// 파라미터 타입 미확정
-	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+	private static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
 		// 주문 기본 정보
 		PromptOrder orderPrompt = PromptOrder.from(event);
 		
@@ -118,6 +130,14 @@ public class DeadlinePromptSupport {
 				deliveryManagerInfo.deliveryManagerName(),
 				deliveryManagerInfo.deliveryManagerSlackId()
 		);
+	}
+	
+	public static String aiModelSelector(int hubWayPoint) {
+		if(hubWayPoint >= 3) {
+			return "gemini-1.5-pro";
+		}
+		
+		return "gemini-1.5-flash";
 	}
 	
 	@Getter
@@ -155,6 +175,7 @@ public class DeadlinePromptSupport {
 	}
 	
 	@Getter
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class PromptHub {
 		private final String startHubName;
 		
@@ -172,12 +193,6 @@ public class DeadlinePromptSupport {
 			}
 			
 			return new PromptHub(startHubName, endHubName, transitHubNames);
-		}
-		
-		public PromptHub(String startHubName, String endHubName, String transitHubNames) {
-			this.startHubName = startHubName;
-			this.endHubName = endHubName;
-			this.transitHubNames = transitHubNames;
 		}
 		
 		private static String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId) {
