@@ -186,7 +186,7 @@ public class DeliveryCommandService {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         validateHubManagerOwnership(principal, delivery);
-        delivery.markDeleted(TEMP_CREATED_BY);
+        delivery.markDeleted(principal.getUserId());
     }
 
     // MASTER 전체, HUB_MANAGER는 담당 허브 소속만
