@@ -1,0 +1,10 @@
+# 리눅스에서 실행되는 파일은 항상 LF로 체크아웃한다.
+# Windows에서 core.autocrlf=true면 체크아웃 시 CRLF로 바뀌는데,
+# - Terraform user_data 해시가 달라져 인스턴스가 불필요하게 재시작되고
+# - 셸 스크립트는 리눅스에서 `$'\r': command not found`로 실패한다.
+*.sh   text eol=lf
+*.tf   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sql  text eol=lf
+gradlew text eol=lf
