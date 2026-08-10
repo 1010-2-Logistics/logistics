@@ -1,5 +1,20 @@
 CREATE SCHEMA IF NOT EXISTS company_service;
 CREATE SCHEMA IF NOT EXISTS product_service;
+CREATE SCHEMA IF NOT EXISTS ai_service;
+
+CREATE TABLE IF NOT EXISTS ai_service.p_ai (
+    ai_id UUID PRIMARY KEY,
+    order_id UUID NOT NULL,
+    delivery_id UUID NOT NULL,
+    request_prompt TEXT NOT NULL,
+    response_prompt TEXT,
+    final_deadline TIMESTAMP,
+    ai_model VARCHAR(50),
+    ai_status VARCHAR(50) NOT NULL,
+    call_message TEXT,
+    time_ms INT,
+    retry_count INT NOT NULL DEFAULT 0
+);
 
 CREATE TABLE IF NOT EXISTS company_service.p_company (
     company_id UUID PRIMARY KEY,

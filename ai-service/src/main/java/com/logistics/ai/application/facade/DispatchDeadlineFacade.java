@@ -15,7 +15,10 @@ import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
+import com.logistics.ai.application.dto.result.DispatchDeadlineRetryResultDto;
 import com.logistics.ai.application.event.OrderCreatedEvent;
+import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
+import com.logistics.ai.application.port.in.DispatchDeadlineCommandService;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
@@ -32,6 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
+	
+	private final DispatchDeadlineCommandService commandService;
+	
+	private final DeadlineGenerationRetryService deadlineGenerationRetryService;
 	
 	private final DeliveryPort deliveryPort;
 	
@@ -93,19 +100,27 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				hubWayPoint
 		);
 		
-		AiHistory aiHistory = AiHistory.create(
+		// 제미나이 호출 //
+		String aiModel = DeadlinePromptSupport.aiModelSelector(hubWayPoint);
+		
+		DispatchDeadlineRetryResultDto result = deadlineGenerationRetryService.generate(requestPrompt, aiModel);
+		
+		AiHistory successHistory = AiHistory.succeded(
 				event.orderId(),
 				event.deliveryId(),
 				requestPrompt,
-				DeadlinePromptSupport.aiModelSelector(hubWayPoint)
+				aiModel
 		);
 		
+		successHistory.success(
+				result.responsePrompt(),
+				result.finalDeadline(),
+				result.timeMs(),
+				result.retryCount(),
+				result.lastRetryReason()
+		);
 		
-		
-		// === DispatchDeadlineGenerationPort === //
-		// 제미나이 호출 //
-		//
-		
+		commandService.saveSucceeded(successHistory);
 	}
 	
 	private void validateHubIdsMatch(Map<UUID, HubInfo> hubMap, Set<UUID> hubIds) {
@@ -119,36 +134,6 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 			
 			throw new AiException(AiErrorCode.AI_HUB_INFO_INCOMPLETE);
 		}
-	}
-	
-	private String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
-		StringBuilder hubNames = new StringBuilder();
-		
-		for (int i = 0; i < routes.size() - 1; i++) {
-			UUID transitHubId = routes.get(i).endHubId();
-			HubInfo transitHub = hubMap.get(transitHubId);
-			
-			if(transitHub != null) {
-				hubNames.append(transitHub.hubName() + ", ");
-			}
-			
-		}
-		
-		if(hubNames.length() > 0) {
-			hubNames.setLength(hubNames.length() - 2);
-		}
-		
-		return hubNames.toString();
-	}
-	
-	private String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId, String defaultMessage) {
-		if (hubId == null) return defaultMessage;
-		
-		HubInfo hub = hubMap.get(hubId);
-		
-		return (hub != null)
-				? hub.hubName()
-				: String.format("%s 정보 없음(서버 에러)", defaultMessage);
 	}
 	
 }

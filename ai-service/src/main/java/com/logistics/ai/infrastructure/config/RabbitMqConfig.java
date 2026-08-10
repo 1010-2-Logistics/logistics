@@ -2,6 +2,7 @@ package com.logistics.ai.infrastructure.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
@@ -28,8 +29,8 @@ public class RabbitMqConfig {
   private String orderCreatedDlqRoutingKey;
   
   @Bean
-  TopicExchange orderCreatedExchange() {
-  	return new TopicExchange(orderCreatedExchange);
+  DirectExchange orderCreatedExchange() {
+  	return new DirectExchange(orderCreatedExchange);
   }
   
   @Bean

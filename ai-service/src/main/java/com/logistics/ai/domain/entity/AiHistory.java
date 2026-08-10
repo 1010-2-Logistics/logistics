@@ -3,9 +3,6 @@ package com.logistics.ai.domain.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,12 +32,10 @@ public class AiHistory {
 	@Column(name = "delivery_id", nullable = false)
 	private UUID deliveryId;
 	
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "request_prompt", columnDefinition = "jsonb", nullable = false)
+	@Column(name = "request_prompt", columnDefinition = "TEXT", nullable = false)
 	private String requestPrompt;
 	
-	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "response_prompt", columnDefinition = "jsonb")
+	@Column(name = "response_prompt", columnDefinition = "TEXT")
 	private String responsePrompt;
 	
 	@Column(name = "final_deadline")
@@ -53,8 +48,8 @@ public class AiHistory {
 	@Enumerated(EnumType.STRING)
 	private AiStatus status;
 	
-	@Column(name = "error_message", columnDefinition = "TEXT")
-	private String errorMessage;
+	@Column(name = "call_message", columnDefinition = "TEXT")
+	private String callMessage;
 	
 	@Column(name = "time_ms")
 	private Integer timeMs;
@@ -62,7 +57,7 @@ public class AiHistory {
 	@Column(name = "retry_count", nullable = false)
 	private int retryCount;
 	
-	public static AiHistory create(UUID orderId, UUID deliveryId, String requestPrompt, String aiModel) {
+	public static AiHistory succeded(UUID orderId, UUID deliveryId, String requestPrompt, String aiModel) {
 		AiHistory aiHistory = new AiHistory();
 		
 		aiHistory.orderId = orderId;
@@ -75,18 +70,27 @@ public class AiHistory {
 		return aiHistory;
 	}
 	
-	public void success(String responsePrompt, LocalDateTime finalDeadline, int timeMs) {
+	public static AiHistory failed(UUID orderId, UUID deliveryId, String requestPrompt, String aiModel, String callMessage, Integer retryCount) {
+		AiHistory aiHistory = new AiHistory();
+		
+		aiHistory.orderId = orderId;
+		aiHistory.deliveryId = deliveryId;
+		aiHistory.requestPrompt = requestPrompt;
+		aiHistory.aiModel = aiModel;
+		aiHistory.callMessage = callMessage;
+		aiHistory.status = AiStatus.FAILED;
+		aiHistory.retryCount = retryCount;
+		
+		return aiHistory;
+	}
+	
+	public void success(String responsePrompt, LocalDateTime finalDeadline, int timeMs, int retryCount, String callMessage) {
 		this.responsePrompt = responsePrompt;
 		this.finalDeadline = finalDeadline;
 		this.timeMs = timeMs;
+		this.retryCount = retryCount;
+		this.callMessage = callMessage;
 		this.status = AiStatus.SUCCESS;
-		this.errorMessage = null;
-	}
-	
-	public void fail(String errorMessage, int timeMs) {
-		this.errorMessage = errorMessage;
-		this.status = AiStatus.FAILED;
-		this.timeMs = timeMs;
 	}
 	
 	public void increaseRetryCount() {

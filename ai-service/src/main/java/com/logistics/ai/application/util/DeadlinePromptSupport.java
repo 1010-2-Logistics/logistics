@@ -115,7 +115,7 @@ public class DeadlinePromptSupport {
 		PromptHub hubPrompt = PromptHub.from(hubMap, routes, hubWayPoint);
 		
 		// 상품 기본 정보
-		String productInfo = String.format("%s %d EA", product.productName(), orderPrompt.quantity);
+		String productInfo = String.format("%s %s EA", product.productName(), orderPrompt.quantity);
 		
 		return String.format(USER_PROMPT_TEMPLATE,
 				orderPrompt.getOrderId(),

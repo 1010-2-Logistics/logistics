@@ -15,7 +15,7 @@ spring:
 
 rabbitmq:
   order-created:
-    exchange: order.created
+    exchange: order.exchange
     queue: order-created.queue
     
     dlx: ai.dead-letter.exchange

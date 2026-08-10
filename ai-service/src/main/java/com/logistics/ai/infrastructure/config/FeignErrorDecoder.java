@@ -14,6 +14,7 @@ import feign.Response;
 import feign.codec.ErrorDecoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 @Component
@@ -69,8 +70,10 @@ public class FeignErrorDecoder implements ErrorDecoder {
 		
 		try (InputStream is = response.body().asInputStream()){
 			return jsonMapper.readValue(is, ErrorResponse.class);
-		} catch (IOException e) {
+		} catch (JacksonException e) {
 			log.warn("[AI-SERVICE]: FeignErrorDecoder, ErrorResponse 파싱 실패, status = {}", response.status(), e);
+		} catch (IOException e) {
+			log.warn("[AI-SERVICE]: FeignErrorDecoder, ErrorResponse 읽기 실패, status = {}", response.status(), e);
 		}
 		
 		return null;
