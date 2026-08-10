@@ -11,6 +11,7 @@ import java.util.UUID;
  */
 public record SignupCommandDto(
         String username,
+        String name,
         String password,
         String passwordConfirm,
         String slackId,

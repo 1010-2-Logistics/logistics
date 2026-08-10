@@ -12,8 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * 애플리케이션 최초 실행 시 MASTER 계정을 생성한다.
- *
+ * 애플리케이션 최초 실행 시 MASTER 계정 생성
  * 활성 MASTER가 이미 존재하면 아무 작업도 하지 않는다.
  */
 @Component
@@ -64,6 +63,7 @@ public class MasterAccountInitializer
          */
         User master = User.create(
                 properties.username(),
+                properties.name(),
                 encodedPassword,
                 properties.slackId(),
                 UserRole.MASTER,
@@ -83,6 +83,8 @@ public class MasterAccountInitializer
     private void validateProperties() {
         if (properties.username() == null
                 || properties.username().isBlank()
+                || properties.name() == null
+                || properties.name().isBlank()
                 || properties.password() == null
                 || properties.password().isBlank()
                 || properties.slackId() == null

@@ -550,6 +550,7 @@ class UserApprovalServiceTest {
     private User createMaster(Long userId) {
         User user = User.create(
                 "master01",
+                "sampel",
                 "encodedPassword",
                 "U_MASTER_" + userId,
                 UserRole.MASTER,
@@ -571,6 +572,7 @@ class UserApprovalServiceTest {
     ) {
         User user = User.create(
                 "hub" + userId,
+                "sample",
                 "encodedPassword",
                 "U_HUB_" + userId,
                 UserRole.HUB_MANAGER,
@@ -592,6 +594,7 @@ class UserApprovalServiceTest {
     ) {
         User user = User.create(
                 "delivery" + userId,
+                "sample",
                 "encodedPassword",
                 "U_DELIVERY_" + userId,
                 UserRole.HUB_DELIVERY_MANAGER,
