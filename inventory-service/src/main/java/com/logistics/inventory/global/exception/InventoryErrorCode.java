@@ -16,7 +16,6 @@ public enum InventoryErrorCode implements ErrorCode {
     INVENTORY_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 허브에 동일한 상품 재고가 이미 존재합니다."),
 
 
-
     ;
 
     private final HttpStatus httpStatus;

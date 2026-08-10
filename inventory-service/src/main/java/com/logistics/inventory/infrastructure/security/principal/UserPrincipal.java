@@ -1,5 +1,6 @@
 package com.logistics.inventory.infrastructure.security.principal;
 
+import com.logistics.inventory.application.dto.auth.AuthenticatedUser;
 import com.logistics.inventory.domain.entity.Role;
 import com.logistics.inventory.global.exception.CommonErrorCode;
 import com.logistics.inventory.global.exception.CustomException;
@@ -85,5 +86,12 @@ public class UserPrincipal {
 
     }
 
-
+    public AuthenticatedUser toAuthenticatedUser() {
+        return new AuthenticatedUser(
+                userId,
+                role,
+                hubId,
+                companyId
+        );
+    }
 }

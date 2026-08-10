@@ -8,6 +8,7 @@ import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.facade.InventoryFacade;
 import com.logistics.inventory.application.service.InventoryCommandService;
 import com.logistics.inventory.global.response.ApiResponse;
+import com.logistics.inventory.infrastructure.security.principal.UserPrincipal;
 import com.logistics.inventory.presentation.dto.request.InventoryCreateRequestDto;
 import com.logistics.inventory.presentation.dto.request.InventoryUpdateRequestDto;
 import com.logistics.inventory.presentation.dto.response.InventoryCreateResponseDto;
@@ -17,11 +18,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-@Tag(name= "Inventory")
+@Tag(name = "Inventory")
 @RestController
 @RequestMapping("/api/v1/inventories")
 @RequiredArgsConstructor
@@ -40,11 +42,15 @@ public class InventoryCommandController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<InventoryCreateResponseDto> createInventory(
+            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody InventoryCreateRequestDto inventoryCreateRequestDto
     ) {
         InventoryCreateCommand createInventoryCommand = InventoryCreateCommand.toCommand(inventoryCreateRequestDto);
 
-        InventoryCreateResult inventoryCreateResultDto = inventoryFacade.createInventory(createInventoryCommand);
+        InventoryCreateResult inventoryCreateResultDto = inventoryFacade.createInventory(
+                createInventoryCommand,
+                principal.toAuthenticatedUser()
+        );
 
         InventoryCreateResponseDto inventoryCreateResponseDto = InventoryCreateResponseDto.from(inventoryCreateResultDto);
 
@@ -65,6 +71,7 @@ public class InventoryCommandController {
     )
     @PutMapping("/{inventoryId}")
     public ApiResponse<InventoryUpdateResponseDto> updateInventory(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("inventoryId") UUID inventoryId,
             @Valid @RequestBody InventoryUpdateRequestDto inventoryUpdateRequestDto
     ) {
@@ -73,7 +80,10 @@ public class InventoryCommandController {
                 inventoryUpdateRequestDto
         );
 
-        InventoryUpdateResult inventoryUpdateResult = inventoryCommandService.updateInventory(updateInventoryCommand);
+        InventoryUpdateResult inventoryUpdateResult = inventoryCommandService.updateInventory(
+                updateInventoryCommand,
+                principal.toAuthenticatedUser()
+        );
 
         InventoryUpdateResponseDto inventoryUpdateResponseDto = InventoryUpdateResponseDto.from(inventoryUpdateResult);
 
@@ -95,9 +105,13 @@ public class InventoryCommandController {
     @DeleteMapping("/{inventoryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("inventoryId") UUID inventoryId
     ) {
-        InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
+        InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(
+                inventoryId,
+                principal.toAuthenticatedUser()
+        );
 
         // TODO: 인증 적용 후 실제 로그인 사용자 ID로 교체
         Long deletedBy = 1L;

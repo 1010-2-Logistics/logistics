@@ -1,4 +1,4 @@
-package com.logistics.inventory.application.service;
+package com.logistics.inventory.application.authorization;
 
 import com.logistics.inventory.application.dto.auth.AuthenticatedUser;
 import com.logistics.inventory.domain.entity.Role;
