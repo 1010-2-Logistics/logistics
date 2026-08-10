@@ -6,12 +6,15 @@ import com.logistics.delivery.presentation.dto.response.DeliveryInternalResponse
 import java.util.UUID;
 
 import com.logistics.delivery.presentation.dto.response.DeliveryRouteListResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name= "Delivery Internal")
 @RestController
 @RequestMapping("/internal/v1/deliveries")
 @RequiredArgsConstructor
@@ -19,13 +22,26 @@ public class DeliveryInternalQueryController {
 
     private final DeliveryQueryService deliveryQueryService;
 
+    @Operation(
+            summary = "배송 단건 조회 (내부)",
+            description = """
+                 접근 권한:
+                - 내부 서비스 전용 (Order, Slack Notification 등)
+                """
+    )
     @GetMapping("/{deliveryId}")
     public ApiResponse<DeliveryInternalResponse> getInternal(@PathVariable UUID deliveryId) {
         var result = deliveryQueryService.getInternal(deliveryId);
         return ApiResponse.success(200, "배송 조회 성공", DeliveryInternalResponse.from(result));
     }
 
-    // DeliveryInternalQueryController.java에 추가
+    @Operation(
+            summary = "배송 경로 조회 (내부)",
+            description = """
+                 접근 권한:
+                - 내부 서비스 전용 (Order, Slack Notification 등)
+                """
+    )
     @GetMapping("/{deliveryId}/routes")
     public ApiResponse<DeliveryRouteListResponse> getRoutesInternal(@PathVariable UUID deliveryId) {
         var result = deliveryQueryService.getRoutes(deliveryId);
