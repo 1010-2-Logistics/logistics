@@ -2,6 +2,9 @@ package com.logistics.order.infrastructure.adapter;
 
 import com.logistics.order.application.dto.result.DeliveryCreateResult;
 import com.logistics.order.application.port.DeliveryPort;
+import com.logistics.order.infrastructure.feign.client.DeliveryClient;
+import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
+import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +13,9 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class DeliveryClientAdapter implements DeliveryPort{
+public class DeliveryClientAdapter implements DeliveryPort {
+    private final DeliveryClient deliveryClient;
+
     @Override
     public DeliveryCreateResult createDelivery(
             UUID orderId,
@@ -20,13 +25,27 @@ public class DeliveryClientAdapter implements DeliveryPort{
             String receiverName,
             String receiverSlackId
     ) {
-        return null;
+        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
+                orderId,
+                startHubId,
+                endHubId,
+                deliveryAddress,
+                receiverName,
+                receiverSlackId
+        );
+
+        DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
+
+        return new DeliveryCreateResult(
+                deliveryCreateResponse.deliveryId(),
+                deliveryCreateResponse.routeCount()
+        );
     }
 
     @Override
     public void cancelDelivery(
             UUID orderId
     ) {
-
+        deliveryClient.cancelDelivery(orderId);
     }
 }
