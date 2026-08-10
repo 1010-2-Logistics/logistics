@@ -42,6 +42,7 @@ class UserCommandServiceTest {
     void 생성하면_저장하고_이벤트를_발행한다() {
         // given
         UUID companyId = UUID.randomUUID();
+        UUID hubId = UUID.randomUUID();
 
         CreateUserCommandDto command = new CreateUserCommandDto(
                 "sample01",
@@ -49,15 +50,9 @@ class UserCommandServiceTest {
                 "U0123456789",
                 UserRole.COMPANY_MANAGER,
                 companyId,
-                null
+                hubId
         );
 
-        /*
-         * save()가 호출되면 전달받은 User 객체를 그대로 반환하도록 설정한다.
-         *
-         * 실제 JPA Repository라면 저장 시 userId가 생성되지만,
-         * 순수 Mockito 테스트에서는 userId가 null인 상태다.
-         */
         when(userCommandRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -92,11 +87,11 @@ class UserCommandServiceTest {
                 .isEqualTo(companyId);
 
         assertThat(savedUser.getHubId())
-                .isNull();
+                .isEqualTo(hubId);
 
         /*
-         * 실제 DB 저장이 아니므로 GeneratedValue가 동작하지 않는다.
-         * 따라서 반환되는 userId도 null이다.
+         * Mockito 테스트에서는 GeneratedValue가 동작하지 않으므로
+         * 저장 후 userId는 null이다.
          */
         assertThat(result).isNull();
     }
