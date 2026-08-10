@@ -2,14 +2,11 @@ package com.logistics.order.application.saga;
 
 
 import com.logistics.order.application.dto.command.OrderCreateSagaCommand;
+import com.logistics.order.application.dto.result.DeliveryCreateResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
+import com.logistics.order.application.port.DeliveryPort;
+import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.service.OrderCommandService;
-import com.logistics.order.infrastructure.feign.client.DeliveryClient;
-import com.logistics.order.infrastructure.feign.client.InventoryClient;
-import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
-import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,17 +17,12 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class OrderCreateOrchestrator {
-
-    // 1. application에 넣은 판단 기준 :
+    // application에 OrderCreateOrchestrator를 넣은 판단 기준 :
     // 여러 작업의 실행 순서를 조율하는 애플리케이션 로직이기 때문
 
-    // 2. 변경 작업
-    // inventory : 재고 차감/복원
-    // delivery : 배송 생성/취소
-    // order : 주문 저장
     private final OrderCommandService orderCommandService;
-    private final InventoryClient inventoryClient;
-    private final DeliveryClient deliveryClient;
+    private final InventoryPort inventoryPort;
+    private final DeliveryPort deliveryPort;
 
     public OrderCreateResult execute(
             OrderCreateSagaCommand orderCreateSagaCommand
@@ -44,7 +36,7 @@ public class OrderCreateOrchestrator {
                 orderCreateSagaCommand
         );
 
-        DeliveryCreateResponse deliveryCreateResponse = createDeliveryWithCompensation(
+        DeliveryCreateResult deliveryCreateResult = createDeliveryWithCompensation(
                 operationId,
                 orderId,
                 orderCreateSagaCommand
@@ -54,7 +46,7 @@ public class OrderCreateOrchestrator {
                 operationId,
                 orderId,
                 orderCreateSagaCommand,
-                deliveryCreateResponse
+                deliveryCreateResult
         );
     }
 
@@ -63,33 +55,29 @@ public class OrderCreateOrchestrator {
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
-        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+        inventoryPort.deductInventory(
                 operationId,
                 orderId,
                 orderCreateSagaCommand.orderCommand().productId(),
                 orderCreateSagaCommand.startHubId(),
                 orderCreateSagaCommand.orderCommand().quantity()
         );
-
-        inventoryClient.deductInventory(inventoryDeductionRequest);
     }
 
-    private DeliveryCreateResponse createDeliveryWithCompensation(
+    private DeliveryCreateResult createDeliveryWithCompensation(
             UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
-        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
-                orderId,
-                orderCreateSagaCommand.startHubId(),
-                orderCreateSagaCommand.endHubId(),
-                orderCreateSagaCommand.endCompanyAddress(),
-                orderCreateSagaCommand.receiverName(),
-                orderCreateSagaCommand.receiverSlackId()
-        );
-
         try {
-            return deliveryClient.createDelivery(deliveryCreateRequest).getData();
+            return deliveryPort.createDelivery(
+                    orderId,
+                    orderCreateSagaCommand.startHubId(),
+                    orderCreateSagaCommand.endHubId(),
+                    orderCreateSagaCommand.endCompanyAddress(),
+                    orderCreateSagaCommand.receiverName(),
+                    orderCreateSagaCommand.receiverSlackId()
+            );
 
         } catch (RuntimeException originalException) {
             compensateInventoryRestoration(
@@ -107,20 +95,20 @@ public class OrderCreateOrchestrator {
             UUID operationId,
             UUID orderId,
             OrderCreateSagaCommand orderCreateSagaCommand,
-            DeliveryCreateResponse deliveryCreateResponse
+            DeliveryCreateResult  deliveryCreateResult
     ) {
         try {
             return orderCommandService.createOrder(
                     orderCreateSagaCommand.orderCommand(),
                     orderId,
-                    deliveryCreateResponse.deliveryId(),
+                    deliveryCreateResult.deliveryId(),
                     orderCreateSagaCommand.startCompanyId()
             );
 
         } catch (RuntimeException originalException) {
 
             try {
-                deliveryClient.cancelDelivery(orderId);
+                deliveryPort.cancelDelivery(orderId);
             } catch (RuntimeException compensationException) {
                 log.error(
                         "[ERROR Order] 주문 저장 실패 보상 중 배송 취소 실패. orderId={}, perationId={}",
@@ -150,15 +138,13 @@ public class OrderCreateOrchestrator {
             RuntimeException originalException
     ) {
         try {
-            InventoryRestorationRequest request = new InventoryRestorationRequest(
+            inventoryPort.restoreInventory(
                     operationId,
                     orderId,
                     orderCreateSagaCommand.orderCommand().productId(),
                     orderCreateSagaCommand.startHubId(),
                     orderCreateSagaCommand.orderCommand().quantity()
             );
-
-            inventoryClient.restoreInventory(request);
 
         } catch (RuntimeException compensationException) {
             log.error(
