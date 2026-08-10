@@ -16,4 +16,7 @@ public interface HubQueryRepository {
     Page<Hub> search(UUID hubId, Pageable pageable);
 
     Set<UUID> findValidHubIdsIn(List<UUID> hubIds);
+
+    //내부 api 허브 리스트를 받아 허브 정보 반환
+    List<Hub> findAllByHubIdInAndDeletedAtIsNull(List<UUID> hubIds);
 }
