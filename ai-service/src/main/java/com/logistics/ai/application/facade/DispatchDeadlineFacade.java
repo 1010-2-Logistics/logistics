@@ -1,5 +1,7 @@
 package com.logistics.ai.application.facade;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.logistics.ai.application.event.OrderCreatedEvent;
@@ -9,10 +11,14 @@ import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
+	
+	private static final String DELIVERY_MANAGER_WORK_TIME = "09:00 ~ 18:00";
 	
 	private final DeliveryPort deliveryPort;
 	
@@ -22,14 +28,13 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 
 	@Override
 	public void generate(OrderCreatedEvent event) {
-		String deliveryManagerWorkTime = "09:00 ~ 18:00";
+		UUID orderId = event.orderId();
+		UUID deliveryId = event.deliveryId();
 		
-		// === OrderPort === // :내부 API 미구현
-		// 1. OrderCreatedEvent 수신 -> event.orderId() 로 주문 정보 조회
-		// /internal/v1/orders/{orderId} - 미구현
-		// productId, quantity, request 수신
-		
-		
+		log.info("[AI-SERVICE]: OrderCreatedEvent 수신, orderId = {}, deliveryId = {}",
+				orderId,
+				deliveryId
+		);
 		
 		// === DeliveryPort === //
 		// 2. event.deliveryId() 로 배송정보 조회
