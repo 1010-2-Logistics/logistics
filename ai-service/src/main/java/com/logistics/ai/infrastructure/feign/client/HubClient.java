@@ -12,7 +12,7 @@ import com.logistics.ai.infrastructure.feign.response.HubInfoResponseDto;
 @FeignClient(name = "hub-service", configuration = FeignConfig.class)
 public interface HubClient {
 
-	@GetMapping("/internal/v1/hubs/info")
+	@GetMapping("/internal/v1/hubs/getHubInfos")
 	Set<HubInfoResponseDto> getHubInfoList(Set<UUID> hubIds);
 
 }
