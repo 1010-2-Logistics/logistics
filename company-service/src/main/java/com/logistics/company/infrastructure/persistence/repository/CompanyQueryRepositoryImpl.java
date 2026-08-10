@@ -48,6 +48,16 @@ public class CompanyQueryRepositoryImpl implements CompanyQueryRepository {
 	public List<UUID> findIdsByHubId(UUID hubId) {
 		return jpaRepository.findCompanyIdByHubIdAndDeletedAtIsNull(hubId);
 	}
+
+	@Override
+	public boolean existsByHubIdAndCompanyNameAndDeletedAtIsNull(UUID hubId, String companyName) {
+		return jpaRepository.existsByHubIdAndCompanyNameAndDeletedAtIsNull(hubId, companyName);
+	}
+
+	@Override
+	public boolean existsByHubIdAndCompanyNameAndCompanyIdAndDeletedAtIsNull(UUID hubId, String companyName, UUID companyId) {
+		return jpaRepository.existsByHubIdAndCompanyNameAndCompanyIdNotAndDeletedAtIsNull(hubId, companyName, companyId);
+	}
   
   
 }
