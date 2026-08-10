@@ -27,10 +27,11 @@ data "aws_iam_policy_document" "github_actions_assume" {
     }
 
     # main 브랜치 푸시(=deploy.yml 트리거)에서만 이 역할을 assume할 수 있다.
+    # 접두사는 조직·리포지토리 불변 ID를 포함한다(variables.tf 주석 참조).
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main"]
+      values   = ["${var.github_sub_prefix}:ref:refs/heads/main"]
     }
   }
 }
