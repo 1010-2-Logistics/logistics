@@ -24,16 +24,4 @@ class HubTest {
         assertThat(hub.getLatitude()).isEqualTo(BigDecimal.valueOf(37.1234567));
         assertThat(hub.getLongitude()).isEqualTo(BigDecimal.valueOf(127.1234567));
     }
-
-    @Test
-    void update하면_이름이_바뀐다() {
-//        // given
-//        Hub hub = Hub.create("이전 이름");
-//
-//        // when
-//        hub.update("새 이름");
-//
-//        // then
-//        assertThat(hub.getName()).isEqualTo("새 이름");
-    }
 }
