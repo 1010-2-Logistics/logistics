@@ -34,6 +34,9 @@ public class OrderFacade {
     String receiverName = "임시 수령인";
     String receiverSlackId = "TEMP_SLACK_ID";
 
+    // TODO: 현재 operationId는 Saga 실행마다 새로 생성되므로
+    // 동일 HTTP 요청 재시도까지 보장하는 멱등키는 아님
+    // 추후 요청 경계에서 Idempotency-Key를 전달받는 방식 검토
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand
     ) {
