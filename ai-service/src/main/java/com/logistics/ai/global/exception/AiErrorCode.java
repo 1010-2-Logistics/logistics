@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AiErrorCode implements ErrorCode {
 	
+	AI_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 정보를 불러오는데 실패했습니다."),
+	
 	
 	;
 	

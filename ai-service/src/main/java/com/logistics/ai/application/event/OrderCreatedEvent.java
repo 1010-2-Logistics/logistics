@@ -4,7 +4,10 @@ import java.util.UUID;
 
 public record OrderCreatedEvent(
 		UUID orderId,
-		UUID deliveryId
+		UUID deliveryId,
+		UUID productId,
+		Integer quantity,
+		String request
 ) {
 
 }

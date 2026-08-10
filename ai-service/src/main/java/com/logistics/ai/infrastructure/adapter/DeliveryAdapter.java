@@ -1,5 +1,6 @@
 package com.logistics.ai.infrastructure.adapter;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,7 @@ public class DeliveryAdapter implements DeliveryPort {
 		List<RouteItem> routes = response.routes();
 		
 		return routes.stream()
+				.sorted(Comparator.comparing(RouteItem::sequence, Comparator.nullsLast(Comparator.naturalOrder())))
 				.map(RouteItem::toApplication)
 				.toList();
 	}
