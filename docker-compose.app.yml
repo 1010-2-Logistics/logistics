@@ -1,0 +1,268 @@
+# =============================================================================
+# App EC2 전용 — Spring 애플리케이션 11개 + Zipkin (상태를 갖지 않는 것)
+# =============================================================================
+#
+# 사용법
+#   App EC2      : docker compose -f docker-compose.app.yml up -d
+#   로컬 전체검증 : docker compose -f docker-compose.data.yml -f docker-compose.app.yml up
+#
+# ── 설계 원칙 ────────────────────────────────────────────────────────────────
+# 각 서비스의 application.yml을 수정하지 않는다.
+# Spring Boot는 OS 환경변수가 application.yml / application-{profile}.yml 보다
+# 우선순위가 높으므로, 아래 환경변수만으로 하드코딩된 값을 전부 덮어쓴다.
+# 팀원들이 각자 브랜치에서 작업 중이라 파일 수정은 병합 충돌을 만든다.
+#
+#   yml 프로퍼티                                → 환경변수
+#   eureka.client.service-url.defaultZone       → EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+#   management.zipkin.tracing.endpoint          → MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
+#   spring.profiles.active                      → SPRING_PROFILES_ACTIVE
+#   spring.rabbitmq.host                        → SPRING_RABBITMQ_HOST
+#   spring.datasource.hikari.maximum-pool-size  → SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE
+#
+# 값이 yml에 안 보이는 것이 이 방식의 단점이다. 실제 적용 여부는 반드시
+# 실측으로 확인할 것:
+#   docker compose ... exec user-service env | grep EUREKA_CLIENT_SERVICEURL
+#
+# ── ai-service ───────────────────────────────────────────────────────────────
+# 미완성(ai.gemini.url 비어 있음)이라 이번 배포에서 제외했다. 포함하려면
+# 이 파일에 서비스 하나 추가 + infra/postgres/ai.sql 작성 + Gemini 설정.
+#
+# ── ai-service 제외 후 기대값 ────────────────────────────────────────────────
+#   앱 컨테이너 11 (+ Zipkin = 12) / Eureka 등록 10 / Gateway 라우트 9
+
+name: logistics
+
+# ── 공통 환경변수 ─────────────────────────────────────────────────────────────
+x-app-env: &app-env
+  SPRING_PROFILES_ACTIVE: prod
+
+  # 8GB 박스에 11개 JVM이 올라간다. 명시하지 않으면 JVM이 "RAM의 1/4"인 2GB를
+  # 잡으려 들어 4~5개째부터 OOM Killer에 죽는다.
+  JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=128m"
+
+  # 컨테이너 안에서 localhost는 자기 자신이라 yml의 하드코딩 값이 통하지 않는다
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:19090/eureka/"
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+
+  # 9개 서비스의 yml에 spring.rabbitmq.* 설정이 아예 없어서 기본값
+  # localhost:5672로 동작한다. 컨테이너에서는 반드시 덮어야 한다.
+  SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST}
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+
+  # 기본 풀 10 × DB 사용 9서비스 = 90. PostgreSQL max_connections 100에 근접하고
+  # 커넥션당 백엔드 프로세스가 ~8MB라 메모리도 잡아먹는다. 3으로 낮춰 27.
+  SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: "3"
+
+  # application-prod.yml이 ${DB_HOST} 형태로 참조한다
+  DB_HOST: ${DB_HOST}
+  DB_USERNAME: ${DB_USERNAME}
+  DB_PASSWORD: ${DB_PASSWORD}
+
+# ── 공통 서비스 설정 ──────────────────────────────────────────────────────────
+x-app-base: &app-base
+  restart: unless-stopped
+  # 초과 시 즉시 죽으므로 메모리 초과를 배포 후가 아니라 여기서 발견한다
+  mem_limit: 600m
+  networks: [logistics]
+  depends_on:
+    eureka-server:
+      condition: service_healthy
+
+# 포트가 열렸는지만 확인한다. alpine 베이스라 bash가 없어 busybox의 nc를 쓴다.
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 15s
+  timeout: 5s
+  retries: 20
+  start_period: 60s
+
+services:
+
+  # ── 인프라 ─────────────────────────────────────────────────────────────────
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/eureka-server:${IMAGE_TAG:-latest}
+    container_name: logistics-eureka-server
+    restart: unless-stopped
+    mem_limit: 600m
+    networks: [logistics]
+    ports:
+      - "19090:19090"   # G1/G6에서 /eureka/apps 조회에 사용
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=128m"
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19090"]
+      <<: *healthcheck-defaults
+
+  gateway-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/gateway-service:${IMAGE_TAG:-latest}
+    container_name: logistics-gateway-service
+    ports:
+      - "19091:19091"   # 외부 진입점. SG에서 본인 IP만 허용
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=128m"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:19090/eureka/"
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      # Phase 1.5에서 JwtAuthenticationGlobalFilter가 사용한다
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19091"]
+      <<: *healthcheck-defaults
+
+  # ── 비즈니스 서비스 9개 ────────────────────────────────────────────────────
+  user-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/user-service:${IMAGE_TAG:-latest}
+    container_name: logistics-user-service
+    environment:
+      <<: *app-env
+      JWT_SECRET: ${JWT_SECRET}
+      # 최초 MASTER 계정 부트스트랩. app.master.slack-id 는 대시가 제거되어
+      # APP_MASTER_SLACKID 가 된다 (APP_MASTER_SLACK_ID 아님).
+      APP_MASTER_USERNAME: ${MASTER_USERNAME}
+      APP_MASTER_PASSWORD: ${MASTER_PASSWORD}
+      APP_MASTER_SLACKID: ${MASTER_SLACK_ID}
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19092"]
+      <<: *healthcheck-defaults
+
+  order-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/order-service:${IMAGE_TAG:-latest}
+    container_name: logistics-order-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19093"]
+      <<: *healthcheck-defaults
+
+  product-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: product-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/product-service:${IMAGE_TAG:-latest}
+    container_name: logistics-product-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19094"]
+      <<: *healthcheck-defaults
+
+  delivery-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: delivery-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/delivery-service:${IMAGE_TAG:-latest}
+    container_name: logistics-delivery-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19096"]
+      <<: *healthcheck-defaults
+
+  hub-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: hub-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/hub-service:${IMAGE_TAG:-latest}
+    container_name: logistics-hub-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19097"]
+      <<: *healthcheck-defaults
+
+  inventory-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: inventory-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/inventory-service:${IMAGE_TAG:-latest}
+    container_name: logistics-inventory-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19098"]
+      <<: *healthcheck-defaults
+
+  company-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: company-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/company-service:${IMAGE_TAG:-latest}
+    container_name: logistics-company-service
+    environment:
+      <<: *app-env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19099"]
+      <<: *healthcheck-defaults
+
+  hubroute-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: hubRoute-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/hubroute-service:${IMAGE_TAG:-latest}
+    container_name: logistics-hubroute-service
+    environment:
+      <<: *app-env
+      # 이 서비스만 Redis를 쓴다 (@Cacheable 로 허브 경로 계산 결과 캐싱).
+      # yml이 이미 ${REDIS_HOST:localhost} 패턴이라 그대로 주입된다.
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: "6379"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19100"]
+      <<: *healthcheck-defaults
+
+  slack-service:
+    <<: *app-base
+    build:
+      context: .
+      dockerfile: slack-service/Dockerfile
+    image: ${IMAGE_REGISTRY:-logistics}/slack-service:${IMAGE_TAG:-latest}
+    container_name: logistics-slack-service
+    environment:
+      <<: *app-env
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 19101"]
+      <<: *healthcheck-defaults
+
+  # ── 관측 ───────────────────────────────────────────────────────────────────
+  # 브라우저로 UI를 봐야 하므로 Data EC2가 아니라 App EC2에 둔다.
+  # 트레이스는 휘발성 관측 데이터라 영속성이 필요 없다.
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: logistics-zipkin
+    restart: unless-stopped
+    mem_limit: 512m
+    networks: [logistics]
+    ports:
+      - "9411:9411"
+    environment:
+      # Zipkin도 JVM이다. 방치하면 2GB를 잡는다.
+      JAVA_OPTS: "-Xmx256m"
+
+networks:
+  logistics:
+    driver: bridge

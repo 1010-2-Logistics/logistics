@@ -1,0 +1,46 @@
+package com.logistics.user.domain.repository;
+
+import com.logistics.user.domain.entity.User;
+import java.util.Optional;
+import java.util.UUID;
+
+import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.domain.entity.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+public interface UserQueryRepository {
+
+    Optional<User> findByIdAndDeletedAtIsNull(Long userId);
+
+    Page<User> search(
+            String username,
+            UserStatus status,
+            UserRole role,
+            UUID hubId,
+            UUID companyId,
+            Pageable pageable
+    );
+
+    /**
+     * 삭제되지 않은 사용자 중 username 중복 여부 확인
+     */
+    boolean existsByUsername(String username);
+
+    /**
+     * 삭제되지 않은 사용자 중 Slack ID 중복 여부 확인
+     */
+    boolean existsBySlackId(String slackId);
+
+    /**
+     * 로그인할 사용자 username으로 조회
+     *
+     * 삭제된 사용자도 조회해야 AUTH_USER_DELETED를 반환 가능
+     */
+    Optional<User> findByUsername(String username);
+
+    //서비스 시작시 이미 MASTER가 존재하는가?
+    boolean existsByRole(
+            UserRole role
+    );
+}

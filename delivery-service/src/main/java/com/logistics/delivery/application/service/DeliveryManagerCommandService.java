@@ -1,0 +1,85 @@
+package com.logistics.delivery.application.service;
+
+import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
+import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.domain.entity.DeliveryManager;
+import com.logistics.delivery.domain.entity.DeliveryManagerAssignmentState;
+import com.logistics.delivery.domain.entity.ManagerType;
+import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRepository;
+import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
+import com.logistics.delivery.global.exception.CustomException;
+import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import feign.FeignException;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class DeliveryManagerCommandService {
+
+    private final DeliveryManagerRepository deliveryManagerRepository;
+    private final DeliveryManagerAssignmentStateRepository assignmentStateRepository;
+    private final HubPort hubPort;
+
+    public DeliveryManager register(RegisterDeliveryManagerCommand command) {
+        if (deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(command.userId())) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_ALREADY_EXISTS);
+        }
+
+        if (command.managerType() == ManagerType.COMPANY_DELIVERY_MANAGER) {
+            validateHub(command.hubId());
+        }
+
+        // 같은 (managerType, hubId) 풀에 대한 시퀀스 채번을 직렬화 + 배정 상태 생성 책임을 등록 쪽으로 확정
+        assignmentStateRepository
+                .findForUpdate(command.managerType(), command.hubId())
+                .orElseGet(() -> assignmentStateRepository.save(
+                        DeliveryManagerAssignmentState.init(command.managerType(), command.hubId())));
+
+        int nextSequence = deliveryManagerRepository
+                .findMaxSequence(command.managerType(), command.hubId())
+                .map(seq -> seq + 1)
+                .orElse(0);
+
+        DeliveryManager manager = DeliveryManager.create(
+                command.userId(), command.hubId(), command.slackId(), command.managerType(), nextSequence);
+        return deliveryManagerRepository.save(manager);
+    }
+
+    private void validateHub(UUID hubId) {
+        if (hubId == null) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+        }
+        try {
+            Set<UUID> validIds = hubPort.validateHubIds(List.of(hubId));
+            if (!validIds.contains(hubId)) {
+                throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
+            }
+        } catch (FeignException e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
+        DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
+
+        if (manager.getManagerType() == ManagerType.COMPANY_DELIVERY_MANAGER) {
+            validateHub(hubId);
+        }
+
+        manager.updateHub(hubId);
+        return manager;
+    }
+
+    public void delete(Long deliveryManagerId) {
+        DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
+        manager.markDeleted(null);
+    }
+}

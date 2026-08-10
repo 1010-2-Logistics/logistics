@@ -1,0 +1,36 @@
+package com.logistics.hubRoute.infrastructure.persistence.repository;
+
+import com.logistics.hubRoute.domain.entity.HubRoute;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+interface HubRouteJpaRepository extends JpaRepository<HubRoute, UUID> {
+
+    Optional<HubRoute> findByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId);
+
+    @Query("SELECT h FROM HubRoute h WHERE h.deletedAt IS NULL "
+            + "AND (:hubRouteId IS NULL OR h.hubRouteId = :hubRouteId)")
+    Page<HubRoute> search(@Param("hubRouteId") UUID hubRouteId, Pageable pageable);
+
+    boolean existsByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
+
+    boolean existsByStartHubIdAndEndHubIdAndHubRouteIdNotAndDeletedAtIsNull(UUID startHubId, UUID endHubId, UUID hubRouteId);
+
+    Optional<HubRoute> findByStartHubIdAndEndHubIdAndDeletedAtIsNull(UUID startHubId, UUID endHubId);
+
+    List<HubRoute> findAllByDeletedAtIsNull();
+
+    boolean existsByHubRouteIdAndDeletedAtIsNull(UUID hubRouteId);
+
+    //허브가 삭제되면 해당 허브를 사용하는 허브 경로도 같이 삭제
+    @Query("SELECT h FROM HubRoute h WHERE (h.startHubId = :startHubId OR h.endHubId = :endHubId) AND h.deletedAt IS NULL")
+    List<HubRoute> findAllByStartHubIdOrEndHubIdAndDeletedAtIsNull(@Param("startHubId") UUID startHubId, @Param("endHubId") UUID endHubId);
+}

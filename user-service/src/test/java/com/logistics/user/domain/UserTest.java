@@ -1,0 +1,268 @@
+package com.logistics.user.domain;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
+import com.logistics.user.domain.entity.UserStatus;
+import java.util.UUID;
+
+import com.logistics.user.global.exception.CustomException;
+import com.logistics.user.global.exception.UserErrorCode;
+import org.junit.jupiter.api.Test;
+
+class UserTest {
+
+    @Test
+    void 생성하면_PENDING_상태로_시작한다() {
+        // given
+        UUID companyId = UUID.randomUUID();
+        UUID hubId = UUID.randomUUID();
+
+        // when
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.COMPANY_MANAGER,
+                companyId,
+                hubId
+        );
+
+        // then
+        assertThat(user.getUsername())
+                .isEqualTo("sample01");
+
+        assertThat(user.getPassword())
+                .isEqualTo("encoded-password");
+
+        assertThat(user.getSlackId())
+                .isEqualTo("U0123456789");
+
+        assertThat(user.getRole())
+                .isEqualTo(UserRole.COMPANY_MANAGER);
+
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.PENDING);
+
+        assertThat(user.getCompanyId())
+                .isEqualTo(companyId);
+
+        assertThat(user.getHubId())
+                .isEqualTo(hubId);
+    }
+
+    @Test
+    void Slack_ID를_변경할_수_있다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        // when
+        user.updateSlackId("U9999999999");
+
+        // then
+        assertThat(user.getSlackId())
+                .isEqualTo("U9999999999");
+    }
+
+    @Test
+    void 비밀번호를_변경할_수_있다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "old-encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        // when
+        user.changePassword("new-encoded-password");
+
+        // then
+        assertThat(user.getPassword())
+                .isEqualTo("new-encoded-password");
+    }
+
+    @Test
+    void 사용자를_승인할_수_있다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        // when
+        user.approve();
+
+        // then
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.APPROVED);
+    }
+
+    @Test
+    void 사용자를_거절할_수_있다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        String rejectionReason = "가입 조건을 충족하지 않았습니다.";
+
+        // when
+        user.reject(rejectionReason);
+
+        // then
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.REJECTED);
+
+        assertThat(user.getRejectionReason())
+                .isEqualTo(rejectionReason);
+    }
+
+    @Test
+    void 거절_사유가_없으면_예외가_발생한다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        // when & then
+        assertThatThrownBy(
+                () -> user.reject(null)
+        )
+                .isInstanceOf(CustomException.class)
+                .satisfies(exception -> {
+                    CustomException customException =
+                            (CustomException) exception;
+
+                    assertThat(customException.getErrorCode())
+                            .isEqualTo(
+                                    UserErrorCode.USER_APPROVAL_INVALID_REQUEST
+                            );
+                });
+
+        // 실패했으므로 상태는 여전히 PENDING
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.PENDING);
+    }
+
+    @Test
+    void 이미_승인된_사용자를_다시_승인하면_예외가_발생한다() {
+        // given
+        User user = User.create(
+                "sample01",
+                "encoded-password",
+                "U0123456789",
+                UserRole.MASTER,
+                null,
+                null
+        );
+
+        user.approve();
+
+        // when & then
+        assertThatThrownBy(user::approve)
+                .isInstanceOf(CustomException.class)
+                .satisfies(exception -> {
+                    CustomException customException =
+                            (CustomException) exception;
+
+                    assertThat(customException.getErrorCode())
+                            .isEqualTo(
+                                    UserErrorCode.USER_APPROVAL_CONFLICT
+                            );
+                });
+
+        // 예외 발생 후에도 기존 상태는 유지되어야 한다.
+        assertThat(user.getStatus())
+                .isEqualTo(UserStatus.APPROVED);
+    }
+
+    @Test
+    void MASTER는_업체나_허브에_소속될_수_없다() {
+        // given
+        UUID companyId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(
+                () -> User.create(
+                        "sample01",
+                        "encoded-password",
+                        "U0123456789",
+                        UserRole.MASTER,
+                        companyId,
+                        null
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("MASTER는 업체 또는 허브에 소속될 수 없습니다.");
+    }
+
+    @Test
+    void 업체_역할은_companyId와_hubId가_모두_필요하다() {
+        // given
+        UUID companyId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(
+                () -> User.create(
+                        "sample01",
+                        "encoded-password",
+                        "U0123456789",
+                        UserRole.COMPANY_MANAGER,
+                        companyId,
+                        null
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(
+                        "업체 역할은 companyId와 hubId가 모두 필요합니다."
+                );
+    }
+
+    @Test
+    void 업체_역할은_companyId가_없으면_예외가_발생한다() {
+        // given
+        UUID hubId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(
+                () -> User.create(
+                        "sample01",
+                        "encoded-password",
+                        "U0123456789",
+                        UserRole.COMPANY_MANAGER,
+                        null,
+                        hubId
+                )
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(
+                        "업체 역할은 companyId와 hubId가 모두 필요합니다."
+                );
+    }
+}
