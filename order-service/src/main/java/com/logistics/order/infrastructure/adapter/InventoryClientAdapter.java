@@ -1,9 +1,12 @@
 package com.logistics.order.infrastructure.adapter;
 
 import com.logistics.order.application.port.InventoryPort;
+import com.logistics.order.global.exception.CustomException;
+import com.logistics.order.global.exception.OrderErrorCode;
 import com.logistics.order.infrastructure.feign.client.InventoryClient;
 import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
 import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,15 +25,26 @@ public class InventoryClientAdapter implements InventoryPort {
             UUID hubId,
             Integer quantity
     ) {
-        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
-                operationId,
-                orderId,
-                productId,
-                hubId,
-                quantity
-        );
 
-        inventoryClient.deductInventory(inventoryDeductionRequest);
+        try {
+            InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
+                    operationId,
+                    orderId,
+                    productId,
+                    hubId,
+                    quantity
+            );
+            inventoryClient.deductInventory(inventoryDeductionRequest);
+
+        } catch (FeignException.Conflict e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_OUT_OF_STOCK
+            );
+        } catch (FeignException e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 
     @Override

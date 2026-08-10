@@ -2,9 +2,12 @@ package com.logistics.order.infrastructure.adapter;
 
 import com.logistics.order.application.dto.result.DeliveryCreateResult;
 import com.logistics.order.application.port.DeliveryPort;
+import com.logistics.order.global.exception.CustomException;
+import com.logistics.order.global.exception.OrderErrorCode;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,21 +28,27 @@ public class DeliveryClientAdapter implements DeliveryPort {
             String receiverName,
             String receiverSlackId
     ) {
-        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
-                orderId,
-                startHubId,
-                endHubId,
-                deliveryAddress,
-                receiverName,
-                receiverSlackId
-        );
+        try {
+            DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
+                    orderId,
+                    startHubId,
+                    endHubId,
+                    deliveryAddress,
+                    receiverName,
+                    receiverSlackId
+            );
 
-        DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
+            DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
 
-        return new DeliveryCreateResult(
-                deliveryCreateResponse.deliveryId(),
-                deliveryCreateResponse.routeCount()
-        );
+            return new DeliveryCreateResult(
+                    deliveryCreateResponse.deliveryId(),
+                    deliveryCreateResponse.routeCount()
+            );
+        } catch (FeignException e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 
     @Override

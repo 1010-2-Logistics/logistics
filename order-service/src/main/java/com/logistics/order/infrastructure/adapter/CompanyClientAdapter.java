@@ -2,8 +2,11 @@ package com.logistics.order.infrastructure.adapter;
 
 import com.logistics.order.application.dto.result.CompanyOrderInfoResult;
 import com.logistics.order.application.port.CompanyPort;
+import com.logistics.order.global.exception.CustomException;
+import com.logistics.order.global.exception.OrderErrorCode;
 import com.logistics.order.infrastructure.feign.client.CompanyClient;
 import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,19 +22,28 @@ public class CompanyClientAdapter implements CompanyPort {
             UUID startCompanyId,
             UUID endCompanyId
     ) {
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
-                startCompanyId,
-                endCompanyId
-        ).getData();
+        try {
+            CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            ).getData();
 
-        return new CompanyOrderInfoResult(
-                companyOrderInfoResponse.startCompanyId(),
-                companyOrderInfoResponse.startHubId(),
-                companyOrderInfoResponse.startCompanyAddress(),
-                companyOrderInfoResponse.endCompanyId(),
-                companyOrderInfoResponse.endHubId(),
-                companyOrderInfoResponse.endCompanyAddress()
-        );
+            return new CompanyOrderInfoResult(
+                    companyOrderInfoResponse.startCompanyId(),
+                    companyOrderInfoResponse.startHubId(),
+                    companyOrderInfoResponse.startCompanyAddress(),
+                    companyOrderInfoResponse.endCompanyId(),
+                    companyOrderInfoResponse.endHubId(),
+                    companyOrderInfoResponse.endCompanyAddress()
+            );
+        } catch (FeignException.NotFound e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_REFERENCE_NOT_FOUND
+            );
+        } catch (FeignException e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 }
-
