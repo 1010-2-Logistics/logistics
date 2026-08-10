@@ -6,9 +6,9 @@ import java.io.InputStream;
 import org.springframework.stereotype.Component;
 
 import com.logistics.ai.global.response.ErrorResponse;
-import com.logistics.ai.infrastructure.feign.exception.NonRetryRemoteException;
-import com.logistics.ai.infrastructure.feign.exception.RemoteErrorCode;
-import com.logistics.ai.infrastructure.feign.exception.RetryRemoteException;
+import com.logistics.ai.infrastructure.exception.NonRetryRemoteException;
+import com.logistics.ai.infrastructure.exception.RemoteErrorCode;
+import com.logistics.ai.infrastructure.exception.RetryRemoteException;
 
 import feign.Response;
 import feign.codec.ErrorDecoder;

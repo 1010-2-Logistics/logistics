@@ -3,6 +3,7 @@ package com.logistics.ai.application.service;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.stereotype.Service;
@@ -11,17 +12,22 @@ import com.logistics.ai.application.dto.result.DispatchDeadlineResultDto;
 import com.logistics.ai.application.dto.result.DispatchDeadlineRetryResultDto;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
 import com.logistics.ai.application.port.out.DispatchDeadlineGenerationPort;
-import com.logistics.ai.global.exception.DeadlineGenerationRetryException;
-
-import lombok.RequiredArgsConstructor;
+import com.logistics.ai.infrastructure.exception.DeadlineGenerationRetryException;
 
 @Service
-@RequiredArgsConstructor
 public class DeadlineGenerationRetryServiceImpl implements DeadlineGenerationRetryService {
 
 	private final DispatchDeadlineGenerationPort generationPort;
 	
 	private final RetryTemplate retryTemplate;
+	
+	public DeadlineGenerationRetryServiceImpl(
+			DispatchDeadlineGenerationPort generationPort,
+			@Qualifier("deadlineGenerationRetryTemplate") RetryTemplate retryTemplate
+	) {
+		this.generationPort = generationPort;
+		this.retryTemplate = retryTemplate;
+	}
 
 	@Override
 	public DispatchDeadlineRetryResultDto generate(String requestPrompt, String aiModel) {
@@ -58,6 +64,8 @@ public class DeadlineGenerationRetryServiceImpl implements DeadlineGenerationRet
 			throw new DeadlineGenerationRetryException(
 					getRootMessage(lastException),
 					e.getRetryCount(),
+					requestPrompt,
+					aiModel,
 					lastException
 			);
 		}

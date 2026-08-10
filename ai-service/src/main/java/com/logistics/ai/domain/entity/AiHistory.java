@@ -32,7 +32,7 @@ public class AiHistory {
 	@Column(name = "delivery_id", nullable = false)
 	private UUID deliveryId;
 	
-	@Column(name = "request_prompt", columnDefinition = "TEXT", nullable = false)
+	@Column(name = "request_prompt", columnDefinition = "TEXT")
 	private String requestPrompt;
 	
 	@Column(name = "response_prompt", columnDefinition = "TEXT")

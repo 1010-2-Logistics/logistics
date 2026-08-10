@@ -8,5 +8,5 @@ public interface DispatchDeadlineCommandService {
 
 	AiHistory saveSucceeded(AiHistory successAiHistory);
 	
-	AiHistory saveFailed(UUID orderId, UUID deliveryId, String requestPrompt, String aiModel, String errorMessage, Integer retryCount);
+	AiHistory saveFailed(UUID orderId, UUID deliveryId, String requestPrompt, String aiModel, String errorMessage, int retryCount);
 }

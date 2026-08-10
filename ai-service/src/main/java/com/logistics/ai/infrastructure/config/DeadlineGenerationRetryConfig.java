@@ -7,14 +7,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.core.retry.RetryTemplate;
 
-import com.logistics.ai.infrastructure.feign.exception.RetryRemoteException;
+import com.logistics.ai.infrastructure.exception.RetryRemoteException;
 
 import feign.RetryableException;
 
 @Configuration
 public class DeadlineGenerationRetryConfig {
 
-	@Bean
+	@Bean("deadlineGenerationRetryTemplate")
 	RetryTemplate deadlineGenerationRetryTemplate() {
 		RetryPolicy retryPolicy = RetryPolicy.builder()
         .maxRetries(2)

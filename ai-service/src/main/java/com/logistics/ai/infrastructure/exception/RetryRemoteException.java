@@ -1,4 +1,4 @@
-package com.logistics.ai.infrastructure.feign.exception;
+package com.logistics.ai.infrastructure.exception;
 
 import lombok.Getter;
 

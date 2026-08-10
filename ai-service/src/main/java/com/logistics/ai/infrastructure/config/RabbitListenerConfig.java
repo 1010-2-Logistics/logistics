@@ -1,15 +1,17 @@
 package com.logistics.ai.infrastructure.config;
 
-import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
+import java.time.Duration;
+
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.config.StatelessRetryOperationsInterceptor;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 
-import com.logistics.ai.infrastructure.feign.exception.RetryRemoteException;
-import com.logistics.ai.infrastructure.messaging.OrderCreatedMessageRecover;
+import com.logistics.ai.infrastructure.exception.DeadlineGenerationRetryException;
+import com.logistics.ai.infrastructure.exception.RetryRemoteException;
 
 import feign.RetryableException;
 import tools.jackson.databind.json.JsonMapper;
@@ -18,41 +20,60 @@ import tools.jackson.databind.json.JsonMapper;
 public class RabbitListenerConfig {
 	
 	@Bean
-	JacksonJsonMessageConverter rabbitMessageConvertor(JsonMapper jsonMapper) {
+	JacksonJsonMessageConverter jacksonJsonMessageConverter(JsonMapper jsonMapper) {
 		return new JacksonJsonMessageConverter(jsonMapper);
 	}
 	
-	@Bean
-	StatelessRetryOperationsInterceptor orderCreatedRetryInterceptor(OrderCreatedMessageRecover orderCreatedMessageRecover) {
-		return RetryInterceptorBuilder
-				.stateless()
-				.configureRetryPolicy(policy -> policy
-						.maxRetries(2) // 최초 1회 + 재시도 2회 = 총 3회
-						.includes(RetryRemoteException.class, RetryableException.class) // Retry 대상을 RetryRemoteException 계열로 한정
-				)
-				.backOffOptions(
-						1000,
-						2.0,
-						10000
-				)
-				.recoverer(orderCreatedMessageRecover)
+	@Bean("orderCreatedRetryTemplate")
+	RetryTemplate orderCreatedRetryTemplate() {
+		RetryPolicy retryPolicy = RetryPolicy.builder()
+				.maxRetries(2)
+				.delay(Duration.ofSeconds(2))
+				.multiplier(2.0)
+				.maxDelay(Duration.ofSeconds(60))
+				.predicate(RabbitListenerConfig::isOrderCreatedRetryable)
 				.build();
+		
+		return new RetryTemplate(retryPolicy);
 	}
 	
 	@Bean
-	SimpleRabbitListenerContainerFactory orderCreatedRabbitListenerContainerFactory(
+	SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
 			ConnectionFactory connectionFactory,
-			StatelessRetryOperationsInterceptor orderCreatedRetryInterceptor,
-			JacksonJsonMessageConverter rabbitMessageConvertor) {
+			JacksonJsonMessageConverter rabbitMessageConvertor
+	) {
 		SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
 		
 		factory.setConnectionFactory(connectionFactory);
-		
-		factory.setAdviceChain(orderCreatedRetryInterceptor);
-		
 		factory.setMessageConverter(rabbitMessageConvertor);
 		
 		return factory;
 	}
+	
+	private static boolean isOrderCreatedRetryable(Throwable throwable) {
+		if(hasCause(throwable, DeadlineGenerationRetryException.class)) {
+			return false;
+		}
+		
+		return hasCause(throwable, RetryRemoteException.class) || hasCause(throwable, RetryableException.class);
+	}
+
+	private static boolean hasCause(Throwable throwable, Class<? extends Throwable> type) {
+		Throwable current = throwable;
+		
+		while(current != null) {
+			if(type.isInstance(current)) {
+				return true;
+			}
+			
+			if(current == current.getCause()) {
+				break;
+			}
+			
+			current = current.getCause();
+		}
+		return false;
+	}
+	
 	
 }

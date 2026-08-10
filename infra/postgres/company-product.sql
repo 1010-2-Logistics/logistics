@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS ai_service.p_ai (
     ai_id UUID PRIMARY KEY,
     order_id UUID NOT NULL,
     delivery_id UUID NOT NULL,
-    request_prompt TEXT NOT NULL,
+    request_prompt TEXT,
     response_prompt TEXT,
     final_deadline TIMESTAMP,
     ai_model VARCHAR(50),
