@@ -3,6 +3,7 @@ package com.logistics.ai.infrastructure.config;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,15 @@ public class RabbitMqConfig {
   @Value("${rabbitmq.order-created.queue}")
   private String orderCreatedQueue;
   
+  @Value("${rabbitmq.order-created.dlx}")
+  private String orderCreatedDlx;
+  
+  @Value("${rabbitmq.order-created.dlq}")
+  private String orderCreatedDlq;
+  
+  @Value("${rabbitmq.order-created.dlq-routing-key}")
+  private String orderCreatedDlqRoutingKey;
+  
   @Bean
   TopicExchange orderCreatedExchange() {
   	return new TopicExchange(orderCreatedExchange);
@@ -24,7 +34,11 @@ public class RabbitMqConfig {
   
   @Bean
   Queue orderCreatedQueue() {
-  	return new Queue(orderCreatedQueue);
+  	return QueueBuilder
+  			.durable(orderCreatedQueue)
+  			.deadLetterExchange(orderCreatedDlx)
+  			.deadLetterRoutingKey(orderCreatedDlqRoutingKey)
+  			.build();
   }
   
   @Bean
@@ -33,6 +47,26 @@ public class RabbitMqConfig {
   			.bind(orderCreatedQueue())
   			.to(orderCreatedExchange())
   			.with(orderCreatedQueue);		
+  }
+  
+  @Bean
+  TopicExchange orderCreatedDlx() {
+  	return new TopicExchange(orderCreatedDlx);
+  }
+  
+  @Bean
+  Queue orderCreatedDlq() {
+  	return QueueBuilder
+  			.durable(orderCreatedDlq)
+  			.build();
+  }
+  
+  @Bean
+  Binding orderCreatedDlqBinding() {
+  	return BindingBuilder
+  			.bind(orderCreatedDlq())
+  			.to(orderCreatedDlx())
+  			.with(orderCreatedDlqRoutingKey);
   }
   
 }

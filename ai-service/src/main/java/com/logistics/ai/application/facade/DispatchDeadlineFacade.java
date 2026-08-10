@@ -85,7 +85,6 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// /internal/v1/hubs?=hub_uuid_1,hub_uuid_2,hub_uuid_3,hub_uuid_4,hub_uuid_5
 		
 		
-		
 		// === 가져온 정보들로 조합 === //
 		// AI 에게 보낼 메세지 //
 		// ============================ //

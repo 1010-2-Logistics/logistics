@@ -16,8 +16,15 @@ public class OrderCreatedEventListener {
 
 	private final DispatchDeadlineUseCase dispatchDeadlineUseCase;
 	
-	@RabbitListener(queues = "${rabbitmq.order-created.queue}")
+	@RabbitListener(
+			queues = "${rabbitmq.order-created.queue}",
+			containerFactory = "orderCreatedRabbitListenerContainerFactory"
+	)
 	public void handle(OrderCreatedEvent event) {
+		log.info("[AI-SERVICE] OrderCreatedEvent 수신, orderId = {}"
+				, event.orderId()
+		);
+		
 		dispatchDeadlineUseCase.generate(event);
 	}
 	
