@@ -2,6 +2,7 @@ package com.logistics.user.presentation.controller;
 
 
 import com.logistics.user.application.dto.command.ChangePasswordCommandDto;
+import com.logistics.user.application.dto.command.DeleteUserCommandDto;
 import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
 import com.logistics.user.application.dto.command.WithdrawUserCommandDto;
 import com.logistics.user.application.dto.result.ChangeApprovalResultDto;
@@ -11,9 +12,6 @@ import com.logistics.user.application.facade.UserFacade;
 import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.domain.entity.UserStatus;
-import com.logistics.user.global.exception.AuthErrorCode;
-import com.logistics.user.global.exception.CustomException;
-import com.logistics.user.global.exception.UserErrorCode;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.infrastructure.security.AuthenticatedUser;
 import com.logistics.user.presentation.dto.request.*;
@@ -174,5 +172,34 @@ public class CommandController {
                 message,
                 UserApprovalResponseDto.from(result)
         );
+    }
+
+    /**
+     * MASTER가 사용자를 관리자 권한으로 삭제
+     */
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(
+            @PathVariable Long userId,
+            Authentication authentication
+    ) {
+        /*
+         * Gateway 검증 후 Filter가 SecurityContext에 등록한
+         * 현재 요청자 정보
+         */
+        AuthenticatedUser currentUser =
+                (AuthenticatedUser) authentication.getPrincipal();
+
+        /*
+         * 요청자와 삭제 대상 정보 전달
+         */
+        DeleteUserCommandDto command =
+                new DeleteUserCommandDto(
+                        currentUser.userId(),
+                        currentUser.role(),
+                        userId
+                );
+
+        userCommandService.deleteUser(command);
     }
 }
