@@ -3,6 +3,7 @@ package com.logistics.delivery.application.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
@@ -14,6 +15,7 @@ import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRe
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.UserAffiliationPort;
 import feign.FeignException;
 
 import java.util.List;
@@ -37,6 +39,9 @@ class DeliveryManagerCommandServiceTest {
 
     @Mock
     private HubPort hubPort;
+
+    @Mock
+    private UserAffiliationPort userAffiliationPort;
 
     @InjectMocks
     private DeliveryManagerCommandService deliveryManagerCommandService;
@@ -140,6 +145,29 @@ class DeliveryManagerCommandServiceTest {
 
         // then
         assertThat(result.getDeliverySequence()).isEqualTo(4);
+    }
+
+    @Test
+    void 소속변경_API_호출_실패시_503_예외로_등록이_롤백된다() {
+        // given
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(6L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(Optional.empty());
+        when(deliveryManagerRepository.save(any(DeliveryManager.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        FeignException feignException = mock(FeignException.class);
+        lenient().when(feignException.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        doThrow(feignException).when(userAffiliationPort).changeAffiliation(eq(6L), any(), any());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(6L, null, "U06", ManagerType.HUB_DELIVERY_MANAGER);
+
+        // when & then
+        assertThatThrownBy(() -> deliveryManagerCommandService.register(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
     }
 
     @Test
