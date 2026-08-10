@@ -2,6 +2,7 @@ package com.logistics.delivery.application.service;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.UserAffiliationPort;
 import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.domain.entity.DeliveryManagerAssignmentState;
 import com.logistics.delivery.domain.entity.ManagerType;
@@ -25,6 +26,7 @@ public class DeliveryManagerCommandService {
     private final DeliveryManagerRepository deliveryManagerRepository;
     private final DeliveryManagerAssignmentStateRepository assignmentStateRepository;
     private final HubPort hubPort;
+    private final UserAffiliationPort userAffiliationPort;
 
     public DeliveryManager register(RegisterDeliveryManagerCommand command) {
         if (deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(command.userId())) {
@@ -48,7 +50,19 @@ public class DeliveryManagerCommandService {
 
         DeliveryManager manager = DeliveryManager.create(
                 command.userId(), command.hubId(), command.slackId(), command.managerType(), nextSequence);
-        return deliveryManagerRepository.save(manager);
+        DeliveryManager saved = deliveryManagerRepository.save(manager);
+
+        syncUserAffiliation(saved.getDeliveryManagerId(), saved.getManagerType(), saved.getHubId());
+
+        return saved;
+    }
+
+    private void syncUserAffiliation(Long userId, ManagerType managerType, UUID hubId) {
+        try {
+            userAffiliationPort.changeAffiliation(userId, managerType.name(), hubId);
+        } catch (FeignException e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+        }
     }
 
     private void validateHub(UUID hubId) {
@@ -74,6 +88,8 @@ public class DeliveryManagerCommandService {
         }
 
         manager.updateHub(hubId);
+        syncUserAffiliation(manager.getDeliveryManagerId(), manager.getManagerType(), manager.getHubId());
+
         return manager;
     }
 
