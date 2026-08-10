@@ -286,9 +286,42 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED));
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER);
 
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+    }
+
+    @Test
+    void 본인이_배정된_COMPANY_DELIVERY_MANAGER는_상태변경_가능() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+        delivery.assignCompanyDeliveryManager(42L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal companyManager = new UserPrincipal(42L, Role.COMPANY_DELIVERY_MANAGER, null, null);
+
+        DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), companyManager);
+
+        assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+    }
+
+    @Test
+    void 본인_배송이_아닌_COMPANY_DELIVERY_MANAGER는_상태변경시_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+        delivery.assignCompanyDeliveryManager(42L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal otherManager = new UserPrincipal(99L, Role.COMPANY_DELIVERY_MANAGER, null, null);
+
+        assertThatThrownBy(() -> deliveryCommandService.changeStatus(
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), otherManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     @Test
@@ -299,7 +332,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         assertThatThrownBy(() -> deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED)))
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
@@ -311,7 +344,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED)))
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
@@ -545,9 +578,37 @@ class DeliveryCommandServiceTest {
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        deliveryCommandService.delete(deliveryId);
+        deliveryCommandService.delete(deliveryId, MASTER);
 
         assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 담당_허브인_HUB_MANAGER는_삭제_가능() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID startHubId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal hubManager = new UserPrincipal(3L, Role.HUB_MANAGER, startHubId, null);
+
+        deliveryCommandService.delete(deliveryId, hubManager);
+
+        assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 담당_허브가_아닌_HUB_MANAGER가_삭제하면_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal otherHubManager = new UserPrincipal(3L, Role.HUB_MANAGER, UUID.randomUUID(), null);
+
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId, otherHubManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     @Test
@@ -555,7 +616,7 @@ class DeliveryCommandServiceTest {
         UUID deliveryId = UUID.randomUUID();
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId))
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
