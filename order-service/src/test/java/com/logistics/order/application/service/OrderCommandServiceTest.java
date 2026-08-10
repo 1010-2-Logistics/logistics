@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,7 +67,7 @@ class OrderCommandServiceTest {
 
             given(orderCommandRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
 
-            OrderCreateResult result = orderCommandService.createOrder(
+            OrderCreateResult orderCreateResult = orderCommandService.createOrder(
                     orderCreateCommand,
                     orderId,
                     deliveryId,
@@ -81,7 +82,8 @@ class OrderCommandServiceTest {
                             orderId,
                             deliveryId,
                             productId,
-                            10
+                            10,
+                            LocalDateTime.of(2026, 8, 10, 17, 30)
                     )
             );
 
@@ -95,7 +97,7 @@ class OrderCommandServiceTest {
             assertThat(savedOrder.getRequest()).isEqualTo("8월 6일 오전까지 납품");
             assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.CREATED);
 
-            assertThat(result.orderId()).isEqualTo(orderId);
+            assertThat(orderCreateResult.orderId()).isEqualTo(orderId);
         }
     }
 

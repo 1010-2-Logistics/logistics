@@ -29,6 +29,7 @@ public class CommandController {
 
     @PostMapping
     public ApiResponse<OrderCreateResponseDto> createOrder(
+            @RequestHeader("Idempotency-Key") UUID idempotencyKey,
             @Valid @RequestBody OrderCreateRequestDto orderCreateRequestDto
     ) {
         OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
@@ -38,7 +39,10 @@ public class CommandController {
                 orderCreateRequestDto.request()
         );
 
-        OrderCreateResult orderCreateResult = orderFacade.createOrder(orderCreateCommand);
+        OrderCreateResult orderCreateResult = orderFacade.createOrder(
+                orderCreateCommand,
+                idempotencyKey
+        );
 
         OrderCreateResponseDto orderCreateResponseDto =
                 OrderCreateResponseDto.from(orderCreateResult);

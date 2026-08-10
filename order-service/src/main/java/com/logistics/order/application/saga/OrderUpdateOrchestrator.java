@@ -16,7 +16,6 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class OrderUpdateOrchestrator {
-
     private final OrderCommandService orderCommandService;
     private final InventoryPort inventoryPort;
 

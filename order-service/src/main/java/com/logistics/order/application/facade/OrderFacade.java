@@ -1,14 +1,17 @@
 package com.logistics.order.application.facade;
 
-import com.logistics.order.application.dto.command.*;
+import com.logistics.order.application.dto.command.OrderCancelCommand;
+import com.logistics.order.application.dto.command.OrderCreateCommand;
+import com.logistics.order.application.dto.command.OrderDeleteCommand;
+import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.*;
 import com.logistics.order.application.port.CompanyPort;
-import com.logistics.order.application.port.DeliveryPort;
-import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.port.ProductPort;
+import com.logistics.order.application.saga.OrderCancelOrchestrator;
 import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.saga.OrderDeleteOrchestrator;
 import com.logistics.order.application.saga.OrderUpdateOrchestrator;
+import com.logistics.order.application.saga.command.OrderCancelSagaCommand;
 import com.logistics.order.application.saga.command.OrderCreateSagaCommand;
 import com.logistics.order.application.saga.command.OrderDeleteSagaCommand;
 import com.logistics.order.application.saga.command.OrderUpdateSagaCommand;
@@ -24,26 +27,22 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
-    // Facade 구현체는 Repository를 직접 의존하면 안 된다
     private final OrderCreateOrchestrator orderCreateOrchestrator;
     private final OrderUpdateOrchestrator orderUpdateOrchestrator;
     private final OrderDeleteOrchestrator orderDeleteOrchestrator;
+    private final OrderCancelOrchestrator orderCancelOrchestrator;
 
     private final OrderCommandService orderCommandService;
-    private final DeliveryPort deliveryPort;
     private final ProductPort productPort;
-    private final InventoryPort inventoryPort;
     private final CompanyPort companyPort;
 
     // TODO: User 내부 조회 API 구현 후 실제 수령인 정보로 교체
     String receiverName = "임시 수령인";
     String receiverSlackId = "TEMP_SLACK_ID";
 
-    // TODO: 현재 operationId는 Saga 실행마다 새로 생성되므로
-    // 동일 HTTP 요청 재시도까지 보장하는 멱등키는 아님
-    // 추후 요청 경계에서 Idempotency-Key를 전달받는 방식 검토
     public OrderCreateResult createOrder(
-            OrderCreateCommand orderCreateCommand
+            OrderCreateCommand orderCreateCommand,
+            UUID idempotencyKey
     ) {
         ProductGetResult productGetResult = productPort.getProduct(
                 orderCreateCommand.productId()
@@ -61,7 +60,8 @@ public class OrderFacade {
                 companyOrderInfoResult.endHubId(),
                 companyOrderInfoResult.endCompanyAddress(),
                 receiverName,
-                receiverSlackId
+                receiverSlackId,
+                idempotencyKey
         );
 
         return orderCreateOrchestrator.execute(orderCreateSagaCommand);
@@ -124,8 +124,6 @@ public class OrderFacade {
     public OrderCancelResult cancelOrder(
             OrderCancelCommand orderCancelCommand
     ) {
-        UUID operationId = UUID.randomUUID();
-
         Order order = orderCommandService.findOrderForCancel(
                 orderCancelCommand.orderId()
         );
@@ -135,18 +133,11 @@ public class OrderFacade {
                 order.getEndCompanyId()
         );
 
-        deliveryPort.cancelDelivery(
-                order.getOrderId()
-        );
-        // 실패 시
-        inventoryPort.restoreInventory(
-                operationId,
-                order.getOrderId(),
-                order.getProductId(),
-                companyOrderInfoResult.startHubId(),
-                order.getQuantity()
+        OrderCancelSagaCommand orderCancelSagaCommand = new OrderCancelSagaCommand(
+                order,
+                companyOrderInfoResult.startHubId()
         );
 
-        return orderCommandService.cancelOrder(order);
+        return orderCancelOrchestrator.execute(orderCancelSagaCommand);
     }
 }

@@ -21,7 +21,6 @@ public class OrderCancelOrchestrator {
     private final DeliveryPort deliveryPort;
     private final InventoryPort inventoryPort;
 
-
     public OrderCancelResult execute(
             OrderCancelSagaCommand orderCancelSagaCommand
     ) {
@@ -42,7 +41,7 @@ public class OrderCancelOrchestrator {
         );
     }
 
-    public void cancelDelivery(
+    private void cancelDelivery(
             OrderCancelSagaCommand orderCancelSagaCommand
     ) {
         deliveryPort.cancelDelivery(

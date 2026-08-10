@@ -11,6 +11,7 @@ public record OrderCreateSagaCommand(
         UUID endHubId,
         String endCompanyAddress,
         String receiverName,
-        String receiverSlackId
+        String receiverSlackId,
+        UUID idempotencyKey
 ) {
 }
