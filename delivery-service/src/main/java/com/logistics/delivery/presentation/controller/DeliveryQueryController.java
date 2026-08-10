@@ -5,6 +5,7 @@ import com.logistics.delivery.application.service.DeliveryQueryService;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
 import com.logistics.delivery.global.response.ApiResponse;
 import com.logistics.delivery.global.response.PageResponse;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import com.logistics.delivery.presentation.dto.response.DeliveryResponse;
 import com.logistics.delivery.presentation.dto.response.DeliveryRouteListResponse;
 import com.logistics.delivery.presentation.dto.response.DeliverySummaryResponse;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,8 +63,9 @@ public class DeliveryQueryController {
                 """
     )
     @GetMapping("/{deliveryId}")
-    public ApiResponse<DeliveryResponse> getById(@PathVariable UUID deliveryId) {
-        var result = deliveryQueryService.getById(deliveryId);
+    public ApiResponse<DeliveryResponse> getById(@PathVariable UUID deliveryId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        var result = deliveryQueryService.getById(deliveryId, principal);
         return ApiResponse.success(200, "배송 조회 성공", DeliveryResponse.from(result));
     }
 
@@ -77,8 +80,9 @@ public class DeliveryQueryController {
                 """
     )
     @GetMapping("/{deliveryId}/routes")
-    public ApiResponse<DeliveryRouteListResponse> getRoutes(@PathVariable UUID deliveryId) {
-        var result = deliveryQueryService.getRoutes(deliveryId);
+    public ApiResponse<DeliveryRouteListResponse> getRoutes(@PathVariable UUID deliveryId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        var result = deliveryQueryService.getRoutes(deliveryId, principal);
         return ApiResponse.success(200, "배송 경로 조회 성공", DeliveryRouteListResponse.from(result));
     }
 }

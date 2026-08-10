@@ -13,6 +13,7 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -107,12 +108,14 @@ public class DeliveryCommandService {
         return new DeliveryDetailResult(delivery);
     }
 
-    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId, ChangeDeliveryRouteStatusCommand command) {
+    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId,
+                                                     ChangeDeliveryRouteStatusCommand command, UserPrincipal principal) {
         DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
         if (!route.getDeliveryId().equals(deliveryId)) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
         }
+        validateRouteOwnership(principal, route);
         validateRouteTransition(route.getStatus(), command.status());
         validateSequentialProgress(deliveryId, route.getSequence());
 
@@ -181,5 +184,20 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
         found.changeStatus(DeliveryStatus.CANCELLED);
+    }
+
+    private void validateRouteOwnership(UserPrincipal principal, DeliveryRoute route) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        boolean owns = switch (principal.getRole()) {
+            case HUB_MANAGER -> principal.getHubId().equals(route.getStartHubId())
+                    || principal.getHubId().equals(route.getEndHubId());
+            case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> principal.getUserId().equals(route.getDeliveryManagerId());
+            default -> false;
+        };
+        if (!owns) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.logistics.delivery.presentation.controller;
 
 import com.logistics.delivery.application.service.DeliveryCommandService;
 import com.logistics.delivery.global.response.ApiResponse;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import com.logistics.delivery.presentation.dto.request.DeliveryRouteStatusChangeRequest;
 import com.logistics.delivery.presentation.dto.request.DeliveryStatusChangeRequest;
 import com.logistics.delivery.presentation.dto.response.DeliveryRouteStatusChangeResponse;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name= "Delivery")
@@ -49,8 +51,9 @@ public class DeliveryStatusCommandController {
     @PatchMapping("/{deliveryId}/routes/{routeId}")
     public ApiResponse<DeliveryRouteStatusChangeResponse> changeRouteStatus(
             @PathVariable UUID deliveryId, @PathVariable UUID routeId,
-            @Valid @RequestBody DeliveryRouteStatusChangeRequest request) {
-        var result = deliveryCommandService.changeRouteStatus(deliveryId, routeId, request.toCommand());
+            @Valid @RequestBody DeliveryRouteStatusChangeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        var result = deliveryCommandService.changeRouteStatus(deliveryId, routeId, request.toCommand(), principal);
         return ApiResponse.success(200, "배송 경로 상태 변경 성공", DeliveryRouteStatusChangeResponse.of(result));
     }
 

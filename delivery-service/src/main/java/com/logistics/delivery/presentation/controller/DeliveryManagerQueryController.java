@@ -6,6 +6,7 @@ import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.domain.entity.ManagerType;
 import com.logistics.delivery.global.response.ApiResponse;
 import com.logistics.delivery.global.response.PageResponse;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import com.logistics.delivery.presentation.dto.response.DeliveryManagerResponse;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,9 +43,10 @@ public class DeliveryManagerQueryController {
             @RequestParam(required = false) UUID hubId,
             @RequestParam(required = false) ManagerType managerType,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            @AuthenticationPrincipal UserPrincipal principal) {
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(managerType, hubId, page, size);
-        Page<DeliveryManagerResponse> result = deliveryManagerQueryService.search(query).map(DeliveryManagerResponse::from);
+        Page<DeliveryManagerResponse> result = deliveryManagerQueryService.search(query, principal).map(DeliveryManagerResponse::from);
         return ApiResponse.success(200, "배송 담당자 목록 조회 성공", PageResponse.of(result));
     }
 
@@ -57,8 +60,9 @@ public class DeliveryManagerQueryController {
                 """
     )
     @GetMapping("/{deliveryManagerId}")
-    public ApiResponse<DeliveryManagerResponse> getById(@PathVariable Long deliveryManagerId) {
-        DeliveryManager manager = deliveryManagerQueryService.getById(deliveryManagerId);
+    public ApiResponse<DeliveryManagerResponse> getById(@PathVariable Long deliveryManagerId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        DeliveryManager manager = deliveryManagerQueryService.getById(deliveryManagerId, principal);
         return ApiResponse.success(200, "배송 담당자 조회 성공", DeliveryManagerResponse.from(manager));
     }
 }
