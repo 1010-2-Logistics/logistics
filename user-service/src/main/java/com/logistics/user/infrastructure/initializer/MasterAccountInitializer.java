@@ -46,24 +46,6 @@ public class MasterAccountInitializer
 
         validateProperties();
 
-        System.out.println(
-                "MASTER username = [" + properties.username() + "]"
-        );
-
-        System.out.println(
-                "MASTER username length = "
-                        + properties.username().length()
-        );
-
-        System.out.println(
-                "MASTER slackId = [" + properties.slackId() + "]"
-        );
-
-        System.out.println(
-                "MASTER slackId length = "
-                        + properties.slackId().length()
-        );
-
         /*
          * 환경변수에서 받은 평문 비밀번호를
          * BCrypt 해시로 변환한다.
