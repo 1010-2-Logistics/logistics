@@ -1,21 +1,18 @@
-package com.logistics.ai.application.service;
+package com.logistics.ai.application.facade;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
-import com.logistics.ai.application.port.out.OrderPort;
 import com.logistics.ai.application.port.out.ProductPort;
 
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class DispatchDeadlineCommandService implements DispatchDeadlineUseCase {
-	
-	private final OrderPort orderPort;
+public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	
 	private final DeliveryPort deliveryPort;
 	
