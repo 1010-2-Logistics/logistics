@@ -23,6 +23,10 @@ public record UserCreateRequestDto(
         )
         String username,
 
+        @NotBlank(message="name은 필수입니다. 실명을 작성해주세요.")
+        @Size(max = 50, message = "name은 50자 이하여야 합니다.")
+        String name,
+
         @NotBlank(message = "password는 필수입니다.")
         String password,
 
@@ -41,6 +45,7 @@ public record UserCreateRequestDto(
     public CreateUserCommandDto toCommand() {
         return new CreateUserCommandDto(
                 username,
+                name,
                 password,
                 slackId,
                 role,

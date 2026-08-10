@@ -43,7 +43,7 @@ public class LoginService {
          * 2. username으로 사용자 조회
          */
         User user = userQueryRepository
-                .findByUsername(command.username())
+                .findActiveByUsername(command.username())
                 .orElseThrow(() -> new CustomException(
                         AuthErrorCode.AUTH_INVALID_CREDENTIALS
                 ));

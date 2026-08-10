@@ -36,6 +36,7 @@ public class UserCommandService {
     public Long create(CreateUserCommandDto command) {
         User user = User.create(
                 command.username(),
+                command.name(),
                 command.encodedPassword(),
                 command.slackId(),
                 command.role(),

@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record CreateUserCommandDto(
         String username,
+        String name,
         String encodedPassword,
         String slackId,
         UserRole role,

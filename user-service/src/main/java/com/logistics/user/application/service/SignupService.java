@@ -51,6 +51,7 @@ public class SignupService {
         // 5. 역할과 소속 검증은 User 도메인이 담당한다.
         User user = User.create(
                 command.username(),
+                command.name(),
                 encodedPassword,
                 command.slackId(),
                 command.role(),
