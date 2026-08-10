@@ -1,5 +1,6 @@
 package com.logistics.ai.application.event;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record OrderCreatedEvent(
@@ -8,8 +9,9 @@ public record OrderCreatedEvent(
 		UUID productId,
 		Integer quantity,
 		String request,
-		String receivername,
-		String receiverSlackId
+		String receiverName,
+		String receiverSlackId,
+		LocalDateTime createdAt
 ) {
 
 }

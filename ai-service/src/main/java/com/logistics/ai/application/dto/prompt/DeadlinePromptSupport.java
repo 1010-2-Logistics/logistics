@@ -1,12 +1,17 @@
 package com.logistics.ai.application.dto.prompt;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
+import com.logistics.ai.application.dto.internal.RouteInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 
-public class DeadlineRequestPrompt {
+import lombok.Getter;
+
+public class DeadlinePromptSupport {
 	public static final String SYSTEM_PROMPT = """
 			===[역할]===
 			당신은 물류 배송 관리 전문 AI 입니다.
@@ -85,12 +90,71 @@ public class DeadlineRequestPrompt {
 	}
 	
 	// 파라미터 타입 미확정
-	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, int hubWayPoint) {
+	public static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes,int hubWayPoint) {
+		// 주문 기본 정보
+		String orderId = event.orderId().toString();
+		String customerName = event.receiverName();
+		String customerEmail = event.receiverSlackId();
+		String requestMessage = event.request();
+		
 		return null;
 	}
 	
-	public static class PromptSupport {
+	@Getter
+	public static class PromptHubs {
+		private final String startHubName;
 		
+		private final String endHubName;
+		
+		private final String transitHubNames;
+		
+		public static PromptHubs from(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+			String startHubName = getHubName(hubMap, routes.get(0).startHubId(), "출발지");
+			String endHubName = getHubName(hubMap, routes.get(routes.size() - 1).endHubId(), "도착지");
+			String transitHubNames = "경유지 없음";
+			
+			if(hubWayPoint != 0) {
+				transitHubNames = getTransitHubNames(hubMap, routes);
+			}
+			
+			return new PromptHubs(startHubName, endHubName, transitHubNames);
+		}
+		
+		public PromptHubs(String startHubName, String endHubName, String transitHubNames) {
+			this.startHubName = startHubName;
+			this.endHubName = endHubName;
+			this.transitHubNames = transitHubNames;
+		}
+		
+		private static String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId, String defaultMessage) {
+			if (hubId == null) return defaultMessage;
+			
+			HubInfo hub = hubMap.get(hubId);
+			
+			return (hub != null)
+					? hub.hubName()
+					: String.format("%s 정보 없음(서버 에러)", defaultMessage);
+		}
+		
+		private static String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
+			StringBuilder hubNames = new StringBuilder();
+			
+			for (int i = 0; i < routes.size() - 1; i++) {
+				UUID transitHubId = routes.get(i).endHubId();
+				HubInfo transitHub = hubMap.get(transitHubId);
+				
+				if(transitHub != null) {
+					hubNames.append(transitHub.hubName() + ", ");
+				}
+				
+			}
+			
+			if(hubNames.length() > 0) {
+				hubNames.setLength(hubNames.length() - 2);
+			}
+			
+			return hubNames.toString();
+		}
 	}
 	
 }

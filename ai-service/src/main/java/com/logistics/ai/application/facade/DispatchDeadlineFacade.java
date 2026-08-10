@@ -1,5 +1,6 @@
 package com.logistics.ai.application.facade;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,6 +19,8 @@ import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
+import com.logistics.ai.global.exception.AiErrorCode;
+import com.logistics.ai.global.exception.AiException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,20 +45,6 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				event.deliveryId()
 		);
 		
-		// === DeliveryPort === //
-		// 2. event.deliveryId() 로 배송정보 조회
-		// startHubId, endHubId, deliveryAddress, 배송 담당자 ID
-		// /internal/v1/deliveries/{deliveryId}
-		// ??? delivery 는 같은 데이터베이스라서 배송정보 조회할 때
-		// 경유하는 허브 목록 같이 조회하면 좋을듯
-		
-		
-		// === DeliveryRoutPort === // :내부 API 미구현
-		// 3. event.deliveryId() 로 경유 허브 목록 조회
-		// 경유 허브 목록 리스트에서
-		// DeliveryRoute.startHubId가 DeliveryPort에서 받아온 startHubId와 같은걸 1번
-		// 그 1번의 endHubId가 다음 startHubId 인걸로 2번 ... 정렬해야 함.
-		// ErrorDecoder
 		List<RouteInfo> routes = deliveryPort.getRoutes(event.deliveryId());
 		
 		Set<UUID> hubIds = routes.stream()
@@ -70,31 +59,19 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				hubWayPoint
 		);
 		
-		// === ProductPort === //
-		// 4. OrderPort에서 받아온 productId 를 통해 상품 정보 조회
-		// /internal/v1/products/{productId}
 		ProductInfo product = productPort.getProduct(event.productId());
 		
 		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
 				product.productId()
 		);
 		
-		// === HubPort === // :내부 API 미구현
-		// 5. Set<UUID> 해서 각 경유 hubId 의 주소를 가져온다.
 		List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
 		
-		// RouteInfo의 Sequence 순서에 맞는 hubId 로 그 허브에 해당하는 hubName과 hubAddress 재배치
 		Map<UUID, HubInfo> hubMap = hubInfoList.stream()
 				.collect(Collectors.toMap(HubInfo::hubId, hub -> hub));
 		
-		String startHubName = getHubName(hubMap, routes.get(0).startHubId(), "출발지");
+		validateHubIdsMatch(hubMap, hubIds);
 		
-		String endHubName = getHubName(hubMap, routes.get(routes.size() - 1).endHubId(), "도착지");
-		
-		String transitHubNames = "경유지 없음";
-		if(hubWayPoint != 0) {
-			transitHubNames = getTransitHubNames(hubMap, routes);
-		}
 		
 		
 		
@@ -111,6 +88,19 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// 제미나이 호출 //
 		//
 		
+	}
+	
+	private void validateHubIdsMatch(Map<UUID, HubInfo> hubMap, Set<UUID> hubIds) {
+		if(!hubMap.keySet().containsAll(hubIds)) {
+			Set<UUID> misMatchHubIds = new HashSet<>(hubIds);
+			misMatchHubIds.removeAll(hubMap.keySet());
+			
+			log.error("[AI-SERVICE]: 허브 정보 정합성 오류, misMatchHubIds = {}",
+					misMatchHubIds
+			);
+			
+			throw new AiException(AiErrorCode.AI_HUB_INFO_INCOMPLETE);
+		}
 	}
 	
 	private String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
