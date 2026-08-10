@@ -9,6 +9,7 @@ import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.*;
 import com.logistics.order.application.port.CompanyPort;
 import com.logistics.order.application.port.ProductPort;
+import com.logistics.order.application.port.UserPort;
 import com.logistics.order.application.saga.OrderCancelOrchestrator;
 import com.logistics.order.application.saga.OrderCreateOrchestrator;
 import com.logistics.order.application.saga.OrderDeleteOrchestrator;
@@ -39,10 +40,7 @@ public class OrderFacade {
 
     private final ProductPort productPort;
     private final CompanyPort companyPort;
-
-    // TODO: User 내부 조회 API 구현 후 실제 수령인 정보로 교체
-    String receiverName = "임시 수령인";
-    String receiverSlackId = "TEMP_SLACK_ID";
+    private final UserPort userPort;
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
@@ -58,14 +56,18 @@ public class OrderFacade {
                 orderCreateCommand.endCompanyId()
         );
 
+        UserInfoResult userInfoResult = userPort.getUser(
+                authenticatedUser.userId()
+        );
+
         OrderCreateSagaCommand orderCreateSagaCommand = new OrderCreateSagaCommand(
                 orderCreateCommand,
                 productGetResult.companyId(),
                 companyOrderInfoResult.startHubId(),
                 companyOrderInfoResult.endHubId(),
                 companyOrderInfoResult.endCompanyAddress(),
-                receiverName,
-                receiverSlackId,
+                userInfoResult.name(),
+                userInfoResult.slackId(),
                 idempotencyKey
         );
 
