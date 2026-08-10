@@ -4,6 +4,7 @@ package com.logistics.order.application.saga;
 import com.logistics.order.application.dto.result.DeliveryCreateResult;
 import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.port.DeliveryPort;
+import com.logistics.order.application.port.IdempotencyPort;
 import com.logistics.order.application.port.InventoryPort;
 import com.logistics.order.application.saga.command.OrderCreateSagaCommand;
 import com.logistics.order.application.service.OrderCommandService;
@@ -24,6 +25,8 @@ public class OrderCreateOrchestrator {
     private final InventoryPort inventoryPort;
     private final DeliveryPort deliveryPort;
 
+    private final IdempotencyPort idempotencyPort;
+
     // TroubleShooting01 - 멱등 키 : orderId를 사용하게 되면 다른 업무인데 같은 업무로 취급받아서 operationId와 구분했던 문제
     // idempotencyKey로 교체하면서 든 생각
     // 첫 번째 실행에서 이미 성공 결과가 있어서 차감 안 하고 이전 결과를 줘버린다
@@ -39,6 +42,8 @@ public class OrderCreateOrchestrator {
             OrderCreateSagaCommand orderCreateSagaCommand
     ) {
         UUID idempotencyKey = orderCreateSagaCommand.idempotencyKey();
+
+        String key = "order:create:" + idempotencyKey;
 
         //  idempotencyKey 기준으로 주문 생성 요청 완료 여부 확인
 
