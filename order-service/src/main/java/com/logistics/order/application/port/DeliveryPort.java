@@ -1,6 +1,7 @@
 package com.logistics.order.application.port;
 
 import com.logistics.order.application.dto.result.DeliveryCreateResult;
+import com.logistics.order.application.dto.result.DeliveryGetResult;
 
 import java.util.UUID;
 
@@ -13,6 +14,8 @@ public interface DeliveryPort {
             String receiverName,
             String receiverSlackId
     );
+
+    DeliveryGetResult getDelivery(UUID deliveryId);
 
     void cancelDelivery(UUID orderId);
 }

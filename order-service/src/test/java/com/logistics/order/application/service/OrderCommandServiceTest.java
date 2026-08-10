@@ -20,14 +20,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -47,6 +45,26 @@ class OrderCommandServiceTest {
 
     @InjectMocks
     private OrderCommandService orderCommandService;
+
+    @Test
+    @DisplayName("이미 취소된 주문은 수정할 수 없음")
+    void order_update_canceled() {
+        Order order = Order.create(
+                orderId,
+                deliveryId,
+                startCompanyId,
+                endCompanyId,
+                productId,
+                100,
+                "요청"
+        );
+        order.cancel();
+
+        given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderCommandService.findOrderForUpdate(orderId))
+                .isInstanceOf(CustomException.class);
+    }
 
     @Nested
     @DisplayName("주문 생성")
@@ -111,6 +129,15 @@ class OrderCommandServiceTest {
     @Nested
     @DisplayName("주문 수정")
     class order_update {
+        @Test
+        @DisplayName("수정할 주문이 없으면 예외")
+        void order_update_not_found() {
+            given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForUpdate(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
         @Test
         @DisplayName("주문 수정 성공")
         void order_update_success() {
@@ -178,6 +205,36 @@ class OrderCommandServiceTest {
     @Nested
     @DisplayName("주문 삭제")
     class order_delete {
+        @Test
+        @DisplayName("취소할 주문이 없으면 예외")
+        void order_cancel_not_found() {
+            given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForCancel(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 주문이면 예외")
+        void order_delete_already_deleted() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "요청"
+            );
+            order.delete(1L);
+
+            given(orderCommandRepository.findById(orderId)).willReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForDelete(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
+
         @Test
         @DisplayName("주문 삭제 성공")
         void order_delete_success() {

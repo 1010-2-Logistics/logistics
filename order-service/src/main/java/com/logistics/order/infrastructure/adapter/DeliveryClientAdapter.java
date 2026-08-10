@@ -1,12 +1,14 @@
 package com.logistics.order.infrastructure.adapter;
 
 import com.logistics.order.application.dto.result.DeliveryCreateResult;
+import com.logistics.order.application.dto.result.DeliveryGetResult;
 import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
 import com.logistics.order.infrastructure.feign.client.DeliveryClient;
 import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
 import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
+import com.logistics.order.infrastructure.feign.response.DeliveryResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -52,9 +54,40 @@ public class DeliveryClientAdapter implements DeliveryPort {
     }
 
     @Override
+    public DeliveryGetResult getDelivery(
+            UUID deliveryId
+    ) {
+        DeliveryResponse deliveryResponse = deliveryClient.getDelivery(deliveryId).getData();
+
+        return new DeliveryGetResult(
+                deliveryResponse.deliveryId(),
+                deliveryResponse.startHubId(),
+                deliveryResponse.endHubId(),
+                deliveryResponse.deliveryManagerId()
+        );
+    }
+
+    @Override
     public void cancelDelivery(
             UUID orderId
     ) {
-        deliveryClient.cancelDelivery(orderId);
+        try {
+            deliveryClient.cancelDelivery(orderId);
+
+        } catch (FeignException.NotFound e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_NOT_FOUND
+            );
+
+        } catch (FeignException.Conflict e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_CANCEL_CONFLICT
+            );
+
+        } catch (FeignException e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 }

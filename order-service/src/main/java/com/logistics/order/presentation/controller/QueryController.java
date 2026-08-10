@@ -43,6 +43,7 @@ public class QueryController {
 
     @GetMapping
     public ApiResponse<OrderListResponseDto> getOrders(
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) UUID productId,
             @RequestParam(required = false) UUID endCompanyId,
             @RequestParam(defaultValue = "createdAt") String sort,
@@ -57,7 +58,10 @@ public class QueryController {
                 size
         );
 
-        OrderListResult orderListResult = orderQueryService.getOrders(orderSearchQuery);
+        OrderListResult orderListResult = orderQueryService.getOrders(
+                orderSearchQuery,
+                principal.toAuthenticatedUser()
+        );
 
         OrderListResponseDto orderListResponseDto = OrderListResponseDto.from(orderListResult);
 

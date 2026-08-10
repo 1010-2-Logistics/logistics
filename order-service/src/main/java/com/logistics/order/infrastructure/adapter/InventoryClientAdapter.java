@@ -55,14 +55,20 @@ public class InventoryClientAdapter implements InventoryPort {
             UUID hubId,
             Integer quantity
     ) {
-        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
-                operationId,
-                orderId,
-                productId,
-                hubId,
-                quantity
-        );
+        try {
+            InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
+                    operationId,
+                    orderId,
+                    productId,
+                    hubId,
+                    quantity
+            );
 
-        inventoryClient.restoreInventory(inventoryRestorationRequest);
+            inventoryClient.restoreInventory(inventoryRestorationRequest);
+        } catch (FeignException e) {
+            throw new CustomException(
+                    OrderErrorCode.ORDER_SERVICE_UNAVAILABLE
+            );
+        }
     }
 }

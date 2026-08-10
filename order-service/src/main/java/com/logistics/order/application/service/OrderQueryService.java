@@ -1,9 +1,13 @@
 package com.logistics.order.application.service;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
 import com.logistics.order.application.dto.auth.AuthenticatedUser;
+import com.logistics.order.application.dto.query.OrderReadScope;
 import com.logistics.order.application.dto.query.OrderSearchQuery;
+import com.logistics.order.application.dto.result.DeliveryGetResult;
 import com.logistics.order.application.dto.result.OrderDetailResult;
 import com.logistics.order.application.dto.result.OrderListResult;
+import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderQueryRepository;
 import com.logistics.order.global.exception.CustomException;
@@ -23,6 +27,8 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class OrderQueryService {
     private final OrderQueryRepository orderQueryRepository;
+    private final OrderAuthorizationService orderAuthorizationService;
+    private final DeliveryPort deliveryPort;
 
     public OrderDetailResult getOrder(
             UUID orderId,
@@ -31,10 +37,22 @@ public class OrderQueryService {
         Order order = orderQueryRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
+        DeliveryGetResult delivery = deliveryPort.getDelivery(order.getDeliveryId());
+
+        orderAuthorizationService.validateReadAccess(
+                authenticatedUser,
+                order,
+                delivery.startHubId(),
+                delivery.deliveryManagerId()
+        );
+
         return OrderDetailResult.from(order);
     }
 
-    public OrderListResult getOrders(OrderSearchQuery orderSearchQuery) {
+    public OrderListResult getOrders(
+            OrderSearchQuery orderSearchQuery,
+            AuthenticatedUser authenticatedUser
+    ) {
         int page = validatePage(orderSearchQuery.page());
         int size = normalizeSize(orderSearchQuery.size());
         String sortProperty = validateSort(orderSearchQuery.sort());
@@ -44,10 +62,12 @@ public class OrderQueryService {
                 size,
                 Sort.by(Sort.Direction.DESC, sortProperty)
         );
+        OrderReadScope readScope = orderAuthorizationService.resolveReadScope(authenticatedUser);
 
         Page<Order> orders = orderQueryRepository.search(
                 orderSearchQuery.productId(),
                 orderSearchQuery.endCompanyId(),
+                readScope,
                 pageable
         );
 
@@ -87,5 +107,4 @@ public class OrderQueryService {
 
         throw new CustomException(OrderErrorCode.ORDER_INVALID_REQUEST);
     }
-
 }

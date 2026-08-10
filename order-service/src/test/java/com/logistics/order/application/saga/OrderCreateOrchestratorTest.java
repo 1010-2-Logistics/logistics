@@ -49,6 +49,109 @@ class OrderCreateOrchestratorTest {
     private OrderCreateOrchestrator orderCreateOrchestrator;
 
     @Test
+    @DisplayName("배송 생성 실패 시 재고 복원")
+    void create_order_delivery_fail_restore_inventory() {
+        UUID idempotencyKey = UUID.randomUUID();
+
+        OrderCreateCommand orderCommand = new OrderCreateCommand(endCompanyId, productId, 100, "request");
+
+        OrderCreateSagaCommand command = new OrderCreateSagaCommand(
+                orderCommand,
+                startCompanyId,
+                startHubId,
+                endHubId,
+                "address",
+                "name",
+                "slack",
+                idempotencyKey
+        );
+
+        given(idempotencyPort.getResult(anyString(), eq(OrderCreateResult.class))).willReturn(Optional.empty());
+        given(idempotencyPort.acquire(anyString(), any(Duration.class))).willReturn(true);
+
+        doThrow(new RuntimeException("배송 실패"))
+                .when(deliveryPort)
+                .createDelivery(
+                        any(UUID.class),
+                        eq(startHubId),
+                        eq(endHubId),
+                        eq("address"),
+                        eq("name"),
+                        eq("slack")
+                );
+
+        assertThatThrownBy(() -> orderCreateOrchestrator.execute(command))
+                .isInstanceOf(RuntimeException.class);
+
+        verify(inventoryPort).restoreInventory(
+                any(UUID.class),
+                any(UUID.class),
+                eq(productId),
+                eq(startHubId),
+                eq(100)
+        );
+    }
+
+    @Test
+    @DisplayName("주문 저장 실패 시 배송 취소 후 재고 복원")
+    void create_order_save_fail_compensate() {
+        UUID idempotencyKey = UUID.randomUUID();
+        UUID deliveryId = UUID.randomUUID();
+        OrderCreateCommand orderCommand = new OrderCreateCommand(
+                endCompanyId,
+                productId,
+                100,
+                "request"
+        );
+        OrderCreateSagaCommand command = new OrderCreateSagaCommand(
+                orderCommand,
+                startCompanyId,
+                startHubId,
+                endHubId,
+                "address",
+                "name",
+                "slack",
+                idempotencyKey
+        );
+
+        DeliveryCreateResult deliveryResult = mock(DeliveryCreateResult.class);
+        given(idempotencyPort.getResult(anyString(), eq(OrderCreateResult.class))).willReturn(Optional.empty());
+        given(idempotencyPort.acquire(anyString(), any(Duration.class))).willReturn(true);
+        given(deliveryPort.createDelivery(
+                any(UUID.class),
+                eq(startHubId),
+                eq(endHubId),
+                eq("address"),
+                eq("name"),
+                eq("slack")
+        )).willReturn(deliveryResult);
+
+        given(deliveryResult.deliveryId()).willReturn(deliveryId);
+
+        given(orderCommandService.createOrder(
+                eq(orderCommand),
+                any(UUID.class),
+                eq(deliveryId),
+                eq(startCompanyId),
+                eq("name"),
+                eq("slack")
+        )).willThrow(new RuntimeException("DB 저장 실패"));
+
+        assertThatThrownBy(() -> orderCreateOrchestrator.execute(command))
+                .isInstanceOf(RuntimeException.class);
+
+        verify(deliveryPort).cancelDelivery(any(UUID.class));
+
+        verify(inventoryPort).restoreInventory(
+                any(UUID.class),
+                any(UUID.class),
+                eq(productId),
+                eq(startHubId),
+                eq(100)
+        );
+    }
+
+    @Test
     @DisplayName("동일 멱등키의 성공 결과가 존재하면 Saga를 재실행하지 않고 기존 결과 반환")
     void create_order_idempotent_result() {
         UUID idempotencyKey = UUID.randomUUID();

@@ -1,5 +1,6 @@
 package com.logistics.order.infrastructure.persistence.repository;
 
+import com.logistics.order.application.dto.query.OrderReadScope;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.repository.OrderQueryRepository;
 
@@ -26,6 +27,7 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
     public Page<Order> search(
             UUID productId,
             UUID endCompanyId,
+            OrderReadScope readScope,
             Pageable pageable
     ) {
         return jpaRepository.search(

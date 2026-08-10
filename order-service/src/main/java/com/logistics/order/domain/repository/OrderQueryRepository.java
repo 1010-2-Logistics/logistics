@@ -1,5 +1,6 @@
 package com.logistics.order.domain.repository;
 
+import com.logistics.order.application.dto.query.OrderReadScope;
 import com.logistics.order.domain.entity.Order;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ public interface OrderQueryRepository {
     Page<Order> search(
             UUID productId,
             UUID endCompanyId,
+            OrderReadScope readScope,
             Pageable pageable
     );
 }
