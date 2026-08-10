@@ -8,6 +8,8 @@ import com.logistics.user.application.service.UserQueryService;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.presentation.dto.request.ChangeUserAffiliationRequestDto;
 import com.logistics.user.presentation.dto.response.ChangeUserAffiliationResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.logistics.user.presentation.dto.response.InternalUserResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 /**
  * user-service 내부 API 호출 컨트롤러
  */
+@Tag(
+        name = "User API"
+)
 @RestController
 @RequestMapping("/internal/v1/users")
 @RequiredArgsConstructor
@@ -28,6 +33,9 @@ public class InternalUserController {
     /**
      * 사용자의 소속 및 권한 변경
      */
+    @Operation(
+            summary="사용자 소속 및 권한 변경"
+    )
     @PatchMapping("/{userId}/affiliation")
     public ApiResponse<ChangeUserAffiliationResponseDto> changeAffiliation(
             @PathVariable Long userId,
@@ -48,6 +56,9 @@ public class InternalUserController {
         );
     }
 
+    @Operation(
+            summary="사용자 정보 조회 내부 API"
+    )
     @GetMapping("/{userId}")
     public ApiResponse<InternalUserResponseDto> getUser(
             @PathVariable Long userId

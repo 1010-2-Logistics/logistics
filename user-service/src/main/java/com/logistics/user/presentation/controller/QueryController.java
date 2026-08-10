@@ -15,6 +15,8 @@ import com.logistics.user.global.response.PageResponse;
 import com.logistics.user.infrastructure.security.AuthenticatedUser;
 import com.logistics.user.presentation.dto.response.UserResponseDto;
 import com.logistics.user.presentation.dto.response.UserSummaryResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+@Tag(
+        name = "User API"
+)
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -40,6 +45,16 @@ public class QueryController {
     /**
      * 로그인한 사용자의 정보를 조회한다.
      */
+    @Operation(
+            summary = "내 정보 조회",
+            description = """
+                로그인한 사용자의 정보 조회
+
+                접근 권한:
+                - 모든 로그인 사용자
+                - 본인 정보만 조회 가능
+                """
+    )
     @GetMapping("/me")
     public ApiResponse<UserResponseDto> getMyInfo(
             Authentication authentication
@@ -69,6 +84,16 @@ public class QueryController {
     /**
      * 사용자 정보 상세 조회 (MASTER, 허브 매니저는 본인 허브 소속 사용자만 조회 가능)
      */
+    @Operation(
+            summary = "사용자 상세 조회",
+            description = """
+                특정 사용자의 상세 정보 조회
+
+                접근 권한:
+                - MASTER: 모든 사용자 조회 가능
+                - HUB_MANAGER: 담당 허브 소속 사용자만 조회 가능
+                """
+    )
     @GetMapping("/{userId}")
     public ApiResponse<UserResponseDto> getUserDetail(
             @PathVariable Long userId,
@@ -98,6 +123,16 @@ public class QueryController {
     /**
      * 사용자 정보 목록 조회
      */
+    @Operation(
+            summary = "사용자 목록 조회",
+            description = """
+                조건에 따라 사용자 목록을 조회
+
+                접근 권한:
+                - MASTER: 전체 사용자 조회 가능
+                - HUB_MANAGER: 담당 허브 소속 사용자만 조회 가능
+                """
+    )
     @GetMapping
     public ApiResponse<PageResponse<UserSummaryResponseDto>> search(
             Authentication authentication,
