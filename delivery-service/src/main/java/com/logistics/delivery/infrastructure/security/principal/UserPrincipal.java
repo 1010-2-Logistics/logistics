@@ -44,15 +44,16 @@ public class UserPrincipal {
     }
 
     public void validateRoleConstraints() {
-        // MASTER: hubId 없어야 함
+        // MASTER: 특정 허브에 소속되지 않는다
         if (this.role == Role.MASTER && this.hubId != null) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
         }
-        // HUB_MANAGER, HUB_DELIVERY_MANAGER: hubId 있어야 함
-        if ((this.role == Role.HUB_MANAGER || this.role == Role.HUB_DELIVERY_MANAGER) && this.hubId == null) {
+        // HUB_MANAGER: 담당 허브 스코핑에 반드시 필요하므로 hubId 필수
+        if (this.role == Role.HUB_MANAGER && this.hubId == null) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
         }
-        // COMPANY_MANAGER, COMPANY_DELIVERY_MANAGER: companyId 조건 없이 hubId만 확인
-        // (delivery-service엔 companyId 개념이 없어 company-service 규칙과 다르게 감)
+        // HUB_DELIVERY_MANAGER는 구간마다 이동하므로 고정 허브가 없다(hubId null이 정상).
+        // DeliveryManager 엔티티도 "허브 배송담당자는 hubId null"을 강제한다.
+        // company-service와 규칙이 갈리는 지점 — delivery 도메인 모델 기준을 따른다.
     }
 }

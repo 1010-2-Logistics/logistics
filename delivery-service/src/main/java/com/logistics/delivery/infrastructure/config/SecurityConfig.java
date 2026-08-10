@@ -50,6 +50,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/delivery-managers/{deliveryManagerId}").hasAnyRole(
                                 Role.MASTER.name(), Role.HUB_MANAGER.name())
 
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/actuator/health"
+                        ).permitAll()
+
                         .requestMatchers("/internal/v1/deliveries/**").permitAll()
 
                         .anyRequest().authenticated()
