@@ -57,8 +57,8 @@
 | **Phase 4** | ✅ **G4 통과** |
 | **Phase 5** | ✅ **G5 통과** |
 | **Phase 6** | ✅ **G6 통과 — 배포 완료** |
-| **Phase 7** | 🔄 인프라·워크플로 작성 완료, **G7 완전 검증은 `main` 병합 후** (사용자 결정 대기) |
-| Phase 8 | ⬜ 미착수 |
+| **Phase 7** | ✅ **G7 통과** — `main` 병합 후 실제 자동 배포 성공 |
+| Phase 8 | 🔄 진행 중 — README·비용 기록 완료, destroy는 시연 종료 후 |
 
 **Phase 1**
 - B-6: `MockGatewayAuthenticationFilter:37`의 `@Profile("local")` 삭제
@@ -113,8 +113,29 @@
 - `.github/workflows/deploy.yml` 신규 — `main` 푸시 트리거, JDK 21 빌드 → OIDC로 자격증명 획득 → 11개 이미지 빌드/푸시(`:latest` + `:{sha}`) → SSM Send-Command로 App EC2에서 pull & 재기동
 - **헬스체크는 App EC2 컨테이너 내부(localhost)에서 수행** — `app-sg`의 19091이 본인 IP로만 열려 있어 GitHub Actions 러너 IP에서는 외부 헬스체크가 원천적으로 불가능. SSM 스크립트 안에 재시도 루프로 내장
 - 리포지토리 시크릿은 전혀 쓰지 않음 — 역할 ARN·인스턴스 ID·ECR 레지스트리 전부 시크릿이 아니라 워크플로 파일에 평문으로 기록(민감정보 아님)
-- **G7 완전 검증(`gh run watch`, 실제 트리거)은 `main` 병합 후에만 가능** — `deploy.yml`이 `main` 푸시 트리거라 `feature/aws-deployment-iac` 브랜치에서는 실행되지 않음. 병합 시점은 사용자 결정 사항(문서에 이미 명시된 정책)
-- `gh` CLI 미설치 상태로 확인됨 — Phase 0에서 "필요해지면 설치"로 미뤄둔 항목, 이제 필요해짐. 사용자가 설치·로그인 완료
+- `gh` CLI 미설치 상태로 확인됨 — Phase 0에서 "필요해지면 설치"로 미뤄둔 항목. 사용자가 설치·로그인 완료
+
+**G7 실행 결과 — 첫 실행 실패 후 원인 2건 해결하고 통과**
+
+1. **OIDC `sub` 클레임 형식 불일치 (직접 원인)** — `Not authorized to perform sts:AssumeRoleWithWebIdentity`로 실패. GitHub이 조직·리포지토리 **불변 ID를 포함한 형식**으로 토큰을 발급하고 있었음:
+   ```
+   신뢰 조건: repo:1010-2-Logistics/logistics:ref:refs/heads/main
+   실제 토큰: repo:1010-2-Logistics@312060404/logistics@1320049011:ref:refs/heads/main
+   ```
+   확인 방법은 `gh api repos/{owner}/{repo}/actions/oidc/customization/sub`. ID 기반 접두사를 `github_sub_prefix` 변수로 분리해 조건을 수정. **이름이 바뀌어도 동작하고 동명의 다른 리포지토리에는 권한이 넘어가지 않아 오히려 더 안전한 형식이다.**
+
+2. **CRLF 줄바꿈으로 인한 의도치 않은 인스턴스 재시작 (사전 차단)** — 팀 브랜치를 pull하면서 `core.autocrlf=true`가 `.tf` 파일을 CRLF로 변환. Terraform이 `user_data` 변경으로 인식해 **App/Data EC2 stop/start(=공인 IP 변경, 서비스 중단)** 가 plan에 잡힘. `plan`에서 발견해 적용 전에 차단했고, `.gitattributes`로 `.sh`·`.tf`·`.yml`·`.sql`을 LF 고정. 셸 스크립트가 CRLF로 배포되면 리눅스에서 `$'\r': command not found`로 실패하므로 이 설정은 팀 전체에 유효하다.
+
+**G7 게이트 전 항목 통과 (2026-08-10)**
+
+| 검증 | 결과 |
+|---|---|
+| 워크플로 성공 | 13개 스텝 전부 성공 (빌드→OIDC→ECR→SSM→헬스체크) |
+| ECR 이미지 태그 = 커밋 SHA | `e573933d…` + `latest` 동시 확인 |
+| 순차 기동 동작 | 컨테이너 uptime이 4분/2분/1분으로 갈려 3배치 순차 기동이 실제로 작동했음을 확인 |
+| 배포 후 서비스 정상 | 12개 컨테이너 healthy, 외부에서 로그인→토큰→API 호출 200 |
+| S-1 회귀 | 위조 헤더 요청 401 유지 |
+| 리포지토리 시크릿에 AWS 키 없음 | `gh secret list` 빈 출력 (OIDC만 사용) |
 - **재배포 시 순차 기동 리스크 발견 및 수정**: 최초 `deploy.yml`은 재배포 때 `docker compose up -d`로 11개 컨테이너를 한 번에 올리는 구조였음 — Phase 6에서 확인된 "m5.large(2vCPU)에서 11개 JVM 동시 부팅 시 CPU 포화로 Eureka 등록 타임아웃" 문제가 재배포마다 재현될 수 있었음. `infra/scripts/deploy-app.sh` 신규 작성으로 Phase 6과 동일한 순차 기동(eureka→gateway→3개씩 3배치, 각 단계 헬스체크 대기)을 SSM 스크립트에도 적용. `aws ssm wait command-executed`의 기본 타임아웃도 순차 기동 전체 소요시간보다 짧을 수 있어 직접 폴링(최대 15분)으로 교체
 
 ---
