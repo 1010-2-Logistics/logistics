@@ -25,7 +25,21 @@ public class OrderCancelOrchestrator {
     public OrderCancelResult execute(
             OrderCancelSagaCommand orderCancelSagaCommand
     ) {
-        return null;
+        UUID operationId = UUID.randomUUID();
+
+        cancelDelivery(
+                orderCancelSagaCommand
+        );
+
+        restoreInventory(
+                operationId,
+                orderCancelSagaCommand
+        );
+
+        return cancelOrderWithCompensation(
+                operationId,
+                orderCancelSagaCommand
+        );
     }
 
     public void cancelDelivery(
@@ -96,6 +110,4 @@ public class OrderCancelOrchestrator {
             originalException.addSuppressed(compensationException);
         }
     }
-
-
 }
