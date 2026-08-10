@@ -117,6 +117,15 @@ public enum UserErrorCode implements ErrorCode {
     USER_AFFILIATION_ROLE_NOT_ALLOWED(
             HttpStatus.FORBIDDEN,
             "내부 소속 변경 API에서는 MASTER 권한으로 변경할 수 없습니다."
+    ),
+    USER_DELETE_ACCESS_DENIED(
+            HttpStatus.FORBIDDEN,
+            "사용자를 삭제할 권한이 없습니다."
+    ),
+
+    USER_SELF_DELETE_NOT_ALLOWED(
+            HttpStatus.CONFLICT,
+            "관리자 삭제 API를 통해 본인을 삭제할 수 없습니다."
     ),;
 
 
