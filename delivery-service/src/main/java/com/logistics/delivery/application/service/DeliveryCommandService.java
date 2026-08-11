@@ -50,7 +50,8 @@ public class DeliveryCommandService {
 
         Delivery delivery = Delivery.create(
                 command.orderId(), command.startHubId(), command.endHubId(),
-                command.deliveryAddress(), command.receiverName(), command.slackId());
+                command.deliveryAddress(), command.receiverName(), command.slackId(),
+                command.startCompanyId(), command.endCompanyId());
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
         List<RouteSegment> segments = resolveRouteSegments(command.startHubId(), command.endHubId());
@@ -76,7 +77,7 @@ public class DeliveryCommandService {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_SERVICE_UNAVAILABLE);
         }
     }
 
@@ -88,7 +89,7 @@ public class DeliveryCommandService {
         } catch (FeignException.NotFound e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_SERVICE_UNAVAILABLE);
         }
     }
 

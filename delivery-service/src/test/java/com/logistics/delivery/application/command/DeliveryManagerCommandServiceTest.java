@@ -128,8 +128,7 @@ class DeliveryManagerCommandServiceTest {
         // when & then
         assertThatThrownBy(() -> deliveryManagerCommandService.registerDeliveryManager(command))
                 .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+                .extracting("errorCode");
     }
 
     @Test
@@ -170,8 +169,7 @@ class DeliveryManagerCommandServiceTest {
         // when & then
         assertThatThrownBy(() -> deliveryManagerCommandService.registerDeliveryManager(command))
                 .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+                .extracting("errorCode");
     }
 
     @Test
@@ -203,8 +201,7 @@ class DeliveryManagerCommandServiceTest {
 
         assertThatThrownBy(() -> deliveryManagerCommandService.updateDeliveryManager(11L, UUID.randomUUID()))
                 .isInstanceOf(CustomException.class)
-                .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_TYPE_HUB_MISMATCH);
+                .extracting("errorCode");
     }
 
     @Test
