@@ -42,11 +42,14 @@ public class DeliveryQueryService {
         PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by(Sort.Direction.DESC, query.sort()));
 
         return switch (principal.getRole()) {
-            // COMPANY_MANAGER는 order-service 확인이 별도 이슈라 일단 전체 통과
-            case MASTER, COMPANY_MANAGER -> deliveryRepository.search(query.status(), query.hubId(), pageRequest)
+            case MASTER -> deliveryRepository.search(query.status(), query.hubId(), pageRequest)
                     .map(DeliveryDetailResult::new);
             // 쿼리에 들어온 hubId는 무시하고 본인 담당 허브로 강제 스코프
             case HUB_MANAGER -> deliveryRepository.search(query.status(), principal.getHubId(), pageRequest)
+                    .map(DeliveryDetailResult::new);
+            // 본인 업체가 출발지/도착지인 배송만
+            case COMPANY_MANAGER -> deliveryRepository
+                    .searchByCompany(query.status(), principal.getCompanyId(), pageRequest)
                     .map(DeliveryDetailResult::new);
             // 본인이 배정된 배송만
             case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> deliveryRepository
@@ -93,12 +96,16 @@ public class DeliveryQueryService {
     }
 
     private void validateOwnership(UserPrincipal principal, Delivery delivery, List<DeliveryRoute> routes) {
-        if (principal.getRole() == Role.MASTER || principal.getRole() == Role.COMPANY_MANAGER) {
-            return; // COMPANY_MANAGER는 order-service 확인이 별도 이슈라 일단 통과
+        if (principal.getRole() == Role.MASTER) {
+            return;
         }
         boolean owns = switch (principal.getRole()) {
             case HUB_MANAGER -> principal.getHubId().equals(delivery.getStartHubId())
                     || principal.getHubId().equals(delivery.getEndHubId());
+            // 본인 업체가 출발지 또는 도착지인 배송만 조회 가능
+            case COMPANY_MANAGER -> principal.getCompanyId() != null
+                    && (principal.getCompanyId().equals(delivery.getStartCompanyId())
+                    || principal.getCompanyId().equals(delivery.getEndCompanyId()));
             case COMPANY_DELIVERY_MANAGER -> principal.getUserId().equals(delivery.getCompanyDeliveryManagerId());
             case HUB_DELIVERY_MANAGER -> routes.stream()
                     .anyMatch(r -> principal.getUserId().equals(r.getDeliveryManagerId()));
