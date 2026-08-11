@@ -14,8 +14,11 @@ import com.logistics.company.infrastructure.feign.response.UserRoleUpdateClientR
 @FeignClient(name = "user-service", configuration = FeignConfig.class)
 public interface UserClient {
 
-	@PatchMapping("/internal/v1/users/affiliation")
-	ApiResponse<UserRoleUpdateClientResponseDto> compnayManagerRoleUpdateRequest(UserRoleUpdateClientRequestDto request);
+	@PatchMapping("/internal/v1/users/${userId}/affiliation")
+	ApiResponse<UserRoleUpdateClientResponseDto> compnayManagerRoleUpdateRequest(
+			@PathVariable("userId") Long userId,
+			UserRoleUpdateClientRequestDto request
+	);
 	
 	@GetMapping("/internal/v1/users/{userId}/exists")
 	ApiResponse<UserExistsClientResponseDto> userExistsRequest(@PathVariable("userId") Long userId);
