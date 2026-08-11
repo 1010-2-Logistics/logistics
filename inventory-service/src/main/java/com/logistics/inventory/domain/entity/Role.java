@@ -11,7 +11,6 @@ public enum Role {
 
     COMPANY_DELIVERY_MANAGER,
 
-    ORDER_SERVICE
     ;
 
     public boolean isMaster() {

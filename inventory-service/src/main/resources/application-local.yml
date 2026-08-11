@@ -16,6 +16,3 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
-internal:
-  auth:
-    service-key: ${INTERNAL_SERVICE_KEY}
