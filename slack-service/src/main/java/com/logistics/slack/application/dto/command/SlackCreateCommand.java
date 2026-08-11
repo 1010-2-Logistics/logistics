@@ -22,4 +22,3 @@ public record SlackCreateCommand(
         );
     }
 }
-// fds

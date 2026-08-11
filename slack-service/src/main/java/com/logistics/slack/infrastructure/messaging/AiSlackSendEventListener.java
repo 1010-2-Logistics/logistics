@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class AiSlackSendEventListener {
-    // TODO 내부 시스템 발송 senderId 정책 확정 후 변경
     private static final Long SYSTEM_SENDER_ID = 0L;
 
     private final SlackCommandService slackCommandService;
