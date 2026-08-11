@@ -24,4 +24,5 @@ rabbitmq:
 
 ai:
   gemini:
-    url: http://
+    url: https://generativelanguage.googleapis.com/v1beta/models
+    key: ${GEMINI_KEY}

@@ -41,7 +41,7 @@ public class OrderCreatedEventListener {
 	public void handle(OrderCreatedEvent event, Message message) {
 		try {
 			retryTemplate.execute(() -> {
-				log.info("OrderCreatedEvent 수신, orderId: {}", event.orderId());
+				log.info("OrderCreatedEvent 수신, orderId: {}, deliveryId: {}", event.orderId(), event.deliveryId());
 				
 				dispatchDeadlineUseCase.generate(event);
 				

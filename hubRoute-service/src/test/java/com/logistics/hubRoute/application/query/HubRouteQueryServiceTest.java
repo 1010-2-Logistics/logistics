@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
-import com.logistics.hubRoute.application.port.HubPort; // 1. HubClient 대신 HubPort 적용
 import com.logistics.hubRoute.application.service.HubRouteQueryService;
 import com.logistics.hubRoute.domain.entity.HubRoute;
 import com.logistics.hubRoute.domain.repository.HubRouteQueryRepository;
@@ -13,19 +12,17 @@ import com.logistics.hubRoute.global.exception.CustomException;
 import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteFindRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteFindResponseDto;
-
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
 class HubRouteQueryServiceTest {
@@ -34,7 +31,7 @@ class HubRouteQueryServiceTest {
     private HubRouteQueryRepository hubRouteQueryRepository;
 
     @Mock
-    private HubClient hubClient; // HubPort -> HubClient로 변경하여 서비스 필드와 일치시킴
+    private HubClient hubClient;
 
     @InjectMocks
     private HubRouteQueryService hubRouteQueryService;
@@ -59,7 +56,6 @@ class HubRouteQueryServiceTest {
         UUID endHubId = UUID.randomUUID();
         HubRouteFindRequestDto requestDto = new HubRouteFindRequestDto(startHubId, endHubId);
 
-        // HubClient에서 출발 허브만 검증 성공하도록 설정
         when(hubClient.validateHubIds(anyList())).thenReturn(Set.of(startHubId));
 
         // when & then
@@ -106,9 +102,9 @@ class HubRouteQueryServiceTest {
 
         when(hubClient.validateHubIds(anyList())).thenReturn(Set.of(hubA, hubC));
         when(hubRouteQueryRepository.findByStartHubIdAndEndHubIdAndDeletedAtIsNull(hubA, hubC))
-                .thenReturn(Optional.empty()); // 직통 경로 없음
+                .thenReturn(Optional.empty());
         when(hubRouteQueryRepository.findAllByDeletedAtIsNull())
-                .thenReturn(List.of(routeAB, routeBC)); // 전체 그래프 간선 제공
+                .thenReturn(List.of(routeAB, routeBC));
 
         // when
         HubRouteFindResponseDto result = hubRouteQueryService.findHubRoute(requestDto);
@@ -116,8 +112,8 @@ class HubRouteQueryServiceTest {
         // then
         assertThat(result.startHubId()).isEqualTo(hubA);
         assertThat(result.endHubId()).isEqualTo(hubC);
-        assertThat(result.totalDuration()).isEqualTo(70); // 30 + 40
-        assertThat(result.totalDistance()).isEqualByComparingTo(BigDecimal.valueOf(50.0)); // 20.0 + 30.0
+        assertThat(result.totalDuration()).isEqualTo(70);
+        assertThat(result.totalDistance()).isEqualByComparingTo(BigDecimal.valueOf(50.0));
         assertThat(result.steps()).hasSize(2);
     }
 }

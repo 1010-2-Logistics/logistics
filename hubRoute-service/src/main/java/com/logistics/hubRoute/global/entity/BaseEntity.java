@@ -30,6 +30,10 @@ public abstract class BaseEntity {
 
     private Long deletedBy;
 
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public void markDeleted(Long deletedBy) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = deletedBy;

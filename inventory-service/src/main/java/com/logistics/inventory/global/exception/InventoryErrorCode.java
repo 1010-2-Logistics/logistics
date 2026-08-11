@@ -13,7 +13,10 @@ public enum InventoryErrorCode implements ErrorCode {
     INVENTORY_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
     INVENTORY_HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "허브를 찾을 수 없습니다."),
     INVENTORY_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 재고 요청입니다."),
-    INVENTORY_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 허브에 동일한 상품 재고가 이미 존재합니다.");
+    INVENTORY_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 허브에 동일한 상품 재고가 이미 존재합니다."),
+    INVENTORY_DELETE_CONFLICT(HttpStatus.CONFLICT, "이미 삭제된 재고입니다."),
+
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;
