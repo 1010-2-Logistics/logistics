@@ -33,6 +33,24 @@ public class SecurityConfig {
                                 Role.HUB_MANAGER.name()
                         )
 
+                        // 재고 수정
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/v1/inventories/{inventoryId}"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name()
+                        )
+
+                        // 재고 삭제
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/v1/inventories/{inventoryId}"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name()
+                        )
+
                         // 재고 단건/목록 조회
                         .requestMatchers(
                                 HttpMethod.GET,

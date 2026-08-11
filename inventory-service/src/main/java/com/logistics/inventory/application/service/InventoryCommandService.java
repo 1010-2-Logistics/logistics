@@ -75,14 +75,24 @@ public class InventoryCommandService {
 
     public void deleteInventory(
             InventoryDeleteCommand inventoryDeleteCommand,
-            Long deletedBy
+            AuthenticatedUser authenticatedUser
     ) {
-        Inventory inventory = inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryDeleteCommand.inventoryId())
+        Inventory inventory = inventoryCommandRepository
+                .findById(inventoryDeleteCommand.inventoryId())
                 .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-        inventory.delete(deletedBy);
+        if (inventory.getDeletedAt() != null) {
+            throw new CustomException(
+                    InventoryErrorCode.INVENTORY_DELETE_CONFLICT
+            );
+        }
 
-        inventoryCommandRepository.save(inventory);
+        inventoryAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                inventory.getHubId()
+        );
+
+        inventory.delete(authenticatedUser.userId());
     }
 
     public InventoryDeductionResult deductInventory(

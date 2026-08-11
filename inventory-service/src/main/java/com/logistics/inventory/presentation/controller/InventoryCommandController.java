@@ -109,16 +109,12 @@ public class InventoryCommandController {
             @PathVariable("inventoryId") UUID inventoryId
     ) {
         InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(
-                inventoryId,
-                principal.toAuthenticatedUser()
+                inventoryId
         );
-
-        // TODO: 인증 적용 후 실제 로그인 사용자 ID로 교체
-        Long deletedBy = 1L;
 
         inventoryCommandService.deleteInventory(
                 inventoryDeleteCommand,
-                deletedBy
+                principal.toAuthenticatedUser()
         );
     }
 }
