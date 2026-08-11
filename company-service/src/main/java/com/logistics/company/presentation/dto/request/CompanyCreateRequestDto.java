@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,8 +24,10 @@ public record CompanyCreateRequestDto(
 		@NotBlank(message = "업체 주소는 필수 항목입니다.")
 		String companyAddress
 ) {
-	public CompanyCreateCommand toCommand() {
+	public CompanyCreateCommand toCommand(UserPrincipal user) {
 		return new CompanyCreateCommand(
+				user.getUserId(),
+				user.getRole(),
 				hubId,
 				companyManagerId,
 				companyName,

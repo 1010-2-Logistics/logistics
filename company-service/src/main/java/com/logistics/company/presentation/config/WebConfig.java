@@ -19,8 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
 		registry.addInterceptor(authenticationInterceptor)
 				.addPathPatterns("/api/**")
 				.excludePathPatterns(
-						"internal/**",
-						"swagger-ui/**"
+						"/internal/**",
+						"/swagger-ui/**",
+						"/v3/api-docs/**",
+						"/actuator/health"
 				);
 	}
 	

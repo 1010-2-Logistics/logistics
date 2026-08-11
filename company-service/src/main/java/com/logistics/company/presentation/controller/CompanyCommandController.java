@@ -3,6 +3,8 @@ package com.logistics.company.presentation.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.facade.CompanyFacade;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.service.CompanyCommandServiceImpl;
 import com.logistics.company.global.response.ApiResponse;
+import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 import com.logistics.company.presentation.dto.request.CompanyCreateRequestDto;
 import com.logistics.company.presentation.dto.request.CompanyUpdateRequestDto;
 import com.logistics.company.presentation.dto.response.CompanyCreateResponseDto;
@@ -32,13 +35,16 @@ public class CompanyCommandController {
 
 	private final CompanyFacade companyFacade;
 	
-	private final CompanyCommandService companyCommandService;
+	private final CompanyCommandServiceImpl companyCommandService;
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER')")
 	public ApiResponse<CompanyCreateResponseDto> createCompany(
+			@AuthenticationPrincipal UserPrincipal user,
 			@Valid @RequestBody CompanyCreateRequestDto request) {
-		CompanyCreateResultDto result = companyFacade.createCompany(request.toCommand());
+		
+		CompanyCreateResultDto result = companyFacade.createCompany(request.toCommand(user));
 		
 		CompanyCreateResponseDto response = CompanyCreateResponseDto.from(result);
 		
@@ -50,10 +56,12 @@ public class CompanyCommandController {
 	}
 	
 	@PatchMapping("/{companyId}")
+	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER', 'COMPANY_MANAGER')")
 	public ApiResponse<CompanyUpdateResponseDto> updateCompany(
+			@AuthenticationPrincipal UserPrincipal user,
 			@Valid @RequestBody CompanyUpdateRequestDto request,
 			@PathVariable("companyId") UUID companyId) {
-		CompanyUpdateResultDto result = companyCommandService.updateCompany(companyId, request.toCommand());
+		CompanyUpdateResultDto result = companyFacade.updateCompany(companyId, request.toCommand(user));
 		
 		CompanyUpdateResponseDto response = CompanyUpdateResponseDto.from(result);
 		
@@ -65,10 +73,13 @@ public class CompanyCommandController {
 	}
 	
 	@DeleteMapping("/{companyId}")
-	public ApiResponse<Void> deleteCompany(@PathVariable("companyId") UUID companyId) {
+	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER')")
+	public ApiResponse<Void> deleteCompany(
+			@AuthenticationPrincipal UserPrincipal user,
+			@PathVariable("companyId") UUID companyId) {
 		Long deletedBy = 1L;
 		
-		companyCommandService.deleteCompany(deletedBy, companyId);
+		companyCommandService.deleteCompany(deletedBy, companyId, user);
 		
 		return ApiResponse.success(
 				HttpStatus.NO_CONTENT.value(),

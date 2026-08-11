@@ -23,10 +23,11 @@ import com.logistics.company.application.dto.internal.response.UserRoleUpdateRes
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.port.UserPort;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.service.CompanyCommandServiceImpl;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.domain.entity.Role;
 
 @ExtendWith(MockitoExtension.class)
 public class CompanyFacadeTest {
@@ -37,7 +38,7 @@ public class CompanyFacadeTest {
 	CompanyFacade companyFacade;
 	
 	@Mock
-	CompanyCommandService companyCommandService;
+	CompanyCommandServiceImpl companyCommandService;
 	
 	@Mock
 	HubPort hubPort;
@@ -60,6 +61,8 @@ public class CompanyFacadeTest {
 			String hubName = "허브 이름";
 			
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
+					1L,
+					Role.MASTER,
 					hubId,
 					companyManagerId,
 					companyName,
