@@ -1,5 +1,7 @@
 package com.logistics.inventory.application.service;
 
+import com.logistics.inventory.application.authorization.InventoryAuthorizationService;
+import com.logistics.inventory.application.dto.auth.AuthenticatedUser;
 import com.logistics.inventory.application.dto.command.*;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
@@ -8,6 +10,7 @@ import com.logistics.inventory.application.dto.result.InventoryUpdateResult;
 import com.logistics.inventory.application.port.EventPublisher;
 import com.logistics.inventory.application.port.IdempotencyPort;
 import com.logistics.inventory.domain.entity.Inventory;
+import com.logistics.inventory.domain.entity.Role;
 import com.logistics.inventory.domain.repository.InventoryCommandRepository;
 import com.logistics.inventory.global.exception.CustomException;
 import com.logistics.inventory.global.exception.InventoryErrorCode;
@@ -36,7 +39,12 @@ class InventoryCommandServiceTest {
     UUID hubId = UUID.randomUUID();
     UUID inventoryId = UUID.randomUUID();
     UUID orderId = UUID.randomUUID();
-    Long deletedBy = 1L;
+    AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+            1L,
+            Role.MASTER,
+            null,
+            null
+    );
 
     @Mock
     InventoryCommandRepository inventoryCommandRepository;
@@ -49,6 +57,9 @@ class InventoryCommandServiceTest {
 
     @Mock
     IdempotencyPort idempotencyPort;
+
+    @Mock
+    InventoryAuthorizationService inventoryAuthorizationService;
 
     @Nested
     @DisplayName("재고 차감")
@@ -438,31 +449,42 @@ class InventoryCommandServiceTest {
             given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
             given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
 
-            InventoryUpdateResult inventoryUpdateResult = inventoryCommandService.updateInventory(inventoryUpdateCommand);
+            InventoryUpdateResult inventoryUpdateResult = inventoryCommandService.updateInventory(
+                    inventoryUpdateCommand,
+                    authenticatedUser
+            );
 
             assertThat(inventoryUpdateResult).isNotNull();
             assertThat(inventory.getStock()).isEqualTo(100);
 
             verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
             verify(inventoryCommandRepository).save(inventory);
+            verify(inventoryAuthorizationService).validateHubAccess(
+                    authenticatedUser,
+                    hubId
+            );
         }
 
         @Test
         @DisplayName("존재하지 않는 재고 수정 시 예외")
         void inventory_update_not_found() {
-            InventoryUpdateCommand command = new InventoryUpdateCommand(
+            InventoryUpdateCommand inventoryUpdateCommand = new InventoryUpdateCommand(
                     inventoryId,
                     70
             );
             given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> inventoryCommandService.updateInventory(command))
+            assertThatThrownBy(() -> inventoryCommandService.updateInventory(
+                    inventoryUpdateCommand,
+                    authenticatedUser
+            ))
                     .isInstanceOfSatisfying(
                             CustomException.class,
                             exception -> assertThat(exception.getErrorCode())
                                     .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
             verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+            verify(inventoryAuthorizationService, never()).validateHubAccess(any(), any());
         }
     }
 
@@ -478,19 +500,20 @@ class InventoryCommandServiceTest {
                     UUID.randomUUID(),
                     50
             );
-            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.of(inventory));
-            given(inventoryCommandRepository.save(inventory)).willReturn(inventory);
+            given(inventoryCommandRepository.findById(inventoryId)).willReturn(Optional.of(inventory));
 
             inventoryCommandService.deleteInventory(
                     inventoryDeleteCommand,
-                    deletedBy
+                    authenticatedUser
             );
 
             assertThat(inventory.getDeletedAt()).isNotNull();
-            assertThat(inventory.getDeletedBy()).isEqualTo(deletedBy);
-
-            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
-            verify(inventoryCommandRepository).save(inventory);
+            assertThat(inventory.getDeletedBy()).isEqualTo(authenticatedUser.userId());
+            verify(inventoryAuthorizationService).validateHubAccess(
+                    authenticatedUser,
+                    inventory.getHubId()
+            );
+            verify(inventoryCommandRepository).findById(inventoryId);
         }
 
         @Test
@@ -498,15 +521,19 @@ class InventoryCommandServiceTest {
         void inventory_delete_not_found() {
             InventoryDeleteCommand inventoryDeleteCommand = new InventoryDeleteCommand(inventoryId);
 
-            given(inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryId)).willReturn(Optional.empty());
+            given(inventoryCommandRepository.findById(inventoryId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> inventoryCommandService.deleteInventory(inventoryDeleteCommand, 1L))
+            assertThatThrownBy(() -> inventoryCommandService.deleteInventory(
+                    inventoryDeleteCommand,
+                    authenticatedUser
+            ))
                     .isInstanceOfSatisfying(
                             CustomException.class,
                             exception -> assertThat(exception.getErrorCode())
                                     .isEqualTo(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-            verify(inventoryCommandRepository).findByIdAndDeletedAtIsNull(inventoryId);
+            verify(inventoryCommandRepository).findById(inventoryId);
+            verify(inventoryAuthorizationService, never()).validateHubAccess(any(), any());
         }
     }
 }
