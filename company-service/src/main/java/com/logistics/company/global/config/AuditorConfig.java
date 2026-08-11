@@ -1,0 +1,10 @@
+package com.logistics.company.global.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@Configuration
+@EnableJpaAuditing(auditorAwareRef = "auditingAware", modifyOnCreate = false)
+public class AuditorConfig {
+
+}

@@ -9,16 +9,14 @@ public record HubRouteCreateCommand(
         UUID startHubId,
         UUID endHubId,
         Integer duration,
-        BigDecimal distance,
-        Long createdBy
+        BigDecimal distance
 ) {
     public static HubRouteCreateCommand from(HubRouteCreateRequestDto dto) {
         return new HubRouteCreateCommand(
                 dto.getStartHubId(),
                 dto.getEndHubId(),
                 dto.getDuration(),
-                dto.getDistance(),
-                dto.getCreatedBy()
+                dto.getDistance()
         );
     }
 }

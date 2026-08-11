@@ -8,7 +8,6 @@ import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.presentation.auth.dto.request.LoginRequestDto;
 import com.logistics.user.presentation.auth.dto.request.SignupRequestDto;
 import com.logistics.user.presentation.auth.dto.response.LoginResponseDto;
-import com.logistics.user.presentation.auth.dto.response.LoginUserResponseDto;
 import com.logistics.user.presentation.auth.dto.response.SignupResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

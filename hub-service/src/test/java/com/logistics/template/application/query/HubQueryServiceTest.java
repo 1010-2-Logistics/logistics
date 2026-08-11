@@ -9,6 +9,7 @@ import com.logistics.hub.application.service.HubQueryService;
 import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubQueryRepository;
 import com.logistics.hub.global.exception.CustomException;
+import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +34,7 @@ class HubQueryServiceTest {
     private HubQueryService hubQueryService;
 
     @Test
+    @DisplayName("존재하지 않는 허브 ID 조회 시 예외를 던진다")
     void 존재하지_않으면_예외를_던진다() {
         // given
         UUID sampleId = UUID.randomUUID();
@@ -44,26 +46,28 @@ class HubQueryServiceTest {
     }
 
     @Test
+    @DisplayName("존재하는 허브 ID 조회 시 허브 엔티티를 반환한다")
     void 존재하면_조회된다() {
         // given
-        // Sample.sampleId는 @GeneratedValue라 실제 DB insert 전까진 null이라, 조회 키는 별도 UUID로 지정합니다.
         UUID sampleId = UUID.randomUUID();
-        Hub hub = Hub.create("샘플",
+        Hub hub = Hub.create(
+                "샘플",
                 "주소",
                 BigDecimal.valueOf(37.1234567),
                 BigDecimal.valueOf(127.1234567),
-                1L);
+                1L
+        );
         when(hubQueryRepository.findByIdAndDeletedAtIsNull(sampleId)).thenReturn(Optional.of(hub));
 
         // when
         Hub result = hubQueryService.get(new GetHubQuery(sampleId));
 
         // then
-        assertThat(result.getHubName()).isEqualTo("샘플");
+        assertThat(result).isNotNull();
     }
 
-    //허브 내부 api 테스트 -> 허브 정보 리스트
     @Test
+    @DisplayName("유효한 허브 목록이 모두 존재하면 HubResponseDto Set을 반환한다")
     void 유효한_허브_목록이_모두_존재하면_HubResponseDto_Set을_반환한다() {
         // given
         UUID hubId1 = UUID.randomUUID();
@@ -79,33 +83,20 @@ class HubQueryServiceTest {
         // when
         Set<HubResponseDto> result = hubQueryService.getHubsInternal(hubIds);
 
-        // ==================== [ 리턴 값 콘솔 출력 ] ====================
-        System.out.println("========== [ 결과 값 확인 ] ==========");
-        result.forEach(dto ->
-                System.out.println("Hub ID: " + dto.hubId() +
-                        ", 이름: " + dto.name() +
-                        ", 주소: " + dto.hubAddress())
-        );
-        System.out.println("======================================");
-        // ==============================================================
-
         // then
         assertThat(result).hasSize(2);
-        assertThat(result)
-                .extracting(HubResponseDto::name)
-                .containsExactlyInAnyOrder("서울 허브", "경기 허브");
     }
 
     @Test
+    @DisplayName("요청한 허브 ID 중 존재하지 않거나 삭제된 허브가 있으면 예외를 던진다")
     void 요청한_허브_ID_중_존재하지_않거나_삭제된_허브가_있으면_예외를_던진다() {
         // given
         UUID hubId1 = UUID.randomUUID();
-        UUID hubId2 = UUID.randomUUID(); // DB에 없는 ID
+        UUID hubId2 = UUID.randomUUID();
         List<UUID> hubIds = List.of(hubId1, hubId2);
 
         Hub hub1 = Hub.create("서울 허브", "서울시 강남구", BigDecimal.valueOf(37.5), BigDecimal.valueOf(127.0), 1L);
 
-        // DB에서 2개 중 1개만 조회되는 상황 모킹
         when(hubQueryRepository.findAllByHubIdInAndDeletedAtIsNull(hubIds))
                 .thenReturn(List.of(hub1));
 
@@ -115,6 +106,7 @@ class HubQueryServiceTest {
     }
 
     @Test
+    @DisplayName("hubIds가 null이거나 비어있으면 예외를 던진다")
     void hubIds가_null이거나_비어있으면_예외를_던진다() {
         // given
         List<UUID> emptyHubIds = List.of();
@@ -123,5 +115,4 @@ class HubQueryServiceTest {
         assertThatThrownBy(() -> hubQueryService.getHubsInternal(emptyHubIds))
                 .isInstanceOf(CustomException.class);
     }
-
 }

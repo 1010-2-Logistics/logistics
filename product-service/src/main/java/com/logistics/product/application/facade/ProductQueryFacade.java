@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
 import com.logistics.product.application.dto.internal.response.HubAuthResponseDto;
 import com.logistics.product.application.dto.query.ProductSearchQuery;
 import com.logistics.product.application.port.CompanyPort;
@@ -15,6 +16,9 @@ import com.logistics.product.application.service.ProductPolicy;
 import com.logistics.product.application.service.ProductQueryService;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.entity.Role;
+import com.logistics.product.global.exception.ProductErrorCode;
+import com.logistics.product.global.exception.ProductException;
+import com.logistics.product.infrastructure.security.principal.UserPrincipal;
 import com.logistics.product.presentation.dto.response.ProductInfoResponseDto;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,18 @@ public class ProductQueryFacade {
 	private final CompanyPort companyPort;
 	
 	private final HubPort hubPort;
+	
+	public Product productGetOne(UUID productId, UserPrincipal user) {
+		Product product = productQueryService.findProduct(productId);
+		
+		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(productId);
+		
+		if(companyInfo.hubId() != user.getHubId()) {
+			throw new ProductException(ProductErrorCode.PRODUCT_HUB_ACCESS_DENIED);
+		}
+		
+		return product;
+	}
 	
 	public Page<ProductInfoResponseDto> search(ProductSearchQuery query) {
 		List<UUID> companyIdsQuery = new ArrayList<>();

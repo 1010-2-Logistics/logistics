@@ -10,4 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DispatchDeadlineQueryRepositoryImpl implements DispatchDeadlineQueryRepository {
 
+	private final AiHistoryJpaRepository jpaRepository;
+	
+	
 }
