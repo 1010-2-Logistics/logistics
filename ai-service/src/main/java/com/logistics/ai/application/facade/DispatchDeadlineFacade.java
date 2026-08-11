@@ -20,6 +20,7 @@ import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
 import com.logistics.ai.application.port.in.DispatchDeadlineCommandService;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
+import com.logistics.ai.application.service.DispatchDeadlineQueryService;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
@@ -45,9 +46,13 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	private final ProductPort productPort;
 	
 	private final HubPort hubPort;
+	private final DispatchDeadlineQueryService queryService;
 
 	@Override
 	public void generate(OrderCreatedEvent event) {
+		if(queryService.hasSucceeded(event.orderId())) {
+			return;
+		}
 //		// 테스트코드
 //		UUID startHubId = UUID.randomUUID();
 //		UUID hubId2 = UUID.randomUUID();
