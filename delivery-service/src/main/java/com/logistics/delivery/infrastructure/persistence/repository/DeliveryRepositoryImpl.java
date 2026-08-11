@@ -40,4 +40,9 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
     public Optional<Delivery> findByOrderId(UUID orderId) {
         return jpaRepository.findByOrderIdAndDeletedAtIsNull(orderId);
     }
+
+    @Override
+    public Page<Delivery> searchByCompany(DeliveryStatus status, UUID companyId, Pageable pageable) {
+        return jpaRepository.searchByCompany(status, companyId, pageable);
+    }
 }

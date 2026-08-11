@@ -1,6 +1,6 @@
 package com.logistics.user.global.config;
 
-import com.logistics.user.infrastructure.security.AuthenticatedUser;
+import com.logistics.user.infrastructure.security.UserPrincipal;
 import java.util.Optional;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +44,7 @@ public class AuditorAwareConfig {
              * 프로젝트에서 사용하는 인증 객체가 아닌 경우
              * auditing 대상자를 결정하지 않는다.
              */
-            if (!(principal instanceof AuthenticatedUser currentUser)) {
+            if (!(principal instanceof UserPrincipal currentUser)) {
                 return Optional.empty();
             }
 

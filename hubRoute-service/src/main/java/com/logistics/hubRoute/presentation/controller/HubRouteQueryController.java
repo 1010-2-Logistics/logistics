@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name= "HubRoute")
@@ -35,6 +36,7 @@ public class HubRouteQueryController {
                     - 모든 로그인 사용자
                     """
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{hubRouteId}")
     public ApiResponse<HubRouteResponseDto> get(@PathVariable UUID hubRouteId) {
         HubRouteResponseDto hubRouteResponseDto = hubRouteQueryService.getCachedDto(new GetHubRouteQuery(hubRouteId));
@@ -48,6 +50,7 @@ public class HubRouteQueryController {
                     - 모든 로그인 사용자
                     """
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ApiResponse<PageResponse<HubRouteSummaryResponseDto>> search(
             @RequestParam(required = false) UUID hubRouteId,
@@ -64,10 +67,9 @@ public class HubRouteQueryController {
                     - 모든 로그인 사용자
                     """
     )
-    //허브 경로 탐색 (시작허브와 도착 허브를 받아서 검색 -> 연결되어 있지 않은 허브 경로 검색)
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/findHubRoute")
     public ApiResponse<HubRouteFindResponseDto> findHubRoute(@ModelAttribute HubRouteFindRequestDto requestDto){
-        //redis를 통해 한번 찾거나 조합한 경로는 redis에 저장된다.
         HubRouteFindResponseDto hubRouteFindResponseDto = hubRouteQueryService.findHubRoute(requestDto);
 
         return ApiResponse.success(200,"허브 경로 조회 성공",hubRouteFindResponseDto);

@@ -6,6 +6,7 @@ import com.logistics.hub.application.service.HubQueryService;
 import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.global.response.ApiResponse;
 import com.logistics.hub.global.response.PageResponse;
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import com.logistics.hub.presentation.dto.dto.response.HubSummaryResponseDto;
 import java.util.UUID;
@@ -15,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,11 +40,13 @@ public class QueryController {
                     """
     )
     @GetMapping("/{hubId}")
+    @PreAuthorize("isAuthenticated()")
     public ApiResponse<HubResponseDto> get(@PathVariable UUID hubId) {
         Hub hub = hubQueryService.get(new GetHubQuery(hubId));
         return ApiResponse.success(200, "허브 조회 성공", HubResponseDto.from(hub));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @Operation(
             summary = "허브 목록 조회",
             description = """

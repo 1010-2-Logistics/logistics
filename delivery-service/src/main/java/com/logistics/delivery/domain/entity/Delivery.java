@@ -43,8 +43,15 @@ public class Delivery extends BaseEntity {
     @Column(name = "slack_id", nullable = false)
     private String slackId;
 
+    @Column(name = "start_company_id")
+    private UUID startCompanyId;
+
+    @Column(name = "end_company_id")
+    private UUID endCompanyId;
+
     public static Delivery create(UUID orderId, UUID startHubId, UUID endHubId,
-                                  String deliveryAddress, String receiverName, String slackId, Long createdBy) {
+                                  String deliveryAddress, String receiverName, String slackId,
+                                  UUID startCompanyId, UUID endCompanyId) {
         Delivery delivery = new Delivery();
         delivery.orderId = orderId;
         delivery.startHubId = startHubId;
@@ -52,8 +59,9 @@ public class Delivery extends BaseEntity {
         delivery.deliveryAddress = deliveryAddress;
         delivery.receiverName = receiverName;
         delivery.slackId = slackId;
+        delivery.startCompanyId = startCompanyId;
+        delivery.endCompanyId = endCompanyId;
         delivery.status = DeliveryStatus.HUB_WAITING;
-        delivery.setCreatedBy(createdBy);
         return delivery;
     }
 

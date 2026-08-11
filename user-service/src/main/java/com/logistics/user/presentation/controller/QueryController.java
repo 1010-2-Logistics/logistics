@@ -2,7 +2,6 @@ package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.query.GetMyInfoQueryDto;
 import com.logistics.user.application.dto.query.GetUserDetailQueryDto;
-import com.logistics.user.application.dto.query.GetUserQueryDto;
 import com.logistics.user.application.dto.query.SearchUserQueryDto;
 import com.logistics.user.application.dto.result.UserDetailResultDto;
 import com.logistics.user.application.service.UserQueryService;
@@ -12,16 +11,13 @@ import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.global.response.ApiResponse;
 import com.logistics.user.global.response.PageResponse;
 
-import com.logistics.user.infrastructure.security.AuthenticatedUser;
+import com.logistics.user.infrastructure.security.UserPrincipal;
 import com.logistics.user.presentation.dto.response.UserResponseDto;
 import com.logistics.user.presentation.dto.response.UserSummaryResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,8 +59,8 @@ public class QueryController {
          * Filter가 Authentication principal에 넣은
          * 현재 사용자 인증 정보를 꺼낸다.
          */
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         GetMyInfoQueryDto query =
                 new GetMyInfoQueryDto(
@@ -99,8 +95,8 @@ public class QueryController {
             @PathVariable Long userId,
             Authentication authentication
     ) {
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         GetUserDetailQueryDto query =
                 new GetUserDetailQueryDto(
@@ -164,8 +160,8 @@ public class QueryController {
             @RequestParam(defaultValue = "10")
             int size
     ) {
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         SearchUserQueryDto query =
                 new SearchUserQueryDto(

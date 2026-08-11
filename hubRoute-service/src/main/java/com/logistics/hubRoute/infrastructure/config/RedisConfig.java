@@ -19,8 +19,8 @@ public class RedisConfig {
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 //유효 시간 1시간
-                .entryTtl(Duration.ofSeconds(30))   //테스트용으로 30초
-//                .entryTtl(Duration.ofHours(1))
+//                .entryTtl(Duration.ofSeconds(30))   //테스트용으로 30초
+                .entryTtl(Duration.ofHours(1))
 
                 //레디스 key 직렬화 방식 설정
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))

@@ -4,6 +4,7 @@ import com.logistics.hub.application.event.HubDeletedEvent;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.application.service.HubQueryService;
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +21,8 @@ public class HubFacade {
     private final EventPublisher eventPublisher;
 
 
-    public void deleteHub(UUID hubId,Long deletedBy){
-        hubCommandService.deleteHub(hubId,deletedBy);
+    public void deleteHub(UUID hubId, UserPrincipal userPrincipal){
+        hubCommandService.deleteHub(hubId ,userPrincipal);
 
         //TODO
         //이후 허브 삭제로 인해 영향이 갈 수 있는 도메인에 이벤트 전파
@@ -30,6 +31,6 @@ public class HubFacade {
         //주문 테이블 - 출발 허브나 도착 허브가 사라질 수 있음
         //특히 도착 허브가 사라진 경우 예외 처리가 필요할 것 같음
 
-        eventPublisher.publish(new HubDeletedEvent(hubId,deletedBy));
+        eventPublisher.publish(new HubDeletedEvent(hubId, userPrincipal.getUserId()));
     }
 }

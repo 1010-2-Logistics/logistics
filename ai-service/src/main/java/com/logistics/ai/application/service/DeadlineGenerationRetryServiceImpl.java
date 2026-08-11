@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.retry.RetryException;
 import org.springframework.core.retry.RetryTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import com.logistics.ai.application.dto.result.DispatchDeadlineResultDto;
 import com.logistics.ai.application.dto.result.DispatchDeadlineRetryResultDto;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
 import com.logistics.ai.application.port.out.DispatchDeadlineGenerationPort;
 import com.logistics.ai.infrastructure.exception.DeadlineGenerationRetryException;
+import com.logistics.ai.infrastructure.exception.NonRetryRemoteException;
+import com.logistics.ai.infrastructure.exception.RemoteErrorCode;
 
 @Service
 public class DeadlineGenerationRetryServiceImpl implements DeadlineGenerationRetryService {
@@ -55,6 +58,10 @@ public class DeadlineGenerationRetryServiceImpl implements DeadlineGenerationRet
 				} catch (Throwable t) {
 					lastRetryReason.set(getRootMessage(t));
 					
+					if(isClientError(t)) {
+						throw new NonRetryRemoteException(RemoteErrorCode.AI_API_4XX);
+					}
+					
 					throw t;
 				}
 			});
@@ -89,5 +96,15 @@ public class DeadlineGenerationRetryServiceImpl implements DeadlineGenerationRet
 						: message;
 	}
 	
+	private boolean isClientError(Throwable t) {
+		Throwable root = t;
+		while (root != null) {
+			if (root instanceof HttpClientErrorException) {
+				return ((HttpClientErrorException) root).getStatusCode().is4xxClientError();
+			}
+			root = root.getCause();
+		}
+		return false;
+	}
 	
 }
