@@ -30,8 +30,8 @@ public class DeliveryCommandController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<DeliveryCreateResponse> create(@Valid @RequestBody DeliveryCreateRequest request) {
-        var result = deliveryCommandService.create(request.toCommand());
+    public ApiResponse<DeliveryCreateResponse> createDelivery(@Valid @RequestBody DeliveryCreateRequest request) {
+        var result = deliveryCommandService.createDelivery(request.toCommand());
         return ApiResponse.success(201, "배송 생성 성공", DeliveryCreateResponse.from(result));
     }
 
@@ -43,8 +43,8 @@ public class DeliveryCommandController {
                 """
     )
     @PatchMapping("/order/{orderId}/cancel")
-    public ApiResponse<Void> cancel(@PathVariable UUID orderId) {
-        deliveryCommandService.cancel(orderId);
+    public ApiResponse<Void> cancelDelivery(@PathVariable UUID orderId) {
+        deliveryCommandService.cancelDelivery(orderId);
         return ApiResponse.success(200, "배송 취소 성공", null);
     }
 }

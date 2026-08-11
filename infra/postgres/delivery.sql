@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS delivery_service.p_delivery (
     delivery_address VARCHAR(255) NOT NULL,
     receiver_name VARCHAR(100) NOT NULL,
     slack_id VARCHAR(255) NOT NULL,
+    start_company_id UUID,
+    end_company_id UUID,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by BIGINT NOT NULL,
     updated_at TIMESTAMP,

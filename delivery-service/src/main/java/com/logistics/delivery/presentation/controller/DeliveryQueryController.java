@@ -41,7 +41,7 @@ public class DeliveryQueryController {
                 """
     )
     @GetMapping
-    public ApiResponse<PageResponse<DeliverySummaryResponse>> search(
+    public ApiResponse<PageResponse<DeliverySummaryResponse>> searchDelivery(
             @RequestParam(required = false) DeliveryStatus status,
             @RequestParam(required = false) UUID hubId,
             @RequestParam(required = false) String sort,
@@ -49,7 +49,7 @@ public class DeliveryQueryController {
             @RequestParam(required = false) Integer size,
             @AuthenticationPrincipal UserPrincipal principal) {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(status, hubId, sort, page, size);
-        Page<DeliverySummaryResponse> result = deliveryQueryService.search(query, principal).map(DeliverySummaryResponse::from);
+        Page<DeliverySummaryResponse> result = deliveryQueryService.searchDelivery(query, principal).map(DeliverySummaryResponse::from);
         return ApiResponse.success(200, "배송 목록 조회 성공", PageResponse.of(result));
     }
 
@@ -64,9 +64,9 @@ public class DeliveryQueryController {
                 """
     )
     @GetMapping("/{deliveryId}")
-    public ApiResponse<DeliveryResponse> getById(@PathVariable UUID deliveryId,
+    public ApiResponse<DeliveryResponse> getDeliveryById(@PathVariable UUID deliveryId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        var result = deliveryQueryService.getById(deliveryId, principal);
+        var result = deliveryQueryService.getDeliveryById(deliveryId, principal);
         return ApiResponse.success(200, "배송 조회 성공", DeliveryResponse.from(result));
     }
 
@@ -81,9 +81,9 @@ public class DeliveryQueryController {
                 """
     )
     @GetMapping("/{deliveryId}/routes")
-    public ApiResponse<DeliveryRouteListResponse> getRoutes(@PathVariable UUID deliveryId,
+    public ApiResponse<DeliveryRouteListResponse> getDeliveryRoutes(@PathVariable UUID deliveryId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        var result = deliveryQueryService.getRoutes(deliveryId, principal);
+        var result = deliveryQueryService.getDeliveryRoutes(deliveryId, principal);
         return ApiResponse.success(200, "배송 경로 조회 성공", DeliveryRouteListResponse.from(result));
     }
 }
