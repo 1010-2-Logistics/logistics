@@ -51,8 +51,7 @@ public class DeliveryRoute extends BaseEntity {
     private DeliveryRouteStatus status;
 
     public static DeliveryRoute create(UUID deliveryId, int sequence, UUID startHubId, UUID endHubId,
-                                       Long deliveryManagerId, BigDecimal expectedDistance, Integer expectedDuration,
-                                       Long createdBy) {
+                                       Long deliveryManagerId, BigDecimal expectedDistance, Integer expectedDuration) {
         DeliveryRoute route = new DeliveryRoute();
         route.deliveryId = deliveryId;
         route.sequence = sequence;
@@ -62,7 +61,6 @@ public class DeliveryRoute extends BaseEntity {
         route.expectedDistance = expectedDistance;
         route.expectedDuration = expectedDuration;
         route.status = DeliveryRouteStatus.HUB_MOVE_WAITING;
-        route.setCreatedBy(createdBy);
         return route;
     }
 

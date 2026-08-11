@@ -8,6 +8,8 @@ public record CreateDeliveryCommand(
         UUID endHubId,
         String deliveryAddress,
         String receiverName,
-        String slackId
+        String slackId,
+        UUID startCompanyId,
+        UUID endCompanyId
 ) {
 }

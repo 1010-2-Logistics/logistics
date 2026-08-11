@@ -29,7 +29,7 @@ public class DeliveryManagerCommandService {
     private final HubPort hubPort;
     private final UserAffiliationPort userAffiliationPort;
 
-    public DeliveryManager register(RegisterDeliveryManagerCommand command) {
+    public DeliveryManager registerDeliveryManager(RegisterDeliveryManagerCommand command) {
         if (deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(command.userId())) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_ALREADY_EXISTS);
         }
@@ -64,7 +64,7 @@ public class DeliveryManagerCommandService {
         } catch (FeignException.Conflict e) {
             // user-service에 이미 동일한 소속으로 등록돼 있음 = 목표 상태 달성이므로 성공 처리(멱등)
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
         }
     }
 
@@ -78,11 +78,11 @@ public class DeliveryManagerCommandService {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
         }
     }
 
-    public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
+    public DeliveryManager updateDeliveryManager(Long deliveryManagerId, UUID hubId) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
 
@@ -96,7 +96,7 @@ public class DeliveryManagerCommandService {
         return manager;
     }
 
-    public void delete(Long deliveryManagerId, UserPrincipal principal) {
+    public void deleteDeliveryManager(Long deliveryManagerId, UserPrincipal principal) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
         manager.markDeleted(principal.getUserId());

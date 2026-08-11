@@ -51,12 +51,13 @@ class DeliveryQueryServiceTest {
         // given
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
 
         // when
-        DeliveryResults.DeliveryDetailResult result = deliveryQueryService.getById(deliveryId, MASTER);
+        DeliveryResults.DeliveryDetailResult result = deliveryQueryService.getDeliveryById(deliveryId, MASTER);
 
         // then
         assertThat(result.delivery()).isEqualTo(delivery);
@@ -69,7 +70,7 @@ class DeliveryQueryServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> deliveryQueryService.getById(deliveryId, MASTER))
+        assertThatThrownBy(() -> deliveryQueryService.getDeliveryById(deliveryId, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
@@ -80,13 +81,14 @@ class DeliveryQueryServiceTest {
         // given
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
         UserPrincipal otherHubManager = new UserPrincipal(5L, Role.HUB_MANAGER, UUID.randomUUID(), null);
 
         // when & then
-        assertThatThrownBy(() -> deliveryQueryService.getById(deliveryId, otherHubManager))
+        assertThatThrownBy(() -> deliveryQueryService.getDeliveryById(deliveryId, otherHubManager))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
@@ -98,13 +100,14 @@ class DeliveryQueryServiceTest {
         UUID deliveryId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
         UserPrincipal hubManager = new UserPrincipal(5L, Role.HUB_MANAGER, startHubId, null);
 
         // when
-        DeliveryResults.DeliveryDetailResult result = deliveryQueryService.getById(deliveryId, hubManager);
+        DeliveryResults.DeliveryDetailResult result = deliveryQueryService.getDeliveryById(deliveryId, hubManager);
 
         // then
         assertThat(result.delivery()).isEqualTo(delivery);
@@ -133,14 +136,15 @@ class DeliveryQueryServiceTest {
         // given
         UUID hubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), hubId, UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         Page<Delivery> page = new PageImpl<>(List.of(delivery), PageRequest.of(0, 10), 1);
         when(deliveryRepository.search(any(), any(), any())).thenReturn(page);
 
         SearchDeliveryQuery query = SearchDeliveryQuery.of(DeliveryStatus.HUB_WAITING, hubId, "createdAt", 0, 10);
 
         // when
-        Page<DeliveryResults.DeliveryDetailResult> result = deliveryQueryService.search(query, MASTER);
+        Page<DeliveryResults.DeliveryDetailResult> result = deliveryQueryService.searchDelivery(query, MASTER);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -157,7 +161,7 @@ class DeliveryQueryServiceTest {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(null, UUID.randomUUID(), "createdAt", 0, 10);
 
         // when
-        deliveryQueryService.search(query, hubManager);
+        deliveryQueryService.searchDelivery(query, hubManager);
 
         // then: 쿼리에 넘긴 hubId가 아니라 principal의 hubId로 조회됐는지 확인
         org.mockito.Mockito.verify(deliveryRepository).search(null, hubId, PageRequest.of(0, 10,
@@ -174,7 +178,7 @@ class DeliveryQueryServiceTest {
         SearchDeliveryQuery query = SearchDeliveryQuery.of(null, null, "createdAt", 0, 10);
 
         // when
-        deliveryQueryService.search(query, deliveryManager);
+        deliveryQueryService.searchDelivery(query, deliveryManager);
 
         // then
         org.mockito.Mockito.verify(deliveryRepository).searchByManager(null, 7L, PageRequest.of(0, 10,
@@ -185,13 +189,14 @@ class DeliveryQueryServiceTest {
     @Test
     void 배송_경로_목록을_순번대로_조회한다() {
         UUID deliveryId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        DeliveryRoute route = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        DeliveryRoute route = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(route));
 
-        DeliveryResults.DeliveryRouteListResult result = deliveryQueryService.getRoutes(deliveryId, MASTER);
+        DeliveryResults.DeliveryRouteListResult result = deliveryQueryService.getDeliveryRoutes(deliveryId, MASTER);
 
         assertThat(result.routes()).hasSize(1);
         assertThat(result.routes().get(0).getSequence()).isEqualTo(0);
@@ -202,7 +207,7 @@ class DeliveryQueryServiceTest {
         UUID deliveryId = UUID.randomUUID();
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deliveryQueryService.getRoutes(deliveryId, MASTER))
+        assertThatThrownBy(() -> deliveryQueryService.getDeliveryRoutes(deliveryId, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
@@ -211,13 +216,14 @@ class DeliveryQueryServiceTest {
     @Test
     void 내부_경로_조회는_소유권_검증_없이_조회된다() {
         UUID deliveryId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        DeliveryRoute route = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        DeliveryRoute route = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(route));
 
-        DeliveryResults.DeliveryRouteListResult result = deliveryQueryService.getRoutesInternal(deliveryId);
+        DeliveryResults.DeliveryRouteListResult result = deliveryQueryService.getDeliveryRoutesInternal(deliveryId);
 
         assertThat(result.routes()).hasSize(1);
     }
@@ -225,17 +231,18 @@ class DeliveryQueryServiceTest {
     @Test
     void 경로_진행중이면_현재_구간_담당자를_반환한다() {
         UUID deliveryId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         delivery.changeStatus(DeliveryStatus.HUB_MOVING);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        DeliveryRoute route1 = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        DeliveryRoute route1 = DeliveryRoute.create(deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
         route1.changeStatus(DeliveryRouteStatus.DEST_HUB_ARRIVED);
-        DeliveryRoute route2 = DeliveryRoute.create(deliveryId, 1, UUID.randomUUID(), UUID.randomUUID(), 2L, BigDecimal.TEN, 30, 1L);
+        DeliveryRoute route2 = DeliveryRoute.create(deliveryId, 1, UUID.randomUUID(), UUID.randomUUID(), 2L, BigDecimal.TEN, 30);
         route2.changeStatus(DeliveryRouteStatus.HUB_MOVING);
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(route1, route2));
 
-        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getDeliveryInternal(deliveryId);
 
         assertThat(result.currentManagerId()).isEqualTo(2L);
     }
@@ -243,13 +250,14 @@ class DeliveryQueryServiceTest {
     @Test
     void 업체이동중이면_업체담당자를_현재담당자로_반환한다() {
         UUID deliveryId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         delivery.assignCompanyDeliveryManager(9L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
 
-        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getDeliveryInternal(deliveryId);
 
         assertThat(result.currentManagerId()).isEqualTo(9L);
     }
@@ -257,13 +265,68 @@ class DeliveryQueryServiceTest {
     @Test
     void 취소된_배송은_현재담당자가_없다() {
         UUID deliveryId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        Delivery delivery = Delivery.create(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                null, null);
         delivery.changeStatus(DeliveryStatus.CANCELLED);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
 
-        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getInternal(deliveryId);
+        DeliveryResults.DeliveryInternalResult result = deliveryQueryService.getDeliveryInternal(deliveryId);
 
         assertThat(result.currentManagerId()).isNull();
+    }
+
+    @Test
+    void 본인_업체가_출발지인_배송은_COMPANY_MANAGER가_조회할_수_있다() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                companyId, UUID.randomUUID());
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
+
+        UserPrincipal companyManager = new UserPrincipal(10L, Role.COMPANY_MANAGER, null, companyId);
+
+        DeliveryResults.DeliveryDetailResult result =
+                deliveryQueryService.getDeliveryById(deliveryId, companyManager);
+
+        assertThat(result.delivery().getStartCompanyId()).isEqualTo(companyId);
+    }
+
+    @Test
+    void 다른_업체_배송은_COMPANY_MANAGER가_조회할_수_없다() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01",
+                UUID.randomUUID(), UUID.randomUUID());
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of());
+
+        UserPrincipal otherCompanyManager =
+                new UserPrincipal(11L, Role.COMPANY_MANAGER, null, UUID.randomUUID());
+
+        assertThatThrownBy(() -> deliveryQueryService.getDeliveryById(deliveryId, otherCompanyManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+    }
+
+    @Test
+    void COMPANY_MANAGER가_목록_조회하면_본인_업체로_강제_스코프된다() {
+        UUID companyId = UUID.randomUUID();
+        Page<Delivery> page = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+        when(deliveryRepository.searchByCompany(any(), any(), any())).thenReturn(page);
+
+        UserPrincipal companyManager = new UserPrincipal(12L, Role.COMPANY_MANAGER, null, companyId);
+        SearchDeliveryQuery query = SearchDeliveryQuery.of(null, UUID.randomUUID(), null, 0, 10);
+
+        deliveryQueryService.searchDelivery(query, companyManager);
+
+        // 쿼리에 들어온 hubId는 무시되고 principal의 companyId로 조회돼야 한다
+        org.mockito.Mockito.verify(deliveryRepository).searchByCompany(
+                null, companyId,
+                PageRequest.of(0, 10, org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.DESC, "createdAt")));
     }
 }

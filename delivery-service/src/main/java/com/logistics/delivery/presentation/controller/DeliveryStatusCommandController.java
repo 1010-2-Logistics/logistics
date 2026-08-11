@@ -33,10 +33,10 @@ public class DeliveryStatusCommandController {
                 """
     )
     @PatchMapping("/{deliveryId}")
-    public ApiResponse<DeliveryStatusChangeResponse> changeStatus(
+    public ApiResponse<DeliveryStatusChangeResponse> changeDeliveryStatus(
             @PathVariable UUID deliveryId, @Valid @RequestBody DeliveryStatusChangeRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        var result = deliveryCommandService.changeStatus(deliveryId, request.toCommand(), principal);
+        var result = deliveryCommandService.changeDeliveryStatus(deliveryId, request.toCommand(), principal);
         return ApiResponse.success(200, "배송 상태 변경 성공", DeliveryStatusChangeResponse.from(result));
     }
 
@@ -50,11 +50,11 @@ public class DeliveryStatusCommandController {
                 """
     )
     @PatchMapping("/{deliveryId}/routes/{routeId}")
-    public ApiResponse<DeliveryRouteStatusChangeResponse> changeRouteStatus(
+    public ApiResponse<DeliveryRouteStatusChangeResponse> changeDeliveryRouteStatus(
             @PathVariable UUID deliveryId, @PathVariable UUID routeId,
             @Valid @RequestBody DeliveryRouteStatusChangeRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        var result = deliveryCommandService.changeRouteStatus(deliveryId, routeId, request.toCommand(), principal);
+        var result = deliveryCommandService.changeDeliveryRouteStatus(deliveryId, routeId, request.toCommand(), principal);
         return ApiResponse.success(200, "배송 경로 상태 변경 성공", DeliveryRouteStatusChangeResponse.of(result));
     }
 
@@ -68,7 +68,7 @@ public class DeliveryStatusCommandController {
     )
     @DeleteMapping("/{deliveryId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID deliveryId, @AuthenticationPrincipal UserPrincipal principal) {
-        deliveryCommandService.delete(deliveryId, principal);
+    public void deleteDelivery(@PathVariable UUID deliveryId, @AuthenticationPrincipal UserPrincipal principal) {
+        deliveryCommandService.deleteDelivery(deliveryId, principal);
     }
 }
