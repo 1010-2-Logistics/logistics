@@ -7,9 +7,15 @@ public class RetryRemoteException extends RuntimeException {
 
 	private final String code;
 	
-	public RetryRemoteException(String code, String message) {
+	private final String message;
+	
+	private final RemoteErrorCode error;
+	
+	public RetryRemoteException(RemoteErrorCode error, String message) {
 		super(message);
-		this.code = code;
+		this.code = error.name();
+		this.error = error;
+		this.message = message;
 	}
 	
 }

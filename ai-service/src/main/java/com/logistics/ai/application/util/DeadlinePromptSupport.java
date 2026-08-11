@@ -198,7 +198,7 @@ public class DeadlinePromptSupport {
 		private static String getHubName(Map<UUID, HubInfo> hubMap, UUID hubId) {
 			HubInfo hub = hubMap.get(hubId);
 			
-			return hub.hubName();
+			return hub.name();
 		}
 		
 		private static String getTransitHubNames(Map<UUID, HubInfo> hubMap, List<RouteInfo> routes) {
@@ -209,7 +209,7 @@ public class DeadlinePromptSupport {
 				HubInfo transitHub = hubMap.get(transitHubId);
 				
 				if(transitHub != null) {
-					hubNames.append(transitHub.hubName() + ", ");
+					hubNames.append(transitHub.name() + ", ");
 				}
 				
 			}

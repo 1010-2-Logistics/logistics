@@ -7,9 +7,12 @@ public class NonRetryRemoteException extends RuntimeException {
 
 	private final String code;
 	
-	public NonRetryRemoteException(String code, String message) {
-		super(message);
-		this.code = code;
+	private final RemoteErrorCode error;
+	
+	public NonRetryRemoteException(RemoteErrorCode error) {
+		super(error.getMessage());
+		this.code = error.name();
+		this.error = error;
 	}
 	
 }

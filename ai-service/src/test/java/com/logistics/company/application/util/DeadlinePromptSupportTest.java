@@ -77,8 +77,8 @@ public class DeadlinePromptSupportTest {
 				event.receiverSlackId(),
 				event.request(),
 				product.productName() + " " + event.quantity() + " EA",
-				hubMap.get(startHubId).hubName(),
-				hubMap.get(endHubId).hubName(),
+				hubMap.get(startHubId).name(),
+				hubMap.get(endHubId).name(),
 				deliveryManager.deliveryManagerName(),
 				deliveryManager.deliveryManagerSlackId()
 		);
@@ -161,8 +161,8 @@ public class DeadlinePromptSupportTest {
 				event.receiverSlackId(),
 				event.request(),
 				product.productName() + " " + event.quantity() + " EA",
-				hubMap.get(finalStartHubId).hubName(),
-				hubMap.get(finalEndHubId).hubName(),
+				hubMap.get(finalStartHubId).name(),
+				hubMap.get(finalEndHubId).name(),
 				deliveryManager.deliveryManagerName(),
 				deliveryManager.deliveryManagerSlackId(),
 				
