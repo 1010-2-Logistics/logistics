@@ -1,211 +1,170 @@
 package com.logistics.order.application.facade;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderDeleteCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
-import com.logistics.order.application.dto.result.OrderCancelResult;
-import com.logistics.order.application.dto.result.OrderCreateResult;
-import com.logistics.order.application.dto.result.OrderUpdateResult;
+import com.logistics.order.application.dto.result.*;
+import com.logistics.order.application.port.CompanyPort;
+import com.logistics.order.application.port.ProductPort;
+import com.logistics.order.application.port.UserPort;
+import com.logistics.order.application.saga.OrderCancelOrchestrator;
+import com.logistics.order.application.saga.OrderCreateOrchestrator;
+import com.logistics.order.application.saga.OrderDeleteOrchestrator;
+import com.logistics.order.application.saga.OrderUpdateOrchestrator;
+import com.logistics.order.application.saga.command.OrderCancelSagaCommand;
+import com.logistics.order.application.saga.command.OrderCreateSagaCommand;
+import com.logistics.order.application.saga.command.OrderDeleteSagaCommand;
+import com.logistics.order.application.saga.command.OrderUpdateSagaCommand;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
-import com.logistics.order.infrastructure.feign.client.CompanyClient;
-import com.logistics.order.infrastructure.feign.client.DeliveryClient;
-import com.logistics.order.infrastructure.feign.client.InventoryClient;
-import com.logistics.order.infrastructure.feign.client.ProductClient;
-import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
-import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
-import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
-import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderFacade {
-    // Facade 구현체는 Repository를 직접 의존하면 안 된다
+    private final OrderCreateOrchestrator orderCreateOrchestrator;
+    private final OrderUpdateOrchestrator orderUpdateOrchestrator;
+    private final OrderDeleteOrchestrator orderDeleteOrchestrator;
+    private final OrderCancelOrchestrator orderCancelOrchestrator;
 
+    private final OrderAuthorizationService orderAuthorizationService;
     private final OrderCommandService orderCommandService;
-    private final DeliveryClient deliveryClient;
-    private final ProductClient productClient;
-    private final InventoryClient inventoryClient;
-    private final CompanyClient companyClient;
 
-    // TODO: User 내부 조회 API 구현 후 실제 수령인 정보로 교체
-    String receiverName = "임시 수령인";
-    String receiverSlackId = "TEMP_SLACK_ID";
+    private final ProductPort productPort;
+    private final CompanyPort companyPort;
+    private final UserPort userPort;
 
     public OrderCreateResult createOrder(
-            OrderCreateCommand orderCreateCommand
+            OrderCreateCommand orderCreateCommand,
+            UUID idempotencyKey,
+            AuthenticatedUser authenticatedUser
     ) {
-        UUID orderId = UUID.randomUUID();
+        ProductGetResult productGetResult = productPort.getProduct(
+                orderCreateCommand.productId()
+        );
 
-        // 상품 조회
-        ProductGetResponse productGetResponse = productClient.getProduct(orderCreateCommand.productId()).getData();
-
-        // 업체 조회
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
-                productGetResponse.companyId(),
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
+                productGetResult.companyId(),
                 orderCreateCommand.endCompanyId()
-        ).getData();
-
-        // 재고
-        InventoryDeductionRequest inventoryDeductionRequest = new InventoryDeductionRequest(
-                orderCreateCommand.productId(),
-                companyOrderInfoResponse.startHubId(),
-                orderCreateCommand.quantity()
         );
 
-        inventoryClient.deductInventory(inventoryDeductionRequest);
-
-        // 배달
-        DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
-                orderId,
-                companyOrderInfoResponse.startHubId(),
-                companyOrderInfoResponse.endHubId(),
-                companyOrderInfoResponse.endCompanyAddress(),
-                receiverName,
-                receiverSlackId
+        UserInfoResult userInfoResult = userPort.getUser(
+                authenticatedUser.userId()
         );
 
-        DeliveryCreateResponse deliveryCreateResponse = deliveryClient.createDelivery(deliveryCreateRequest).getData();
-
-        return orderCommandService.createOrder(
+        OrderCreateSagaCommand orderCreateSagaCommand = new OrderCreateSagaCommand(
                 orderCreateCommand,
-                orderId,
-                deliveryCreateResponse.deliveryId(),
-                productGetResponse.companyId()
+                productGetResult.companyId(),
+                companyOrderInfoResult.startHubId(),
+                companyOrderInfoResult.endHubId(),
+                companyOrderInfoResult.endCompanyAddress(),
+                userInfoResult.name(),
+                userInfoResult.slackId(),
+                idempotencyKey
         );
+
+        return orderCreateOrchestrator.execute(orderCreateSagaCommand);
     }
 
     public OrderUpdateResult updateOrder(
-            OrderUpdateCommand orderUpdateCommand
+            OrderUpdateCommand orderUpdateCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForUpdate(
                 orderUpdateCommand.orderId()
         );
 
-        Integer changeQuantity = orderUpdateCommand.quantity();
-
-        if (changeQuantity != null) {
-            CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
-                    order.getStartCompanyId(),
-                    order.getEndCompanyId()
-            ).getData();
-
-            adjustInventory(
-                    order,
-                    companyOrderInfoResponse.startHubId(),
-                    changeQuantity
+        if (orderUpdateCommand.quantity() == null) {
+            return orderUpdateOrchestrator.execute(
+                    new OrderUpdateSagaCommand(
+                            order,
+                            orderUpdateCommand,
+                            null
+                    )
             );
         }
 
-        return orderCommandService.updateOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
+                order.getStartCompanyId(),
+                order.getEndCompanyId()
+        );
+
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
+        );
+
+        OrderUpdateSagaCommand orderUpdateSagaCommand = new OrderUpdateSagaCommand(
                 order,
-                orderUpdateCommand
+                orderUpdateCommand,
+                companyOrderInfoResult.startHubId()
+        );
+
+        return orderUpdateOrchestrator.execute(
+                orderUpdateSagaCommand
         );
     }
 
     public void deleteOrder(
-            OrderDeleteCommand orderDeleteCommand
+            OrderDeleteCommand orderDeleteCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForDelete(
                 orderDeleteCommand.orderId()
         );
 
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
-        ).getData();
-
-        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
-                order.getProductId(),
-                companyOrderInfoResponse.startHubId(),
-                order.getQuantity()
         );
-        // TODO : 보상트랜잭션 순서는 차감 후 주문 실패로 한다
-        inventoryClient.restoreInventory(inventoryRestorationRequest);
 
-        orderCommandService.deleteOrder(order);
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
+        );
+
+        OrderDeleteSagaCommand orderDeleteSagaCommand = new OrderDeleteSagaCommand(
+                order,
+                companyOrderInfoResult.startHubId(),
+                authenticatedUser.userId()
+        );
+
+        orderDeleteOrchestrator.execute(
+                orderDeleteSagaCommand
+        );
     }
 
     public OrderCancelResult cancelOrder(
-            OrderCancelCommand orderCancelCommand
+            OrderCancelCommand orderCancelCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Order order = orderCommandService.findOrderForCancel(
                 orderCancelCommand.orderId()
         );
 
-        CompanyOrderInfoResponse companyOrderInfoResponse = companyClient.getCompaniesForOrder(
+        CompanyOrderInfoResult companyOrderInfoResult = companyPort.getCompaniesForOrder(
                 order.getStartCompanyId(),
                 order.getEndCompanyId()
-        ).getData();
-
-        deliveryClient.cancelDelivery(
-                order.getOrderId()
         );
 
-        InventoryRestorationRequest inventoryRestorationRequest = new InventoryRestorationRequest(
-                order.getProductId(),
-                companyOrderInfoResponse.startHubId(),
-                order.getQuantity()
+        orderAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                companyOrderInfoResult.startHubId()
         );
 
-        // 실패 시
-        inventoryClient.restoreInventory(
-                inventoryRestorationRequest
+        OrderCancelSagaCommand orderCancelSagaCommand = new OrderCancelSagaCommand(
+                order,
+                companyOrderInfoResult.startHubId()
         );
 
-        return orderCommandService.cancelOrder(order);
+        return orderCancelOrchestrator.execute(orderCancelSagaCommand);
     }
-
-    private void adjustInventory(
-            Order order,
-            UUID hubId,
-            int newQuantity
-    ) {
-        int quantityDifference = newQuantity - order.getQuantity();
-
-        if (quantityDifference > 0) {
-            deductInventory(order, hubId, quantityDifference);
-            return;
-        }
-
-        if (quantityDifference < 0) {
-            restoreInventory(order, hubId, -quantityDifference);
-        }
-    }
-
-    private void deductInventory(
-            Order order,
-            UUID hubId,
-            int quantity
-    ) {
-        InventoryDeductionRequest request = new InventoryDeductionRequest(
-                order.getProductId(),
-                hubId,
-                quantity
-        );
-
-        inventoryClient.deductInventory(request);
-    }
-
-    private void restoreInventory(
-            Order order,
-            UUID hubId,
-            int quantity
-    ) {
-        InventoryRestorationRequest request = new InventoryRestorationRequest(
-                order.getProductId(),
-                hubId,
-                quantity
-        );
-
-        inventoryClient.restoreInventory(request);
-    }
-
 }
