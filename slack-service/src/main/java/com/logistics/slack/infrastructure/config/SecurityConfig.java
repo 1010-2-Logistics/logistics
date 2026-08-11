@@ -25,42 +25,69 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        // PATCH /api/v1/companies/manager/fix
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/update/manager/fix").hasAnyRole(
-                                Role.MASTER.name(), Role.HUB_MANAGER.name()
-                        )
-
-                        // DELETED /api/v1/companies/{companyId}
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/{companyId}").hasAnyRole(
-                                Role.MASTER.name(), Role.HUB_MANAGER.name(), Role.COMPANY_MANAGER.name()
-                        )
-
-                        // PATCH /api/v1/companies/{companyId}
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/{companyId}").hasAnyRole(
-                                Role.MASTER.name(), Role.HUB_MANAGER.name(), Role.COMPANY_MANAGER.name()
-                        )
-
-                        // POST /api/v1/companies
-                        .requestMatchers(HttpMethod.POST, "/api/v1/companies").hasAnyRole(
-                                Role.MASTER.name(), Role.HUB_MANAGER.name()
-                        )
-
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/v1/companies/{companyId}",
-                                "/api/v1/companies"
-                        ).permitAll()
-
-                        // 내부 API 권한 검증은 어떻게?
+                        // Slack 메시지 발송
                         .requestMatchers(
-                                "/internal/v1/companies",
-                                "/internal/v1/companies/{companyId}/exists"
+                                HttpMethod.POST,
+                                "/api/v1/slack/messages"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name(),
+                                Role.COMPANY_MANAGER.name(),
+                                Role.HUB_DELIVERY_MANAGER.name(),
+                                Role.COMPANY_DELIVERY_MANAGER.name()
+                        )
+
+                        // Slack 메시지 재발송
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/slack/messages/{slackMessageId}/retry"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name(),
+                                Role.COMPANY_MANAGER.name(),
+                                Role.HUB_DELIVERY_MANAGER.name(),
+                                Role.COMPANY_DELIVERY_MANAGER.name()
+                        )
+
+                        // Slack 메시지 삭제
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/v1/slack/messages/{slackMessageId}"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name(),
+                                Role.COMPANY_MANAGER.name(),
+                                Role.HUB_DELIVERY_MANAGER.name(),
+                                Role.COMPANY_DELIVERY_MANAGER.name()
+                        )
+
+                        // Slack 메시지 단건/목록 조회
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/slack/messages/**"
+                        ).hasAnyRole(
+                                Role.MASTER.name(),
+                                Role.HUB_MANAGER.name(),
+                                Role.COMPANY_MANAGER.name(),
+                                Role.HUB_DELIVERY_MANAGER.name(),
+                                Role.COMPANY_DELIVERY_MANAGER.name()
+                        )
+
+                        // Swagger / health
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/actuator/health"
                         ).permitAll()
+
 
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-
-        ;
+                .addFilterBefore(
+                        new HeaderAuthenticationFilter(),
+                        UsernamePasswordAuthenticationFilter.class
+                );
         return http.build();
     }
 }

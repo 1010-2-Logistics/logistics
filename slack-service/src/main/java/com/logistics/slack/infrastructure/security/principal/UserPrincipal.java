@@ -1,5 +1,6 @@
 package com.logistics.slack.infrastructure.security.principal;
 
+import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.global.exception.CommonErrorCode;
 import com.logistics.slack.global.exception.CustomException;
@@ -80,5 +81,14 @@ public class UserPrincipal {
 				(this.role == Role.COMPANY_MANAGER || this.role == Role.COMPANY_DELIVERY_MANAGER)
 				&& (this.hubId == null || this.companyId == null)
 		) throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+	}
+
+	public AuthenticatedUser toAuthenticatedUser() {
+		return new AuthenticatedUser(
+				userId,
+				role,
+				hubId,
+				companyId
+		);
 	}
 }

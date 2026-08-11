@@ -1,8 +1,11 @@
 package com.logistics.slack.application.service;
 
+import com.logistics.slack.application.authorization.SlackAuthorizationService;
+import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.application.dto.query.SlackSearchQuery;
 import com.logistics.slack.application.dto.result.SlackDetailResult;
 import com.logistics.slack.application.dto.result.SlackListResult;
+import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.domain.repository.SlackQueryRepository;
@@ -33,13 +36,19 @@ class SlackQueryServiceTest {
     UUID slackMessageId = UUID.randomUUID();
     UUID referenceId = UUID.randomUUID();
     Long senderId = 1L;
+    private final AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+            senderId,
+            Role.MASTER,
+            null,
+            null
+    );
     Long receiverId = 2L;
-
     @InjectMocks
     SlackQueryService slackQueryService;
-
     @Mock
     private SlackQueryRepository slackQueryRepository;
+    @Mock
+    private SlackAuthorizationService slackAuthorizationService;
 
     private Slack createSlack() {
         Slack slack = Slack.create(
@@ -68,7 +77,10 @@ class SlackQueryServiceTest {
 
             given(slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
 
-            SlackDetailResult slackDetailResult = slackQueryService.getSlack(slackMessageId);
+            SlackDetailResult slackDetailResult = slackQueryService.getSlack(
+                    slackMessageId,
+                    authenticatedUser
+            );
 
             assertThat(slackDetailResult).isNotNull();
             verify(slackQueryRepository).findByIdAndDeletedAtIsNull(slackMessageId);
@@ -79,7 +91,10 @@ class SlackQueryServiceTest {
         void slack_detail_not_found() {
             given(slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> slackQueryService.getSlack(slackMessageId))
+            assertThatThrownBy(() -> slackQueryService.getSlack(
+                    slackMessageId,
+                    authenticatedUser
+            ))
                     .isInstanceOf(CustomException.class);
         }
     }
@@ -124,7 +139,15 @@ class SlackQueryServiceTest {
                     createdTo,
                     pageable
             )).willReturn(slackPage);
-            Page<SlackListResult> result = slackQueryService.getSlacks(slackSearchQuery);
+            given(slackAuthorizationService.canRead(
+                    authenticatedUser,
+                    slack
+            )).willReturn(true);
+
+            Page<SlackListResult> result = slackQueryService.getSlacks(
+                    slackSearchQuery,
+                    authenticatedUser
+            );
 
             assertThat(result).hasSize(1);
 
@@ -137,7 +160,7 @@ class SlackQueryServiceTest {
                     createdTo,
                     pageable
             );
+            verify(slackAuthorizationService).canRead(authenticatedUser, slack);
         }
     }
-
 }

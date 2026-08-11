@@ -6,12 +6,14 @@ import com.logistics.slack.application.dto.result.SlackListResult;
 import com.logistics.slack.application.service.SlackQueryService;
 import com.logistics.slack.global.response.ApiResponse;
 import com.logistics.slack.global.response.PageResponse;
+import com.logistics.slack.infrastructure.security.principal.UserPrincipal;
 import com.logistics.slack.presentation.dto.request.SlackSearchRequestDto;
 import com.logistics.slack.presentation.dto.response.SlackDetailResponseDto;
 import com.logistics.slack.presentation.dto.response.SlackListResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -25,9 +27,13 @@ public class SlackQueryController {
 
     @GetMapping("/{slackMessageId}")
     public ApiResponse<SlackDetailResponseDto> getSlack(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable("slackMessageId") UUID slackMessageId
     ) {
-        SlackDetailResult slackDetailResult = slackQueryService.getSlack(slackMessageId);
+        SlackDetailResult slackDetailResult = slackQueryService.getSlack(
+                slackMessageId,
+                principal.toAuthenticatedUser()
+        );
 
         SlackDetailResponseDto slackDetailResponseDto = SlackDetailResponseDto.from(slackDetailResult);
 
@@ -40,13 +46,17 @@ public class SlackQueryController {
 
     @GetMapping
     public ApiResponse<PageResponse<SlackListResponseDto>> getSlacks(
+            @AuthenticationPrincipal UserPrincipal principal,
             @ModelAttribute SlackSearchRequestDto slackSearchRequestDto
     ) {
         SlackSearchQuery slackSearchQuery = SlackSearchQuery.from(
                 slackSearchRequestDto
         );
 
-        Page<SlackListResult> slackListResultPage = slackQueryService.getSlacks(slackSearchQuery);
+        Page<SlackListResult> slackListResultPage = slackQueryService.getSlacks(
+                slackSearchQuery,
+                principal.toAuthenticatedUser()
+        );
 
         Page<SlackListResponseDto> slackListResponseDtoPage = slackListResultPage.map(SlackListResponseDto::from);
 

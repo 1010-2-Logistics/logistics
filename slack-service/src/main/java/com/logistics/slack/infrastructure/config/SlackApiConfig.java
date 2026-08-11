@@ -1,23 +1,26 @@
 package com.logistics.slack.infrastructure.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-public class SlackWebhookConfig {
-    // Slack 으로 요청 보내는 HTTP 클라이언트 만드는 곳
+public class SlackApiConfig {
     @Bean
     public RestClient slackRestClient(
-            SlackProperties slackProperties
+            SlackProperties properties
     ) {
         return RestClient.builder()
-                .baseUrl(slackProperties.baseUrl())
+                .baseUrl(properties.baseUrl())
                 .defaultHeader(
                         HttpHeaders.AUTHORIZATION,
-                        "Bearer " + slackProperties.botToken()
+                        "Bearer " + properties.botToken()
+                )
+                .defaultHeader(
+                        HttpHeaders.CONTENT_TYPE,
+                        MediaType.APPLICATION_JSON_VALUE
                 )
                 .build();
     }

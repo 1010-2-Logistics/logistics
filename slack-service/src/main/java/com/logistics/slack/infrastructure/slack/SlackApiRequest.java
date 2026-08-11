@@ -1,6 +1,7 @@
 package com.logistics.slack.infrastructure.slack;
 
-public record SlackWebhookRequest (
+public record SlackApiRequest(
+        String channel,
         String text
 ){
 }
