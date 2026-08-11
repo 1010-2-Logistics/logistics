@@ -91,6 +91,10 @@ eureka:
     instance-id: ${spring.application.name}:${server.port}
 
 management:
+  tracing:
+    sampling:
+      probability: 1.0
+
   endpoints:
     web:
       exposure:

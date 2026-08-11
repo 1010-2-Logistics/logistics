@@ -105,7 +105,7 @@
 - App EC2용 `.env`는 로컬 `.env`를 scp로 복사 후 원격 `sed`로 `DB_HOST`/`REDIS_HOST`/`RABBITMQ_HOST`만 Data EC2 프라이빗 IP(`10.0.2.181`)로 치환 + `IMAGE_REGISTRY`/`IMAGE_TAG` 추가 — 시크릿 값은 내가 직접 보지 않음
 - 3배치 순차 기동(Zipkin+eureka → gateway → 업무 서비스 9개를 3개씩) 전부 정상, 최종 여유 메모리 3.99GB
 - G6 게이트 전 항목 통과 — Eureka 10개, 외부(내 PC)에서 회원가입→승인→로그인→토큰→리소스 생성까지 실제 왕복 성공, 재부팅 후 12개 컨테이너 자동 복구
-- **미해결 이슈로 기록**: Zipkin 수신 자체는 정상(수동 span 202 확인)이지만 12개 서비스 전부 span을 전송하지 않음. 의존성(`micrometer-tracing-bridge-brave 1.7.0`)·설정 키·네트워크 전부 정상 확인했는데도 재현됨 — Spring Boot 4.1과의 버전 궁합 문제로 추정. 문서 우선순위상 "부차" 항목이라 배포 완료 판정에는 영향 없음. **팀 담당자 확인 필요**
+- ~~**미해결 이슈**: Zipkin 수신 자체는 정상(수동 span 202 확인)이지만 12개 서비스 전부 span을 전송하지 않음~~ → **2026-08-11 해결** (아래 참조)
 
 **Phase 7 (인프라·워크플로 작성 완료, 실행 검증은 보류)**
 - `infra/terraform/cd.tf` 신규 — GitHub OIDC 프로바이더(`token.actions.githubusercontent.com`), `main` 브랜치 푸시로만 assume 가능한 IAM 역할(`sub: repo:1010-2-Logistics/logistics:ref:refs/heads/main`), ECR push 권한(11개 리포로 스코프) + SSM SendCommand 권한(App EC2 인스턴스로 스코프)
@@ -137,6 +137,67 @@
 | S-1 회귀 | 위조 헤더 요청 401 유지 |
 | 리포지토리 시크릿에 AWS 키 없음 | `gh secret list` 빈 출력 (OIDC만 사용) |
 - **재배포 시 순차 기동 리스크 발견 및 수정**: 최초 `deploy.yml`은 재배포 때 `docker compose up -d`로 11개 컨테이너를 한 번에 올리는 구조였음 — Phase 6에서 확인된 "m5.large(2vCPU)에서 11개 JVM 동시 부팅 시 CPU 포화로 Eureka 등록 타임아웃" 문제가 재배포마다 재현될 수 있었음. `infra/scripts/deploy-app.sh` 신규 작성으로 Phase 6과 동일한 순차 기동(eureka→gateway→3개씩 3배치, 각 단계 헬스체크 대기)을 SSM 스크립트에도 적용. `aws ssm wait command-executed`의 기본 타임아웃도 순차 기동 전체 소요시간보다 짧을 수 있어 직접 폴링(최대 15분)으로 교체
+
+---
+
+## Zipkin 트레이스 미수집 — 해결 (2026-08-11)
+
+Phase 6에서 "부차" 우선순위로 미해결 기록했던 항목. **원인이 두 겹이었고 둘 다 조용히 실패하는 유형**이라 발견이 늦었다.
+
+### 원인 ① Spring Boot 4에서 프로퍼티 경로가 바뀜
+
+```
+Boot 3.x:  management.zipkin.tracing.endpoint          ← 기존 설정 (무시됨)
+Boot 4.x:  management.tracing.export.zipkin.endpoint   ← 실제 필요한 키
+```
+
+Spring Boot는 모르는 프로퍼티가 있어도 에러를 내지 않고 무시한다. 그래서 **설정이 존재하는데도 기본값(`http://localhost:9411/api/v2/spans`)으로 동작**했고, 컨테이너에서 `localhost`는 자기 자신이므로 span이 어디에도 도달하지 않았다. B-1(Eureka·Zipkin 주소 하드코딩)과 같은 유형의 함정이다.
+
+확인 방법 — 라이브러리에 동봉된 메타데이터가 정답을 갖고 있다:
+```bash
+unzip -p <app>.jar 'BOOT-INF/lib/spring-boot-zipkin-*.jar' > /tmp/z.jar
+unzip -p /tmp/z.jar META-INF/spring-configuration-metadata.json
+```
+
+의존성도 함께 교체했다: `io.zipkin.reporter2:zipkin-reporter-brave` → `org.springframework.boot:spring-boot-starter-zipkin`.
+
+### 원인 ② 샘플링 결정은 최초 진입점에서 내려져 하위로 전파된다
+
+프로퍼티를 고친 뒤에도 `gateway-service`·`eureka-server`만 수집되고 업무 서비스는 여전히 누락됐다.
+
+업무 서비스 9개는 전부 `management.tracing.sampling.probability: 1.0`을 갖고 있었지만, **`gateway-service`에는 샘플링 설정 자체가 없어 기본값 10%로 동작**하고 있었다. 분산 추적은 요청이 처음 진입한 지점에서 "이 요청을 기록할지"를 결정하고 그 결정을 전파 헤더로 하위에 넘기므로, **하위 서비스가 1.0이어도 Gateway가 "기록 안 함"으로 판단하면 따를 수밖에 없다.**
+
+증상이 특히 헷갈렸던 이유 — 로그에는 trace ID가 정상적으로 찍힌다:
+```
+ERROR 1 --- [user-service] [io-19092-exec-5] [6a7aab8a…-9738911213cd7428]
+                                              └ traceId ┘ └ spanId ┘
+```
+추적 컨텍스트는 생성되지만 **샘플링되지 않아 전송만 안 되는** 상태였다. "설정도 맞고 연결도 되는데 왜 안 오지"의 정체가 이것이다.
+
+`eureka-server`만 예외적으로 수집됐던 건 클라이언트 10개가 30초마다 하트비트를 보내 **10%만 걸려도 절대량이 컸기 때문**이다.
+
+### 수정 파일
+
+| 경로 | 내용 |
+|---|---|
+| `build.gradle` (루트) | `zipkin-reporter-brave` → `spring-boot-starter-zipkin` |
+| 서비스 `application.yml` 10개 | `management.zipkin.tracing.endpoint` → `management.tracing.export.zipkin.endpoint` |
+| `gateway-service/application.yml` | `management.tracing.sampling.probability: 1.0` 추가 |
+| `docker-compose.app.yml` | `MANAGEMENT_ZIPKIN_TRACING_ENDPOINT` → `MANAGEMENT_TRACING_EXPORT_ZIPKIN_ENDPOINT` (3곳) |
+
+`management.tracing.sampling.probability`는 Boot 4에서도 이름이 그대로라 수정 대상이 아니다.
+
+### 검증 (로컬)
+
+```bash
+curl -s "http://localhost:9411/api/v2/services"
+# ["eureka-server","gateway-service","hub-service","inventory-service",
+#  "order-service","product-service","user-service"]
+```
+
+호출한 서비스가 순차적으로 나타나는 것을 확인. Zipkin은 **span을 받은 적 있는 서비스만** 목록에 보여주므로, 목록에 없는 서비스는 설정 문제가 아니라 해당 API를 호출하지 않았기 때문이다(이 점 때문에 중간에 "여전히 안 된다"고 오판했다).
+
+> **참고**: `probability: 1.0`(전량 수집)은 시연·학습 목적이라 택한 값이다. 운영에서는 저장 비용과 오버헤드 때문에 보통 0.1~0.01을 쓰고, Gateway 같은 진입점에서만 결정하면 되므로 하위 서비스 설정은 사실상 불필요하다.
 
 ---
 
