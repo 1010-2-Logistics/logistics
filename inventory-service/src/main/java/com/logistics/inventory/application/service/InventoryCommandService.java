@@ -98,7 +98,7 @@ public class InventoryCommandService {
     public InventoryDeductionResult deductInventory(
             InventoryDeductionCommand inventoryDeductionCommand
     ) {
-        String key = "inventory:deduct:" + inventoryDeductionCommand.orderId();
+        String key = "inventory:deduct:" + inventoryDeductionCommand.operationId();
         Duration ttl = Duration.ofMinutes(10);
 
         // 핵심 코드 : 이 주문 예전에 성공한 적 있어? 있으면 그때 결과 다시 줘
@@ -141,7 +141,7 @@ public class InventoryCommandService {
     public InventoryRestorationResult restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        String key = "inventory:restore:" + inventoryRestorationCommand.orderId();
+        String key = "inventory:restore:" + inventoryRestorationCommand.operationId();
         Duration ttl = Duration.ofMinutes(10);
 
         Optional<InventoryRestorationResult> previousResult = idempotencyPort.getResult(

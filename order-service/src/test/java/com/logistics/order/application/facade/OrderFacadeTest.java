@@ -1,22 +1,26 @@
 package com.logistics.order.application.facade;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
+import com.logistics.order.application.dto.command.OrderCancelCommand;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderDeleteCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
-import com.logistics.order.application.dto.result.OrderCreateResult;
+import com.logistics.order.application.dto.result.*;
+import com.logistics.order.application.port.CompanyPort;
+import com.logistics.order.application.port.ProductPort;
+import com.logistics.order.application.port.UserPort;
+import com.logistics.order.application.saga.OrderCancelOrchestrator;
+import com.logistics.order.application.saga.OrderCreateOrchestrator;
+import com.logistics.order.application.saga.OrderDeleteOrchestrator;
+import com.logistics.order.application.saga.OrderUpdateOrchestrator;
+import com.logistics.order.application.saga.command.OrderCancelSagaCommand;
+import com.logistics.order.application.saga.command.OrderCreateSagaCommand;
+import com.logistics.order.application.saga.command.OrderDeleteSagaCommand;
+import com.logistics.order.application.saga.command.OrderUpdateSagaCommand;
 import com.logistics.order.application.service.OrderCommandService;
 import com.logistics.order.domain.entity.Order;
-import com.logistics.order.global.response.ApiResponse;
-import com.logistics.order.infrastructure.feign.client.CompanyClient;
-import com.logistics.order.infrastructure.feign.client.DeliveryClient;
-import com.logistics.order.infrastructure.feign.client.InventoryClient;
-import com.logistics.order.infrastructure.feign.client.ProductClient;
-import com.logistics.order.infrastructure.feign.request.DeliveryCreateRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryDeductionRequest;
-import com.logistics.order.infrastructure.feign.request.InventoryRestorationRequest;
-import com.logistics.order.infrastructure.feign.response.CompanyOrderInfoResponse;
-import com.logistics.order.infrastructure.feign.response.DeliveryCreateResponse;
-import com.logistics.order.infrastructure.feign.response.ProductGetResponse;
+import com.logistics.order.domain.entity.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,7 +39,6 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class OrderFacadeTest {
-    // TODO : CRUD 이후 예외 관련 테스트 진행 예정
     UUID orderId = UUID.randomUUID();
     UUID deliveryId = UUID.randomUUID();
     UUID startCompanyId = UUID.randomUUID();
@@ -43,22 +46,34 @@ class OrderFacadeTest {
     UUID productId = UUID.randomUUID();
     UUID startHubId = UUID.randomUUID();
     UUID endHubId = UUID.randomUUID();
+    UUID idempotencyKey = UUID.randomUUID();
 
+    AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+            1L,
+            Role.MASTER,
+            null,
+            null
+    );
     @Mock
     private OrderCommandService orderCommandService;
 
     @Mock
-    private ProductClient productClient;
+    private OrderAuthorizationService orderAuthorizationService;
 
     @Mock
-    private CompanyClient companyClient;
-
+    private ProductPort productPort;
     @Mock
-    private InventoryClient inventoryClient;
-
+    private CompanyPort companyPort;
     @Mock
-    private DeliveryClient deliveryClient;
-
+    private UserPort userPort;
+    @Mock
+    private OrderCreateOrchestrator orderCreateOrchestrator;
+    @Mock
+    private OrderUpdateOrchestrator orderUpdateOrchestrator;
+    @Mock
+    private OrderDeleteOrchestrator orderDeleteOrchestrator;
+    @Mock
+    private OrderCancelOrchestrator orderCancelOrchestrator;
     @InjectMocks
     private OrderFacade orderFacade;
 
@@ -66,79 +81,75 @@ class OrderFacadeTest {
     @DisplayName("주문 생성")
     class order_create {
         @Test
-        @DisplayName("성공")
+        @DisplayName("주문 생성 요청 위임 성공")
         void order_create_success() {
-            // 상품 조회 → 업체 조회 → 재고 차감 → 배송 생성 → 주문 저장
             OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
                     endCompanyId,
                     productId,
                     100,
                     "오후까지 납품"
             );
-
-            ProductGetResponse productGetResponse = mock(ProductGetResponse.class);
-            CompanyOrderInfoResponse companyOrderInfoResponse = mock(CompanyOrderInfoResponse.class);
-            DeliveryCreateResponse deliveryCreateResponse = mock(DeliveryCreateResponse.class);
+            ProductGetResult productGetResult = mock(ProductGetResult.class);
+            CompanyOrderInfoResult companyOrderInfoResult = mock(CompanyOrderInfoResult.class);
+            UserInfoResult userInfoResult = mock(UserInfoResult.class);
             OrderCreateResult orderCreateResult = mock(OrderCreateResult.class);
 
-            ApiResponse<ProductGetResponse> productApiResponse = mock(ApiResponse.class);
-            ApiResponse<CompanyOrderInfoResponse> companyApiResponse = mock(ApiResponse.class);
-            ApiResponse<DeliveryCreateResponse> deliveryApiResponse = mock(ApiResponse.class);
-
-            given(productClient.getProduct(productId)).willReturn(productApiResponse);
-            given(productApiResponse.getData()).willReturn(productGetResponse);
-            given(productGetResponse.companyId()).willReturn(startCompanyId);
-
-            given(companyClient.getCompaniesForOrder(
+            given(productPort.getProduct(productId)).willReturn(productGetResult);
+            given(productGetResult.companyId()).willReturn(startCompanyId);
+            given(companyPort.getCompaniesForOrder(
                     startCompanyId,
                     endCompanyId
-            )).willReturn(companyApiResponse);
-            given(companyApiResponse.getData()).willReturn(companyOrderInfoResponse);
-            given(companyOrderInfoResponse.startHubId()).willReturn(startHubId);
-            given(companyOrderInfoResponse.endHubId()).willReturn(endHubId);
-            given(companyOrderInfoResponse.endCompanyAddress()).willReturn("서울특별시 송파구");
+            )).willReturn(companyOrderInfoResult);
 
-            given(deliveryClient.createDelivery(any(DeliveryCreateRequest.class))).willReturn(deliveryApiResponse);
-            given(deliveryApiResponse.getData()).willReturn(deliveryCreateResponse);
-            given(deliveryCreateResponse.deliveryId()).willReturn(deliveryId);
+            given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
+            given(companyOrderInfoResult.endHubId()).willReturn(endHubId);
+            given(companyOrderInfoResult.endCompanyAddress()).willReturn("서울특별시 송파구");
+            given(orderCreateOrchestrator.execute(any(OrderCreateSagaCommand.class))).willReturn(orderCreateResult);
+            given(userPort.getUser(authenticatedUser.userId())).willReturn(userInfoResult);
+            given(userInfoResult.name()).willReturn("name");
+            given(userInfoResult.slackId()).willReturn("U123456");
 
-            given(orderCommandService.createOrder(
-                    any(OrderCreateCommand.class),
-                    any(UUID.class),
-                    any(UUID.class),
-                    any(UUID.class)
-            )).willReturn(orderCreateResult);
-
-            orderFacade.createOrder(orderCreateCommand);
-
-            verify(inventoryClient).deductInventory(any(InventoryDeductionRequest.class));
-
-            verify(deliveryClient).createDelivery(any(DeliveryCreateRequest.class));
-
-            verify(orderCommandService).createOrder(
-                    any(OrderCreateCommand.class),
-                    any(UUID.class),
-                    any(UUID.class),
-                    any(UUID.class)
+            orderFacade.createOrder(
+                    orderCreateCommand,
+                    idempotencyKey,
+                    authenticatedUser
             );
+
+            verify(productPort).getProduct(productId);
+            verify(companyPort).getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            );
+            verify(userPort).getUser(authenticatedUser.userId());
+            verify(orderCreateOrchestrator).execute(any(OrderCreateSagaCommand.class));
         }
 
         @Test
-        @DisplayName("업체 조회 실패 시 이후 호출 중단")
-        void order_create_company() {
+        @DisplayName("수량 변경이 없으면 업체 조회 없이 수정 요청 위임")
+        void order_update_without_quantity() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+            OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
+                    orderId,
+                    null,
+                    "요청사항만 변경"
+            );
+            given(orderCommandService.findOrderForUpdate(orderId)).willReturn(order);
 
-        }
+            orderFacade.updateOrder(
+                    orderUpdateCommand,
+                    authenticatedUser
+            );
 
-        @Test
-        @DisplayName("재고 차감 실패 시 배송과 주문 생성 중단")
-        void order_create_inventory() {
-
-        }
-
-        @Test
-        @DisplayName("배송 생성 실패 시 주문 저장 중단")
-        void order_create_fail_save() {
-
+            verify(orderCommandService).findOrderForUpdate(orderId);
+            verify(orderUpdateOrchestrator).execute(any(OrderUpdateSagaCommand.class));
         }
     }
 
@@ -146,7 +157,7 @@ class OrderFacadeTest {
     @DisplayName("주문 수정")
     class order_update {
         @Test
-        @DisplayName("주문 수정 성공")
+        @DisplayName("주문 수정 요청 위임 성공")
         void order_update_success() {
             Order order = Order.create(
                     orderId,
@@ -157,32 +168,34 @@ class OrderFacadeTest {
                     100,
                     "오후까지 납품"
             );
-
-            OrderUpdateCommand command = new OrderUpdateCommand(
+            OrderUpdateCommand orderUpdateCommand = new OrderUpdateCommand(
                     orderId,
                     130,
                     "오전까지 납품"
             );
+            CompanyOrderInfoResult companyOrderInfoResult = mock(CompanyOrderInfoResult.class);
+            OrderUpdateResult orderUpdateResult = mock(OrderUpdateResult.class);
 
-            CompanyOrderInfoResponse companyResponse = mock(CompanyOrderInfoResponse.class);
             given(orderCommandService.findOrderForUpdate(orderId)).willReturn(order);
-            ApiResponse<CompanyOrderInfoResponse> apiResponse = mock(ApiResponse.class);
-
-            given(companyClient.getCompaniesForOrder(
+            given(companyPort.getCompaniesForOrder(
                     startCompanyId,
                     endCompanyId
-            )).willReturn(apiResponse);
+            )).willReturn(companyOrderInfoResult);
 
-            given(apiResponse.getData()).willReturn(companyResponse);
-            given(companyResponse.startHubId()).willReturn(startHubId);
+            given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
+            given(orderUpdateOrchestrator.execute(any(OrderUpdateSagaCommand.class))).willReturn(orderUpdateResult);
 
-            orderFacade.updateOrder(command);
-
-            verify(inventoryClient).deductInventory(any(InventoryDeductionRequest.class));
-            verify(orderCommandService).updateOrder(
-                    order,
-                    command
+            orderFacade.updateOrder(
+                    orderUpdateCommand,
+                    authenticatedUser
             );
+
+            verify(orderCommandService).findOrderForUpdate(orderId);
+            verify(companyPort).getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            );
+            verify(orderUpdateOrchestrator).execute(any(OrderUpdateSagaCommand.class));
         }
     }
 
@@ -190,7 +203,7 @@ class OrderFacadeTest {
     @DisplayName("주문 삭제")
     class order_delete {
         @Test
-        @DisplayName("주문 삭제 성공")
+        @DisplayName("주문 삭제 요청 위임 성공")
         void order_delete_success() {
             Order order = Order.create(
                     orderId,
@@ -202,23 +215,69 @@ class OrderFacadeTest {
                     "오후까지 납품"
             );
             OrderDeleteCommand orderDeleteCommand = new OrderDeleteCommand(orderId);
-            CompanyOrderInfoResponse companyOrderInfoResponse = mock(CompanyOrderInfoResponse.class);
+            CompanyOrderInfoResult companyOrderInfoResult = mock(CompanyOrderInfoResult.class);
 
             given(orderCommandService.findOrderForDelete(orderId)).willReturn(order);
-
-            ApiResponse<CompanyOrderInfoResponse> apiResponse = mock(ApiResponse.class);
-            given(companyClient.getCompaniesForOrder(
+            given(companyPort.getCompaniesForOrder(
                     startCompanyId,
                     endCompanyId
-            )).willReturn(apiResponse);
-            given(apiResponse.getData()).willReturn(companyOrderInfoResponse);
+            )).willReturn(companyOrderInfoResult);
 
-            given(companyOrderInfoResponse.startHubId()).willReturn(startHubId);
+            given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
 
-            orderFacade.deleteOrder(orderDeleteCommand);
+            orderFacade.deleteOrder(
+                    orderDeleteCommand,
+                    authenticatedUser
+            );
 
-            verify(inventoryClient).restoreInventory(any(InventoryRestorationRequest.class));
-            verify(orderCommandService).deleteOrder(order);
+            verify(orderCommandService).findOrderForDelete(orderId);
+            verify(companyPort).getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            );
+            verify(orderDeleteOrchestrator).execute(any(OrderDeleteSagaCommand.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("주문 취소")
+    class order_cancel {
+        @Test
+        @DisplayName("주문 취소 요청 위임 성공")
+        void order_cancel_success() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "오후까지 납품"
+            );
+            OrderCancelCommand orderCancelCommand = new OrderCancelCommand(orderId);
+            CompanyOrderInfoResult companyOrderInfoResult = mock(CompanyOrderInfoResult.class);
+            OrderCancelResult orderCancelResult = mock(OrderCancelResult.class);
+
+            given(orderCommandService.findOrderForCancel(orderId)).willReturn(order);
+            given(companyPort.getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            )).willReturn(companyOrderInfoResult);
+
+            given(companyOrderInfoResult.startHubId()).willReturn(startHubId);
+            given(orderCancelOrchestrator.execute(any(OrderCancelSagaCommand.class))).willReturn(orderCancelResult);
+
+            orderFacade.cancelOrder(
+                    orderCancelCommand,
+                    authenticatedUser
+            );
+
+            verify(orderCommandService).findOrderForCancel(orderId);
+            verify(companyPort).getCompaniesForOrder(
+                    startCompanyId,
+                    endCompanyId
+            );
+            verify(orderCancelOrchestrator).execute(any(OrderCancelSagaCommand.class));
         }
     }
 }

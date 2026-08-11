@@ -1,20 +1,22 @@
 package com.logistics.order.application.service;
 
 import com.logistics.order.application.dto.query.OrderSearchQuery;
+import com.logistics.order.application.dto.result.DeliveryGetResult;
 import com.logistics.order.application.dto.result.OrderDetailResult;
 import com.logistics.order.application.dto.result.OrderListResult;
+import com.logistics.order.application.port.DeliveryPort;
 import com.logistics.order.domain.entity.Order;
+import com.logistics.order.domain.entity.Role;
 import com.logistics.order.domain.repository.OrderQueryRepository;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -22,15 +24,32 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class OrderQueryService {
     private final OrderQueryRepository orderQueryRepository;
+    private final OrderAuthorizationService orderAuthorizationService;
+    private final DeliveryPort deliveryPort;
 
-    public OrderDetailResult getOrder(UUID orderId) {
+    public OrderDetailResult getOrder(
+            UUID orderId,
+            AuthenticatedUser authenticatedUser
+    ) {
         Order order = orderQueryRepository.findByIdAndDeletedAtIsNull(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        DeliveryGetResult delivery = deliveryPort.getDelivery(order.getDeliveryId());
+
+        orderAuthorizationService.validateReadAccess(
+                authenticatedUser,
+                order,
+                delivery.startHubId(),
+                delivery.deliveryManagerId()
+        );
 
         return OrderDetailResult.from(order);
     }
 
-    public OrderListResult getOrders(OrderSearchQuery orderSearchQuery) {
+    public OrderListResult getOrders(
+            OrderSearchQuery orderSearchQuery,
+            AuthenticatedUser authenticatedUser
+    ) {
         int page = validatePage(orderSearchQuery.page());
         int size = validateSize(orderSearchQuery.size());
         String sortProperty = validateSort(orderSearchQuery.sort());
@@ -41,11 +60,41 @@ public class OrderQueryService {
                 Sort.by(Sort.Direction.DESC, sortProperty)
         );
 
-        Page<Order> orders = orderQueryRepository.search(
-                orderSearchQuery.productId(),
-                orderSearchQuery.endCompanyId(),
-                pageable
-        );
+        Page<Order> orders;
+
+        if (authenticatedUser.role() == Role.COMPANY_MANAGER) {
+            orders = orderQueryRepository.searchByCreatedBy(
+                    authenticatedUser.userId(),
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+        } else if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+            Page<Order> searchedOrders = orderQueryRepository.search(
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+
+            List<Order> filteredOrders = searchedOrders.getContent().stream()
+                    .filter(order -> isAssignedDeliveryManager(
+                            order,
+                            authenticatedUser.userId()
+                    )).toList();
+
+            orders = new PageImpl<>(
+                    filteredOrders,
+                    pageable,
+                    filteredOrders.size()
+            );
+        } else {
+            orders = orderQueryRepository.search(
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+        }
 
         return OrderListResult.from(orders);
     }
@@ -82,5 +131,17 @@ public class OrderQueryService {
         }
 
         throw new CustomException(OrderErrorCode.ORDER_INVALID_REQUEST);
+    }
+
+    private boolean isAssignedDeliveryManager(
+            Order order,
+            Long userId
+    ) {
+        DeliveryGetResult delivery = deliveryPort.getDelivery(order.getDeliveryId());
+
+        return Objects.equals(
+                delivery.deliveryManagerId(),
+                userId
+        );
     }
 }
