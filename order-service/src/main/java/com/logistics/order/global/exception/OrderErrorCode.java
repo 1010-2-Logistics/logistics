@@ -13,9 +13,13 @@ public enum OrderErrorCode implements ErrorCode {
     ORDER_DELETE_CONFLICT(HttpStatus.CONFLICT, "이미 삭제된 주문입니다."),
     ORDER_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "연동 서비스 처리에 실패했습니다."),
     ORDER_CANCEL_CONFLICT(HttpStatus.CONFLICT, "이미 취소됐거나 배송이 시작되어 취소할 수 없습니다."),
+    ORDER_ALREADY_PROCESSING(HttpStatus.CONFLICT, "동일한 주문 생성 요청이 처리 중입니다."),
+
+
+    ORDER_REFERENCE_NOT_FOUND(HttpStatus.NOT_FOUND, "상품 또는 관련 업체를 찾을 수 없습니다."),
+    ORDER_OUT_OF_STOCK(HttpStatus.CONFLICT, "주문 가능한 재고가 부족합니다."),
 
     ;
-
     private final HttpStatus httpStatus;
     private final String message;
 }

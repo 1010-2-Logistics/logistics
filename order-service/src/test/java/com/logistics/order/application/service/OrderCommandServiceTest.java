@@ -46,6 +46,26 @@ class OrderCommandServiceTest {
     @InjectMocks
     private OrderCommandService orderCommandService;
 
+    @Test
+    @DisplayName("이미 취소된 주문은 수정할 수 없음")
+    void order_update_canceled() {
+        Order order = Order.create(
+                orderId,
+                deliveryId,
+                startCompanyId,
+                endCompanyId,
+                productId,
+                100,
+                "요청"
+        );
+        order.cancel();
+
+        given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderCommandService.findOrderForUpdate(orderId))
+                .isInstanceOf(CustomException.class);
+    }
+
     @Nested
     @DisplayName("주문 생성")
     class order_create {
@@ -66,24 +86,31 @@ class OrderCommandServiceTest {
 
             given(orderCommandRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
 
-            OrderCreateResult result = orderCommandService.createOrder(
+            OrderCreateResult orderCreateResult = orderCommandService.createOrder(
                     orderCreateCommand,
                     orderId,
                     deliveryId,
-                    startCompanyId
+                    startCompanyId,
+                    "name",
+                    "slackId"
             );
 
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
 
             verify(orderCommandRepository).save(orderCaptor.capture());
+            ArgumentCaptor<OrderCreatedEvent> eventCaptor =
+                    ArgumentCaptor.forClass(OrderCreatedEvent.class);
+
             verify(applicationEventPublisher).publishEvent(
-                    new OrderCreatedEvent(
-                            orderId,
-                            deliveryId,
-                            productId,
-                            10
-                    )
+                    eventCaptor.capture()
             );
+
+            OrderCreatedEvent event = eventCaptor.getValue();
+
+            assertThat(event.orderId()).isEqualTo(orderId);
+            assertThat(event.deliveryId()).isEqualTo(deliveryId);
+            assertThat(event.productId()).isEqualTo(productId);
+            assertThat(event.quantity()).isEqualTo(10);
 
             Order savedOrder = orderCaptor.getValue();
 
@@ -95,13 +122,22 @@ class OrderCommandServiceTest {
             assertThat(savedOrder.getRequest()).isEqualTo("8월 6일 오전까지 납품");
             assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.CREATED);
 
-            assertThat(result.orderId()).isEqualTo(orderId);
+            assertThat(orderCreateResult.orderId()).isEqualTo(orderId);
         }
     }
 
     @Nested
     @DisplayName("주문 수정")
     class order_update {
+        @Test
+        @DisplayName("수정할 주문이 없으면 예외")
+        void order_update_not_found() {
+            given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForUpdate(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
         @Test
         @DisplayName("주문 수정 성공")
         void order_update_success() {
@@ -170,8 +206,39 @@ class OrderCommandServiceTest {
     @DisplayName("주문 삭제")
     class order_delete {
         @Test
+        @DisplayName("취소할 주문이 없으면 예외")
+        void order_cancel_not_found() {
+            given(orderCommandRepository.findByIdAndDeletedAtIsNull(orderId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForCancel(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 주문이면 예외")
+        void order_delete_already_deleted() {
+            Order order = Order.create(
+                    orderId,
+                    deliveryId,
+                    startCompanyId,
+                    endCompanyId,
+                    productId,
+                    100,
+                    "요청"
+            );
+            order.delete(1L);
+
+            given(orderCommandRepository.findById(orderId)).willReturn(Optional.of(order));
+
+            assertThatThrownBy(() -> orderCommandService.findOrderForDelete(orderId))
+                    .isInstanceOf(CustomException.class);
+        }
+
+
+        @Test
         @DisplayName("주문 삭제 성공")
         void order_delete_success() {
+            Long deletedBy = 1L;
             Order order = Order.create(
                     orderId,
                     deliveryId,
@@ -184,7 +251,10 @@ class OrderCommandServiceTest {
 
             given(orderCommandRepository.save(order)).willReturn(order);
 
-            orderCommandService.deleteOrder(order);
+            orderCommandService.deleteOrder(
+                    order,
+                    deletedBy
+            );
 
             verify(orderCommandRepository).save(order);
         }

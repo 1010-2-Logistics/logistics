@@ -32,6 +32,11 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
     }
 
     @Override
+    public Page<Delivery> searchByManager(DeliveryStatus status, Long managerId, Pageable pageable) {
+        return jpaRepository.searchByManager(status, managerId, pageable);
+    }
+
+    @Override
     public Optional<Delivery> findByOrderId(UUID orderId) {
         return jpaRepository.findByOrderIdAndDeletedAtIsNull(orderId);
     }

@@ -1,5 +1,7 @@
 package com.logistics.inventory.application.service;
 
+import com.logistics.inventory.application.authorization.InventoryAuthorizationService;
+import com.logistics.inventory.application.dto.auth.AuthenticatedUser;
 import com.logistics.inventory.application.dto.command.*;
 import com.logistics.inventory.application.dto.result.InventoryCreateResult;
 import com.logistics.inventory.application.dto.result.InventoryDeductionResult;
@@ -22,6 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class InventoryCommandService {
+    private final InventoryAuthorizationService inventoryAuthorizationService;
     private final InventoryCommandRepository inventoryCommandRepository;
     private final EventPublisher eventPublisher;
     private final IdempotencyPort idempotencyPort;
@@ -51,13 +54,19 @@ public class InventoryCommandService {
     }
 
     public InventoryUpdateResult updateInventory(
-            InventoryUpdateCommand command
+            InventoryUpdateCommand inventoryUpdateCommand,
+            AuthenticatedUser authenticatedUser
     ) {
         Inventory inventory = inventoryCommandRepository
-                .findByIdAndDeletedAtIsNull(command.inventoryId())
+                .findByIdAndDeletedAtIsNull(inventoryUpdateCommand.inventoryId())
                 .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-        inventory.updateStock(command.stock());
+        inventoryAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                inventory.getHubId()
+        );
+
+        inventory.updateStock(inventoryUpdateCommand.stock());
 
         Inventory savedInventory = inventoryCommandRepository.save(inventory);
 
@@ -66,20 +75,30 @@ public class InventoryCommandService {
 
     public void deleteInventory(
             InventoryDeleteCommand inventoryDeleteCommand,
-            Long deletedBy
+            AuthenticatedUser authenticatedUser
     ) {
-        Inventory inventory = inventoryCommandRepository.findByIdAndDeletedAtIsNull(inventoryDeleteCommand.inventoryId())
+        Inventory inventory = inventoryCommandRepository
+                .findById(inventoryDeleteCommand.inventoryId())
                 .orElseThrow(() -> new CustomException(InventoryErrorCode.INVENTORY_NOT_FOUND));
 
-        inventory.delete(deletedBy);
+        if (inventory.getDeletedAt() != null) {
+            throw new CustomException(
+                    InventoryErrorCode.INVENTORY_DELETE_CONFLICT
+            );
+        }
 
-        inventoryCommandRepository.save(inventory);
+        inventoryAuthorizationService.validateHubAccess(
+                authenticatedUser,
+                inventory.getHubId()
+        );
+
+        inventory.delete(authenticatedUser.userId());
     }
 
     public InventoryDeductionResult deductInventory(
             InventoryDeductionCommand inventoryDeductionCommand
     ) {
-        String key = "inventory:deduct:" + inventoryDeductionCommand.orderId();
+        String key = "inventory:deduct:" + inventoryDeductionCommand.operationId();
         Duration ttl = Duration.ofMinutes(10);
 
         // 핵심 코드 : 이 주문 예전에 성공한 적 있어? 있으면 그때 결과 다시 줘
@@ -122,7 +141,7 @@ public class InventoryCommandService {
     public InventoryRestorationResult restoreInventory(
             InventoryRestorationCommand inventoryRestorationCommand
     ) {
-        String key = "inventory:restore:" + inventoryRestorationCommand.orderId();
+        String key = "inventory:restore:" + inventoryRestorationCommand.operationId();
         Duration ttl = Duration.ofMinutes(10);
 
         Optional<InventoryRestorationResult> previousResult = idempotencyPort.getResult(
