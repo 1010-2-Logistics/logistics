@@ -73,6 +73,8 @@ class OrderCreateOrchestratorTest {
                 .when(deliveryPort)
                 .createDelivery(
                         any(UUID.class),
+                        eq(startCompanyId),
+                        eq(endCompanyId),
                         eq(startHubId),
                         eq(endHubId),
                         eq("address"),
@@ -119,6 +121,8 @@ class OrderCreateOrchestratorTest {
         given(idempotencyPort.acquire(anyString(), any(Duration.class))).willReturn(true);
         given(deliveryPort.createDelivery(
                 any(UUID.class),
+                eq(startCompanyId),
+                eq(endCompanyId),
                 eq(startHubId),
                 eq(endHubId),
                 eq("address"),
@@ -225,6 +229,8 @@ class OrderCreateOrchestratorTest {
 
         given(deliveryPort.createDelivery(
                 any(UUID.class),
+                eq(startCompanyId),
+                eq(endCompanyId),
                 eq(startHubId),
                 eq(endHubId),
                 eq("서울특별시 송파구"),
