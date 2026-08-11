@@ -2,7 +2,6 @@ package com.logistics.delivery.infrastructure.feign.adapter;
 
 import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.infrastructure.feign.client.HubRouteClient;
-import com.logistics.delivery.infrastructure.feign.request.HubRouteFindRequest;
 import com.logistics.delivery.infrastructure.feign.response.HubRoutePathApiResponse;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +16,7 @@ public class HubRoutePortAdapter implements HubRoutePort {
 
     @Override
     public List<HubRouteSegment> findRoute(UUID startHubId, UUID endHubId) {
-        HubRoutePathApiResponse response = hubRouteClient.findHubRoute(new HubRouteFindRequest(startHubId, endHubId));
+        HubRoutePathApiResponse response = hubRouteClient.findHubRoute(startHubId, endHubId);
         return response.data().steps().stream()
                 .map(step -> new HubRouteSegment(step.startHubId(), step.endHubId(), step.distance(), step.duration()))
                 .toList();

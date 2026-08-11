@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
@@ -34,7 +35,11 @@ class OrderEventPublisherTest {
                     UUID.randomUUID(),
                     UUID.randomUUID(),
                     UUID.randomUUID(),
-                    3
+                    3,
+                    "request",
+                    "name",
+                    "U123456",
+                    LocalDateTime.of(2026, 8, 10, 17, 30)
             );
 
             orderEventPublisher.publish(orderCreatedEvent);
