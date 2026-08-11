@@ -19,4 +19,7 @@ public interface DeliveryRepository {
 
     // 본인이 배정된 배송만 (HUB_DELIVERY_MANAGER: route 담당자, COMPANY_DELIVERY_MANAGER: 업체 담당자)
     Page<Delivery> searchByManager(DeliveryStatus status, Long managerId, Pageable pageable);
+
+    // 본인 업체가 출발지 또는 도착지인 배송만 (COMPANY_MANAGER)
+    Page<Delivery> searchByCompany(DeliveryStatus status, UUID companyId, Pageable pageable);
 }

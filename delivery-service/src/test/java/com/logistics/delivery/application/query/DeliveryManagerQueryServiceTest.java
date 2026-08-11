@@ -44,7 +44,7 @@ class DeliveryManagerQueryServiceTest {
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(manager));
 
         // when
-        DeliveryManager result = deliveryManagerQueryService.getById(1L, MASTER);
+        DeliveryManager result = deliveryManagerQueryService.getDeliveryManagerById(1L, MASTER);
 
         // then
         assertThat(result.getDeliveryManagerId()).isEqualTo(1L);
@@ -56,7 +56,7 @@ class DeliveryManagerQueryServiceTest {
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> deliveryManagerQueryService.getById(999L, MASTER))
+        assertThatThrownBy(() -> deliveryManagerQueryService.getDeliveryManagerById(999L, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
@@ -70,7 +70,7 @@ class DeliveryManagerQueryServiceTest {
         UserPrincipal other = new UserPrincipal(99L, Role.HUB_DELIVERY_MANAGER, null, null);
 
         // when & then
-        assertThatThrownBy(() -> deliveryManagerQueryService.getById(2L, other))
+        assertThatThrownBy(() -> deliveryManagerQueryService.getDeliveryManagerById(2L, other))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
@@ -85,7 +85,7 @@ class DeliveryManagerQueryServiceTest {
         UserPrincipal otherHubManager = new UserPrincipal(50L, Role.HUB_MANAGER, UUID.randomUUID(), null);
 
         // when & then
-        assertThatThrownBy(() -> deliveryManagerQueryService.getById(3L, otherHubManager))
+        assertThatThrownBy(() -> deliveryManagerQueryService.getDeliveryManagerById(3L, otherHubManager))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
@@ -110,7 +110,7 @@ class DeliveryManagerQueryServiceTest {
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(ManagerType.HUB_DELIVERY_MANAGER, null, 0, 10);
 
         // when
-        Page<DeliveryManager> result = deliveryManagerQueryService.search(query, MASTER);
+        Page<DeliveryManager> result = deliveryManagerQueryService.searchDeliveryManager(query, MASTER);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(1);
@@ -127,7 +127,7 @@ class DeliveryManagerQueryServiceTest {
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(null, UUID.randomUUID(), 0, 10);
 
         // when
-        deliveryManagerQueryService.search(query, hubManager);
+        deliveryManagerQueryService.searchDeliveryManager(query, hubManager);
 
         // then: 쿼리에 넘긴 hubId가 아니라 principal의 hubId로 조회됐는지 확인
         org.mockito.Mockito.verify(deliveryManagerRepository)
@@ -143,7 +143,7 @@ class DeliveryManagerQueryServiceTest {
 
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(null, null, 0, 10);
 
-        Page<DeliveryManager> result = deliveryManagerQueryService.search(query, deliveryManager);
+        Page<DeliveryManager> result = deliveryManagerQueryService.searchDeliveryManager(query, deliveryManager);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getDeliveryManagerId()).isEqualTo(20L);

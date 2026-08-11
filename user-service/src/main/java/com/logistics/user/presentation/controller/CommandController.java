@@ -13,7 +13,7 @@ import com.logistics.user.application.service.UserApprovalService;
 import com.logistics.user.application.service.UserCommandService;
 import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.global.response.ApiResponse;
-import com.logistics.user.infrastructure.security.AuthenticatedUser;
+import com.logistics.user.infrastructure.security.UserPrincipal;
 import com.logistics.user.presentation.dto.request.*;
 import com.logistics.user.presentation.dto.response.UserApprovalResponseDto;
 import com.logistics.user.presentation.dto.response.UserPasswordUpdateResponseDto;
@@ -87,8 +87,8 @@ public class CommandController {
          * Filter가 Authentication principal에 넣은
          * 현재 사용자 인증 정보를 꺼낸다.
          */
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         /*
          * HTTP 요청값과 인증 사용자 ID를
@@ -132,8 +132,8 @@ public class CommandController {
          * Gateway 헤더 기반 Filter가 principal에 넣은
          * 현재 로그인 사용자 정보 추출
          */
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         ChangePasswordCommandDto command =
                 new ChangePasswordCommandDto(
@@ -176,8 +176,8 @@ public class CommandController {
          * Filter가 Authentication principal에 넣은
          * 현재 로그인 사용자 정보를 꺼낸다.
          */
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         WithdrawUserCommandDto command =
                 new WithdrawUserCommandDto(
@@ -208,8 +208,8 @@ public class CommandController {
             @Valid @RequestBody UserApprovalRequestDto request,
             Authentication authentication
     ) {
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         ChangeApprovalResultDto result =
                 userApprovalService.changeApproval(
@@ -254,8 +254,8 @@ public class CommandController {
          * Gateway 검증 후 Filter가 SecurityContext에 등록한
          * 현재 요청자 정보
          */
-        AuthenticatedUser currentUser =
-                (AuthenticatedUser) authentication.getPrincipal();
+        UserPrincipal currentUser =
+                (UserPrincipal) authentication.getPrincipal();
 
         /*
          * 요청자와 삭제 대상 정보 전달

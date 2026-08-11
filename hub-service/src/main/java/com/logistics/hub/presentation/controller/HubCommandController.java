@@ -6,6 +6,7 @@ import com.logistics.hub.application.facade.HubFacade;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.global.response.ApiResponse;
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hub.presentation.dto.dto.request.HubCreateRequestDto;
 import com.logistics.hub.presentation.dto.dto.request.HubUpdateRequestDto;
 import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -39,12 +42,14 @@ public class HubCommandController {
                     """
     )
     @PostMapping
+    @PreAuthorize("hasRole('MASTER')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<HubCreateResponseDto> createHub(
-            @Valid @RequestBody HubCreateRequestDto hubCreateRequestDto) {
+            @Valid @RequestBody HubCreateRequestDto hubCreateRequestDto,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
         HubCreateCommand hubCreateCommand = HubCreateCommand.from(hubCreateRequestDto);
-        HubCreateResponseDto hubCreateResponseDto = hubCommandService.createHub(hubCreateCommand);
+        HubCreateResponseDto hubCreateResponseDto = hubCommandService.createHub(hubCreateCommand, userPrincipal);
 
         return ApiResponse.success(201, "허브 생성 성공", hubCreateResponseDto);
     }
@@ -57,10 +62,12 @@ public class HubCommandController {
                     """
     )
     @PutMapping("/{hubId}")
+    @PreAuthorize("hasRole('MASTER')")
     public ApiResponse<HubResponseDto> updateHub(@PathVariable UUID hubId,
+                                    @AuthenticationPrincipal UserPrincipal userPrincipal,
                                     @Valid @RequestBody HubUpdateRequestDto request) {
 
-        HubResponseDto hubResponseDto = hubCommandService.updateHub(hubId, request.toCommand());
+        HubResponseDto hubResponseDto = hubCommandService.updateHub(hubId,userPrincipal ,request.toCommand());
 
         return ApiResponse.success(200, "허브 수정 성공", hubResponseDto);
     }
@@ -75,9 +82,11 @@ public class HubCommandController {
                     """
     )
     @DeleteMapping("/{hubId}")
+    @PreAuthorize("hasRole('MASTER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID hubId) {
-        // TODO: 인증 붙으면 실제 로그인 사용자로 교체
-        hubFacade.deleteHub(hubId, 1L);
+    public void delete(@PathVariable UUID hubId,
+                       @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        hubFacade.deleteHub(hubId,userPrincipal);
     }
 }

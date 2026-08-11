@@ -11,10 +11,10 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
-import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
+import com.logistics.ai.application.dto.internal.UserInfo;
 import com.logistics.ai.application.dto.result.DispatchDeadlineRetryResultDto;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
@@ -23,6 +23,7 @@ import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
+import com.logistics.ai.application.port.out.UserPort;
 import com.logistics.ai.application.util.DeadlinePromptSupport;
 import com.logistics.ai.domain.entity.AiHistory;
 import com.logistics.ai.global.exception.AiErrorCode;
@@ -46,101 +47,10 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	
 	private final HubPort hubPort;
 
+	private final UserPort userPort;
+	
 	@Override
 	public void generate(OrderCreatedEvent event) {
-//		// 테스트코드
-//		UUID startHubId = UUID.randomUUID();
-//		UUID hubId2 = UUID.randomUUID();
-//		UUID endHubId = UUID.randomUUID();
-//		
-//		UUID productId = UUID.randomUUID();
-//		
-//		// 경유 허브 목록 조회
-//		List<RouteInfo> routes = List.of(
-//				new RouteInfo(0, startHubId, hubId2, 1L, BigDecimal.valueOf(20), 60),
-//				new RouteInfo(0, hubId2, endHubId, 2L, BigDecimal.valueOf(30), 60)
-//		);
-//		
-//		if(routes == null || routes.isEmpty()) {
-//			throw new AiException(AiErrorCode.AI_DELIVERY_ROUTE_EMPTY);
-//		}
-//		
-//		// 경유 허브 목록의 허브 정보 조회
-//		Set<UUID> hubIds = routes.stream()
-//				.flatMap(route -> Stream.of(route.startHubId(), route.endHubId()))
-//				.filter(Objects::nonNull)
-//				.collect(Collectors.toSet());
-//		
-//		// 경유 허브 수 계산
-//		int hubWayPoint = Math.max(0, hubIds.size() - 2);
-//		
-//		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubPointCount = {}",
-//				hubIds.size(),
-//				hubWayPoint
-//		);
-//		
-//		// 상품 정보 조회
-//		//ProductInfo product = productPort.getProduct(event.productId());
-//		ProductInfo product = new ProductInfo(
-//				productId,
-//				"제로 콜라 2L",
-//				"(주) 코카콜라"
-//		);
-//		
-//		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
-//				product.productId()
-//		);
-//		
-//		// List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
-//		List<HubInfo> hubInfoList = List.of(
-//				new HubInfo(startHubId, "서울 허브", "서울 특별시"),
-//				new HubInfo(hubId2, "대전 허브", "대전 광역시"),
-//				new HubInfo(endHubId, "대구 허브", "대구 광역시")
-//		);
-//		
-//		Map<UUID, HubInfo> hubMap = hubInfoList.stream()
-//				.collect(Collectors.toMap(HubInfo::hubId, hub -> hub));
-//		
-//		validateHubIdsMatch(hubMap, hubIds);
-//		
-//		// 첫 번째 허브 배송 기사 정보 조회
-//		DeliveryManagerInfo deliveryManagerInfo = new DeliveryManagerInfo(
-//				"배달킹",
-//				"U230132"
-//		);
-//		
-//		// AI 요청 프롬프트 생성
-//		String requestPrompt = DeadlinePromptSupport.generatedPrompt(
-//				event,
-//				product,
-//				deliveryManagerInfo,
-//				hubMap,
-//				routes,
-//				hubWayPoint
-//		);
-//		
-//		// 제미나이 호출 //
-//		String aiModel = DeadlinePromptSupport.aiModelSelector(hubWayPoint);
-//		
-//		DispatchDeadlineRetryResultDto result = deadlineGenerationRetryService.generate(requestPrompt, aiModel);
-//		
-//		AiHistory successHistory = AiHistory.succeded(
-//				event.orderId(),
-//				event.deliveryId(),
-//				requestPrompt,
-//				aiModel
-//		);
-//		
-//		successHistory.success(
-//				result.responsePrompt(),
-//				result.finalDeadline(),
-//				result.timeMs(),
-//				result.retryCount(),
-//				result.lastRetryReason()
-//		);
-//		
-//		commandService.saveSucceeded(successHistory);
-		
 		// 원본코드
 		// 경유 허브 목록 조회
 		List<RouteInfo> routes = deliveryPort.getRoutes(event.deliveryId());
@@ -158,30 +68,30 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		// 경유 허브 수 계산
 		int hubWayPoint = Math.max(0, hubIds.size() -2);
 		
-		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubPointCount = {}",
+		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubWayPointCount = {}",
 				hubIds.size(),
 				hubWayPoint
 				);
 		
-		// 상품 정보 조회
+		// 내부 API 호출 2 - 상품 정보 조회
 		ProductInfo product = productPort.getProduct(event.productId());
 		
 		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
 				product.productId()
 				);
 		
+		// 내부 API 호출 3 - 허브 정보 조회
 		List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
 		
+		// 허브 정보와 불러온 허브 상세 정보를 매칭
 		Map<UUID, HubInfo> hubMap = hubInfoList.stream()
 				.collect(Collectors.toMap(HubInfo::hubId, hub -> hub));
 		
+		// 추출 허브 정보와 불러온 허브끼리의 정합성 검사
 		validateHubIdsMatch(hubMap, hubIds);
 		
-		// 첫 번째 허브 배송 기사 정보 조회
-		DeliveryManagerInfo deliveryManagerInfo = new DeliveryManagerInfo(
-				"임시 배송자",
-				"임시 배송 슬랙아이디"
-				);
+		// 출발 허브의 배송 기사 정보 조회
+		UserInfo deliveryManagerInfo = userPort.getUserInfo(routes.get(0).startDeliveryManagerId());
 		
 		// AI 요청 프롬프트 생성
 		String requestPrompt = DeadlinePromptSupport.generatedPrompt(
@@ -193,10 +103,9 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				hubWayPoint
 				);
 		
-		// 제미나이 호출 //
+		// 제미나이 호출
 		String aiModel = DeadlinePromptSupport.aiModelSelector(hubWayPoint);
 		
-		// AI API 호출부
 		DispatchDeadlineRetryResultDto result = deadlineGenerationRetryService.generate(requestPrompt, aiModel);
 		
 		AiHistory successHistory = AiHistory.succeded(

@@ -9,7 +9,6 @@ import com.logistics.user.application.dto.command.LoginCommandDto;
 import com.logistics.user.application.dto.result.LoginResultDto;
 import com.logistics.user.domain.entity.User;
 import com.logistics.user.domain.entity.UserRole;
-import com.logistics.user.domain.entity.UserStatus;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.AuthErrorCode;
 import com.logistics.user.global.exception.CustomException;
