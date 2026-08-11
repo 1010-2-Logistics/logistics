@@ -1,13 +1,11 @@
 package com.logistics.product.application.service;
 
 import java.util.Objects;
-import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
 import com.logistics.product.application.dto.command.ProductAuth;
 import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
-import com.logistics.product.application.dto.internal.response.HubAuthResponseDto;
 import com.logistics.product.domain.entity.CompanyType;
 import com.logistics.product.global.exception.CommonErrorCode;
 import com.logistics.product.global.exception.ProductErrorCode;
@@ -36,13 +34,6 @@ public class ProductPolicy {
 	public void validateHubManager(ProductAuth auth) {
 		if(!auth.role().isMaster() && !auth.role().isHubManager()) {
 			throw new ProductException(CommonErrorCode.AUTH_FORBIDDEN);
-		}
-	}
-	
-	public void validateCompanyBelongsToHub(ProductAuth auth, UUID hubId, HubAuthResponseDto hubAuth) {
-		if(!Objects.equals(auth.userId(), hubAuth.hubManagerId()) &&
-				!Objects.equals(hubId, hubAuth.hubId())) {
-			throw new ProductException(ProductErrorCode.PRODUCT_HUB_ACCESS_DENIED);
 		}
 	}
 	

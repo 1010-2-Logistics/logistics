@@ -11,10 +11,10 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
+import com.logistics.ai.application.dto.internal.UserInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.util.DeadlinePromptSupport;
 
@@ -45,7 +45,8 @@ public class DeadlinePromptSupportTest {
 				"스파르타 컴퓨터"
 		);
 		
-		DeliveryManagerInfo deliveryManager = new DeliveryManagerInfo(
+		UserInfo deliveryManager = new UserInfo(
+				1L,
 				"배송담당자",
 				"U018234"
 		);
@@ -79,8 +80,8 @@ public class DeadlinePromptSupportTest {
 				product.productName() + " " + event.quantity() + " EA",
 				hubMap.get(startHubId).name(),
 				hubMap.get(endHubId).name(),
-				deliveryManager.deliveryManagerName(),
-				deliveryManager.deliveryManagerSlackId()
+				deliveryManager.name(),
+				deliveryManager.slackId()
 		);
 	}
 	
@@ -113,7 +114,8 @@ public class DeadlinePromptSupportTest {
 				"스파르타 컴퓨터"
 				);
 		
-		DeliveryManagerInfo deliveryManager = new DeliveryManagerInfo(
+		UserInfo deliveryManager = new UserInfo(
+				1L,
 				"배송담당자",
 				"U018234"
 				);
@@ -163,8 +165,8 @@ public class DeadlinePromptSupportTest {
 				product.productName() + " " + event.quantity() + " EA",
 				hubMap.get(finalStartHubId).name(),
 				hubMap.get(finalEndHubId).name(),
-				deliveryManager.deliveryManagerName(),
-				deliveryManager.deliveryManagerSlackId(),
+				deliveryManager.name(),
+				deliveryManager.slackId(),
 				
 				// 경유지
 				"인천 허브, 대전 허브, 대구 허브, 창원 허브"
