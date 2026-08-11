@@ -27,6 +27,7 @@ import com.logistics.company.application.service.CompanyCommandService;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.domain.entity.Role;
 
 @ExtendWith(MockitoExtension.class)
 public class CompanyFacadeTest {
@@ -60,6 +61,8 @@ public class CompanyFacadeTest {
 			String hubName = "허브 이름";
 			
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
+					1L,
+					Role.MASTER,
 					hubId,
 					companyManagerId,
 					companyName,

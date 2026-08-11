@@ -4,8 +4,11 @@ import java.util.UUID;
 
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.domain.entity.Role;
 
 public record CompanyCreateCommand(
+		Long userId,
+		Role role,
 		UUID hubId,
 		Long companyManagerId,
 		String companyName,

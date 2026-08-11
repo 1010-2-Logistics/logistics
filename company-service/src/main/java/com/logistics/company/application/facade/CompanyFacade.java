@@ -1,17 +1,23 @@
 package com.logistics.company.application.facade;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
+import com.logistics.company.application.dto.command.CompanyUpdateCommand;
 import com.logistics.company.application.dto.internal.request.UserRoleUpdateRequestDto;
 import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
 import com.logistics.company.application.dto.internal.response.UserExistsResponseDto;
 import com.logistics.company.application.dto.internal.response.UserRoleUpdateResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
+import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.port.UserPort;
 import com.logistics.company.application.service.CompanyCommandService;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.Role;
+import com.logistics.company.global.exception.CommonErrorCode;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
 
@@ -30,6 +36,9 @@ public class CompanyFacade {
 	// 업체 생성
 	public CompanyCreateResultDto createCompany(CompanyCreateCommand command) {
 		// AUTH - 인증 붙여지면 작업 시작
+		if(command.role() != Role.MASTER && command.role() != Role.HUB_MANAGER) {
+			throw new CompanyException(CommonErrorCode.AUTH_FORBIDDEN);
+		}
 		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
 		
