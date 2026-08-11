@@ -15,10 +15,14 @@ spring:
 
 rabbitmq:
   order-created:
-    exchange: order.created
+    exchange: order.exchange
     queue: order-created.queue
-
+    
+    dlx: ai.dead-letter.exchange
+    dlq: order-created.dlq
+    dlq-routing-key: order-created.dead
 
 ai:
   gemini:
-    url: http://
+    url: https://generativelanguage.googleapis.com/v1beta/models
+    key: ${GEMINI_KEY}
