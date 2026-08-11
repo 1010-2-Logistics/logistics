@@ -15,6 +15,7 @@ import com.logistics.company.application.service.CompanyQueryService;
 import com.logistics.company.global.response.ApiResponse;
 import com.logistics.company.presentation.dto.response.CompanyExistsResponseDto;
 import com.logistics.company.presentation.dto.response.OrderedCompanyInfoResponseDto;
+import com.logistics.company.presentation.interceptor.NoAuthentication;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +27,7 @@ public class CompanyInternalQueryController {
 	private final CompanyQueryService companyQueryService;
 	
 	@GetMapping
+	@NoAuthentication
 	public ApiResponse<OrderedCompanyInfoResponseDto> orderedCompanyInfo(
 			@RequestParam("startCompanyId") UUID startCompanyId,
 			@RequestParam("endCompanyId") UUID endCompanyId) {
@@ -42,6 +44,7 @@ public class CompanyInternalQueryController {
 	}
 	
 	@GetMapping("/{companyId}/exists")
+	@NoAuthentication
 	public ApiResponse<CompanyExistsResponseDto> existsCompany(
 			@PathVariable("companyId") UUID companyId) {
 		
@@ -55,6 +58,7 @@ public class CompanyInternalQueryController {
 	}
 	
 	@GetMapping("/ids/{hubId}")
+	@NoAuthentication
 	public ApiResponse<List<UUID>> getCompanyIdsByHubId(@PathVariable("hubId") UUID hubId) {
 		List<UUID> response = companyQueryService.findIdsByHubId(hubId);
 		
