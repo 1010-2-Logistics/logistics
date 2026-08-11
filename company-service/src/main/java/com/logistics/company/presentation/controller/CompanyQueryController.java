@@ -17,6 +17,7 @@ import com.logistics.company.domain.entity.CompanyType;
 import com.logistics.company.global.response.ApiResponse;
 import com.logistics.company.global.response.PageResponse;
 import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
+import com.logistics.company.presentation.interceptor.NoAuthentication;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +29,7 @@ public class CompanyQueryController {
 	private final CompanyQueryService companyQueryService;
 	
 	@GetMapping("/{companyId}")
+	@NoAuthentication
 	public ApiResponse<CompanyInfoResponseDto> companyGetOne(@PathVariable("companyId") UUID companyId) {
 		CompanyInfoResponseDto response = CompanyInfoResponseDto.from(companyQueryService.findByCompany(companyId));
 		
@@ -39,6 +41,7 @@ public class CompanyQueryController {
 	}
 	
 	@GetMapping
+	@NoAuthentication
 	public ApiResponse<PageResponse<CompanyInfoResponseDto>> companySearch(
 			@RequestParam(required = false) String companyName,
 			@RequestParam(required = false) UUID hubId,

@@ -3,6 +3,7 @@ package com.logistics.delivery.application.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.logistics.delivery.application.dto.command.RegisterDeliveryManagerCommand;
@@ -14,6 +15,9 @@ import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRe
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.UserAffiliationPort;
+import com.logistics.delivery.domain.entity.Role;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 
 import java.util.List;
@@ -38,8 +42,13 @@ class DeliveryManagerCommandServiceTest {
     @Mock
     private HubPort hubPort;
 
+    @Mock
+    private UserAffiliationPort userAffiliationPort;
+
     @InjectMocks
     private DeliveryManagerCommandService deliveryManagerCommandService;
+
+    private static final UserPrincipal MASTER = new UserPrincipal(1L, Role.MASTER, null, null);
 
     @Test
     void 이미_등록된_담당자면_예외를_던진다() {
@@ -143,6 +152,29 @@ class DeliveryManagerCommandServiceTest {
     }
 
     @Test
+    void 소속변경_API_호출_실패시_503_예외로_등록이_롤백된다() {
+        // given
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(6L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(Optional.empty());
+        when(deliveryManagerRepository.save(any(DeliveryManager.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        FeignException feignException = mock(FeignException.class);
+        lenient().when(feignException.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        doThrow(feignException).when(userAffiliationPort).changeAffiliation(eq(6L), any(), any());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(6L, null, "U06", ManagerType.HUB_DELIVERY_MANAGER);
+
+        // when & then
+        assertThatThrownBy(() -> deliveryManagerCommandService.register(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
     void 존재하지_않는_담당자_수정시_예외() {
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
 
@@ -179,7 +211,7 @@ class DeliveryManagerCommandServiceTest {
     void 존재하지_않는_담당자_삭제시_예외() {
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deliveryManagerCommandService.delete(999L))
+        assertThatThrownBy(() -> deliveryManagerCommandService.delete(999L, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);
@@ -190,16 +222,37 @@ class DeliveryManagerCommandServiceTest {
         DeliveryManager manager = DeliveryManager.create(20L, null, "U20", ManagerType.HUB_DELIVERY_MANAGER, 0);
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(20L)).thenReturn(Optional.of(manager));
 
-        deliveryManagerCommandService.delete(20L);
+        deliveryManagerCommandService.delete(20L, MASTER);
 
         assertThat(manager.getDeletedAt()).isNotNull();
+        assertThat(manager.getDeletedBy()).isEqualTo(MASTER.getUserId());
+    }
+
+    @Test
+    void 소속변경_API가_409면_이미_동일_소속이므로_성공_처리된다() {
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(32L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(Optional.empty());
+        when(deliveryManagerRepository.save(any(DeliveryManager.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        FeignException.Conflict conflict = mock(FeignException.Conflict.class);
+        lenient().when(conflict.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        doThrow(conflict).when(userAffiliationPort).changeAffiliation(eq(32L), any(), any());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(32L, null, "U32", ManagerType.HUB_DELIVERY_MANAGER);
+
+        DeliveryManager result = deliveryManagerCommandService.register(command);
+
+        assertThat(result.getDeliveryManagerId()).isEqualTo(32L);
     }
 
     @Test
     void 이미_삭제된_담당자_재삭제시_예외() {
         when(deliveryManagerRepository.findByIdAndDeletedAtIsNull(21L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deliveryManagerCommandService.delete(21L))
+        assertThatThrownBy(() -> deliveryManagerCommandService.delete(21L, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND);

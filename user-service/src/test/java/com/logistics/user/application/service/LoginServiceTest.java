@@ -81,7 +81,7 @@ class LoginServiceTest {
          * APPROVED 상태의 사용자를 반환
          */
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -158,7 +158,7 @@ class LoginServiceTest {
          */
         then(userQueryRepository)
                 .should()
-                .findByUsername("delivery1");
+                .findActiveByUsername("delivery1");
 
         then(passwordEncoder)
                 .should()
@@ -186,7 +186,7 @@ class LoginServiceTest {
         );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "unknown1"
                 )
         ).willReturn(Optional.empty());
@@ -222,7 +222,7 @@ class LoginServiceTest {
         );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -262,7 +262,7 @@ class LoginServiceTest {
         );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -306,7 +306,7 @@ class LoginServiceTest {
         );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -348,7 +348,7 @@ class LoginServiceTest {
         );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -442,13 +442,13 @@ class LoginServiceTest {
                 );
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "unknown1"
                 )
         ).willReturn(Optional.empty());
 
         given(
-                userQueryRepository.findByUsername(
+                userQueryRepository.findActiveByUsername(
                         "delivery1"
                 )
         ).willReturn(Optional.of(user));
@@ -488,6 +488,7 @@ class LoginServiceTest {
     ) {
         User user = User.create(
                 "delivery1",
+                "sample",
                 "encodedPassword",
                 "U_DELIVERY_" + userId,
                 UserRole.HUB_DELIVERY_MANAGER,

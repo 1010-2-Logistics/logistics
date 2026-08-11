@@ -6,11 +6,15 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.logistics.order.global.exception.ErrorCode;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor(force = true)
+@AllArgsConstructor
 public class ErrorResponse {
 
     @JsonProperty("SUCCESS")

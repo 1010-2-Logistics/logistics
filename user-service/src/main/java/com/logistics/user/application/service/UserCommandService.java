@@ -1,14 +1,12 @@
 package com.logistics.user.application.service;
 
-import com.logistics.user.application.dto.command.ChangePasswordCommandDto;
-import com.logistics.user.application.dto.command.CreateUserCommandDto;
-import com.logistics.user.application.dto.command.UpdateMySlackIdCommandDto;
-import com.logistics.user.application.dto.command.WithdrawUserCommandDto;
+import com.logistics.user.application.dto.command.*;
 import com.logistics.user.application.dto.result.ChangePasswordResultDto;
 import com.logistics.user.application.dto.result.UpdateMyInfoResultDto;
 import com.logistics.user.application.event.UserCreatedEvent;
 import com.logistics.user.application.port.EventPublisher;
 import com.logistics.user.domain.entity.User;
+import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.domain.repository.UserCommandRepository;
 import com.logistics.user.domain.repository.UserQueryRepository;
 import com.logistics.user.global.exception.CustomException;
@@ -36,6 +34,7 @@ public class UserCommandService {
     public Long create(CreateUserCommandDto command) {
         User user = User.create(
                 command.username(),
+                command.name(),
                 command.encodedPassword(),
                 command.slackId(),
                 command.role(),
@@ -317,24 +316,74 @@ public class UserCommandService {
          */
     }
 
+    // master에 의한 사용자 삭제 메서드
+    @Transactional
+    public void deleteUser(
+            DeleteUserCommandDto command
+    ) {
+        validateDeleteCommand(command);
+        validateDeleteAuthority(command);
+        validateSelfDelete(command);
 
+        User targetUser = userQueryRepository
+                .findByIdAndDeletedAtIsNull(
+                        command.targetUserId()
+                )
+                .orElseThrow(() -> new CustomException(
+                        UserErrorCode.USER_NOT_FOUND
+                ));
 
+        /*
+         * TODO:
+         * Delivery / Company / Hub 등 관련 서비스 연동 후
+         * 진행 중인 업무 존재 여부 검증 추가
+         */
 
+        targetUser.markDeleted(
+                command.requesterId()
+        );
+    }
 
+    // 삭제를 위한 요청값 검증
+    private void validateDeleteCommand(
+            DeleteUserCommandDto command
+    ) {
+        if (command == null
+                || command.requesterId() == null
+                || command.requesterId() <= 0
+                || command.requesterRole() == null
+                || command.targetUserId() == null
+                || command.targetUserId() <= 0) {
 
-    /**
-     * 사용자를 논리 삭제
-     * deletedBy는 삭제를 수행한 사용자의 내부 PK다
-     */
-    public void delete(Long userId, Long deletedBy) {
-        User user = userCommandRepository
-                .findByIdAndDeletedAtIsNull(userId)
-                .orElseThrow(
-                        () -> new CustomException(
-                                UserErrorCode.USER_NOT_FOUND
-                        )
-                );
+            throw new CustomException(
+                    UserErrorCode.USER_INVALID_REQUEST
+            );
+        }
+    }
 
-        user.markDeleted(deletedBy);
+    // 삭제를 시도하는 사람이 master인가?
+    private void validateDeleteAuthority(
+            DeleteUserCommandDto command
+    ) {
+        if (command.requesterRole()
+                != UserRole.MASTER) {
+
+            throw new CustomException(
+                    UserErrorCode.USER_DELETE_ACCESS_DENIED
+            );
+        }
+    }
+
+    // 삭제하려는 사용자가 본인인가?
+    private void validateSelfDelete(
+            DeleteUserCommandDto command
+    ) {
+        if (command.requesterId()
+                .equals(command.targetUserId())) {
+
+            throw new CustomException(
+                    UserErrorCode.USER_SELF_DELETE_NOT_ALLOWED
+            );
+        }
     }
 }

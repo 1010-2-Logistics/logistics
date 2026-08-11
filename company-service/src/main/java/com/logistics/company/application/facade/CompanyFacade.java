@@ -1,35 +1,95 @@
 package com.logistics.company.application.facade;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
+import com.logistics.company.application.dto.command.CompanyUpdateCommand;
+import com.logistics.company.application.dto.internal.request.CompanyNameUpdateRequestDto;
 import com.logistics.company.application.dto.internal.request.UserRoleUpdateRequestDto;
+import com.logistics.company.application.dto.internal.response.CompanyNameUpdateResponseDto;
 import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
 import com.logistics.company.application.dto.internal.response.UserExistsResponseDto;
 import com.logistics.company.application.dto.internal.response.UserRoleUpdateResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
+import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.port.HubPort;
+import com.logistics.company.application.port.ProductPort;
 import com.logistics.company.application.port.UserPort;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.service.CompanyCommandServiceImpl;
+import com.logistics.company.application.service.CompanyQueryService;
 import com.logistics.company.domain.entity.Company;
+import com.logistics.company.domain.entity.Role;
+import com.logistics.company.global.exception.CommonErrorCode;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CompanyFacade {
 
-	private final CompanyCommandService companyCommandService;
+	private final CompanyQueryService companyQueryService;
+	
+	private final CompanyCommandServiceImpl companyCommandService;
 	
 	private final HubPort hubPort;
 	
 	private final UserPort userPort;
 	
+	private final ProductPort productPort;
+	
+	// 업체 수정
+	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand command) {
+		// 이전 기록 저장
+		String beforeName = companyQueryService.findByCompany(companyId).getCompanyName();
+		
+		// companyCommandService.updateCompany 내부에서 권한검사 같이
+		Company updated = companyCommandService.updateCompany(companyId, command);
+		
+		// 상품 쪽 업체명 변경 호출
+		CompanyNameUpdateResponseDto companyNameUpdate = productPort.companyNameUpdate(
+				CompanyNameUpdateRequestDto.from(companyId, command.companyName()), beforeName
+		);
+		
+		if(!companyNameUpdate.exists()) {
+			log.error(
+					"[Company Service]: 상품 서비스 업데이트 실패로 인한 보상 트랜잭션 실행(원래 이름으로 복구). originalName = {}, companyId = {}, updateCount = {}, updateFailtCount = {}",
+					beforeName,
+					companyId,
+					companyNameUpdate.updateCount(),
+					companyNameUpdate.updateFailCount()
+			);
+			
+			updated = companyCommandService.updateFailCompany(companyId, beforeName);
+			
+			if(!updated.getCompanyName().equals(beforeName)) {
+				log.error(
+						"[Company Service]: 상품 서비스 업데이트 실패로 인한 보상 트랜잭션 최종 실패, companyId = {}, beforeName = {}",
+						companyId,
+						beforeName
+				);
+			}
+			
+			throw new CompanyException(CompanyErrorCode.COMPANY_NAME_UPDATE_PRODUCT_FAIL);
+		}
+		
+		return CompanyUpdateResultDto.from(
+				updated,
+				companyNameUpdate
+		);
+	}
+	
 	// 업체 생성
 	public CompanyCreateResultDto createCompany(CompanyCreateCommand command) {
 		// AUTH - 인증 붙여지면 작업 시작
+		if(command.role() != Role.MASTER && command.role() != Role.HUB_MANAGER) {
+			throw new CompanyException(CommonErrorCode.AUTH_FORBIDDEN);
+		}
 		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
 		

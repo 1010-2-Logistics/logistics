@@ -71,7 +71,7 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
             String slackId
     );
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findByUsernameAndDeletedAtIsNull(String username);
 
     boolean existsByRoleAndDeletedAtIsNull(
             UserRole role

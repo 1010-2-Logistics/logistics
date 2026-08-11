@@ -18,4 +18,7 @@ public interface UserClient {
 	
 	@GetMapping("/internal/v1/users/{userId}/exists")
 	ApiResponse<UserExistsClientResponseDto> userExistsRequest(Long userId);
+	
+	@GetMapping("/internal/v1/users/{userId}")
+	ApiResponse<?> getUserAuthentication(Long userId);
 }

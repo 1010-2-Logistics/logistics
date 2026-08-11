@@ -7,11 +7,13 @@ import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryCre
 import com.logistics.delivery.application.dto.result.DeliveryResults.DeliveryDetailResult;
 import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatusChangeResult;
 import com.logistics.delivery.application.port.HubPort;
+import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.domain.entity.*;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,14 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeliveryCommandService {
 
-    private static final BigDecimal PLACEHOLDER_DISTANCE = BigDecimal.ONE;
-    private static final int PLACEHOLDER_DURATION = 1;
     private static final Long TEMP_CREATED_BY = 1L; // TODO: 인증 붙으면 실제 로그인 사용자(호출자)로 교체
 
     private final DeliveryRepository deliveryRepository;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
     private final HubPort hubPort;
+    private final HubRoutePort hubRoutePort;
 
     public DeliveryCreateResult create(CreateDeliveryCommand command) {
         Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
@@ -80,17 +81,26 @@ public class DeliveryCommandService {
         }
     }
 
-    // TODO: hub-route 서비스 연동되면 실제 멀티홉 경로 계산으로 교체
     private List<RouteSegment> resolveRouteSegments(UUID startHubId, UUID endHubId) {
-        return List.of(new RouteSegment(startHubId, endHubId, PLACEHOLDER_DISTANCE, PLACEHOLDER_DURATION));
+        try {
+            return hubRoutePort.findRoute(startHubId, endHubId).stream()
+                    .map(seg -> new RouteSegment(seg.startHubId(), seg.endHubId(), seg.distance(), seg.duration()))
+                    .toList();
+        } catch (FeignException.NotFound e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
+        } catch (FeignException e) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+        }
     }
 
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
     }
 
-    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command) {
+    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+
+        validateDeliveryOwnership(principal, delivery);
 
         if (command.status() != DeliveryStatus.DELIVERED || delivery.getStatus() != DeliveryStatus.COMPANY_MOVING) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
@@ -100,13 +110,28 @@ public class DeliveryCommandService {
         return new DeliveryDetailResult(delivery);
     }
 
-    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId, ChangeDeliveryRouteStatusCommand command) {
+    // MASTER 전체, COMPANY_DELIVERY_MANAGER는 본인 배송만
+    private void validateDeliveryOwnership(UserPrincipal principal, Delivery delivery) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        if (principal.getRole() == Role.COMPANY_DELIVERY_MANAGER
+                && principal.getUserId().equals(delivery.getCompanyDeliveryManagerId())) {
+            return;
+        }
+        throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+    }
+
+    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId,
+                                                     ChangeDeliveryRouteStatusCommand command, UserPrincipal principal) {
         DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
         if (!route.getDeliveryId().equals(deliveryId)) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
         }
+        validateRouteOwnership(principal, route);
         validateRouteTransition(route.getStatus(), command.status());
+        validateSequentialProgress(deliveryId, route.getSequence());
 
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
@@ -144,10 +169,37 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
     }
-    public void delete(UUID deliveryId) {
+
+    private void validateSequentialProgress(UUID deliveryId, int sequence) {
+        if (sequence == 0) {
+            return;
+        }
+        boolean allPriorCompleted = deliveryRouteRepository.findAllByDeliveryId(deliveryId).stream()
+                .filter(r -> r.getSequence() < sequence)
+                .allMatch(r -> r.getStatus() == DeliveryRouteStatus.DEST_HUB_ARRIVED);
+        if (!allPriorCompleted) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+        }
+    }
+
+    public void delete(UUID deliveryId, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
-        delivery.markDeleted(TEMP_CREATED_BY);
+        validateHubManagerOwnership(principal, delivery);
+        delivery.markDeleted(principal.getUserId());
+    }
+
+    // MASTER 전체, HUB_MANAGER는 담당 허브 소속만
+    private void validateHubManagerOwnership(UserPrincipal principal, Delivery delivery) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        if (principal.getRole() == Role.HUB_MANAGER
+                && (principal.getHubId().equals(delivery.getStartHubId())
+                        || principal.getHubId().equals(delivery.getEndHubId()))) {
+            return;
+        }
+        throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     public void cancel(UUID orderId) {
@@ -160,5 +212,20 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
         found.changeStatus(DeliveryStatus.CANCELLED);
+    }
+
+    private void validateRouteOwnership(UserPrincipal principal, DeliveryRoute route) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        boolean owns = switch (principal.getRole()) {
+            case HUB_MANAGER -> principal.getHubId().equals(route.getStartHubId())
+                    || principal.getHubId().equals(route.getEndHubId());
+            case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> principal.getUserId().equals(route.getDeliveryManagerId());
+            default -> false;
+        };
+        if (!owns) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+        }
     }
 }
