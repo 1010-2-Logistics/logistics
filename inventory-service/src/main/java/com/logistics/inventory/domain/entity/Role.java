@@ -9,8 +9,9 @@ public enum Role {
 
     COMPANY_MANAGER,
 
-    COMPANY_DELIVERY_MANAGER
+    COMPANY_DELIVERY_MANAGER,
 
+    ORDER_SERVICE
     ;
 
     public boolean isMaster() {

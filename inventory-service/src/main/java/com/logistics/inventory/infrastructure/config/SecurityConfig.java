@@ -57,6 +57,12 @@ public class SecurityConfig {
                                 "/api/v1/inventories/**"
                         ).authenticated()
 
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/internal/v1/inventories/deductions",
+                                "/internal/v1/inventories/restorations"
+                        ).hasRole(Role.ORDER_SERVICE.name())
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
