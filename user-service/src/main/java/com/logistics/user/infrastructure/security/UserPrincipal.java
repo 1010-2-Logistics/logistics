@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * Gateway가 전달한 인증 정보
  */
-public record AuthenticatedUser(
+public record UserPrincipal(
         Long userId,
         UserRole role,
         UUID hubId,

@@ -12,7 +12,7 @@ class AuthenticatedUserTest {
     @Test
     void MASTER는_소속_정보가_없으면_정상이다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 1L,
                 UserRole.MASTER,
                 null,
@@ -27,7 +27,7 @@ class AuthenticatedUserTest {
     @Test
     void MASTER가_허브_소속을_가지면_예외가_발생한다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 1L,
                 UserRole.MASTER,
                 UUID.randomUUID(),
@@ -42,7 +42,7 @@ class AuthenticatedUserTest {
     @Test
     void MASTER가_업체_소속을_가지면_예외가_발생한다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 1L,
                 UserRole.MASTER,
                 null,
@@ -57,7 +57,7 @@ class AuthenticatedUserTest {
     @Test
     void HUB_MANAGER는_hubId가_있으면_정상이다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 2L,
                 UserRole.HUB_MANAGER,
                 UUID.randomUUID(),
@@ -72,7 +72,7 @@ class AuthenticatedUserTest {
     @Test
     void HUB_MANAGER의_hubId가_없으면_예외가_발생한다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 2L,
                 UserRole.HUB_MANAGER,
                 null,
@@ -87,7 +87,7 @@ class AuthenticatedUserTest {
     @Test
     void COMPANY_MANAGER는_hubId와_companyId가_있으면_정상이다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 3L,
                 UserRole.COMPANY_MANAGER,
                 UUID.randomUUID(),
@@ -102,7 +102,7 @@ class AuthenticatedUserTest {
     @Test
     void COMPANY_MANAGER의_companyId가_없으면_예외가_발생한다() {
         // given
-        AuthenticatedUser user = new AuthenticatedUser(
+        UserPrincipal user = new UserPrincipal(
                 3L,
                 UserRole.COMPANY_MANAGER,
                 UUID.randomUUID(),

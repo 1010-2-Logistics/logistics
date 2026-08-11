@@ -75,8 +75,8 @@ public class MockGatewayAuthenticationFilter
                     request.getHeader(COMPANY_ID_HEADER)
             );
 
-            AuthenticatedUser principal =
-                    new AuthenticatedUser(
+            UserPrincipal principal =
+                    new UserPrincipal(
                             userId,
                             role,
                             hubId,

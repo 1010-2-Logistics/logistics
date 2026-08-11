@@ -65,8 +65,8 @@ class MockGatewayAuthenticationFilterTest {
         assertThat(authentication.isAuthenticated())
                 .isTrue();
 
-        AuthenticatedUser principal =
-                (AuthenticatedUser)
+        UserPrincipal principal =
+                (UserPrincipal)
                         authentication.getPrincipal();
 
         assertThat(principal.userId())
