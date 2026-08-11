@@ -32,10 +32,12 @@ public class HubQueryService {
     }
 
     public Page<Hub> search(SearchHubQuery query) {
+
         return hubQueryRepository.search(query.hubId(), query.pageable());
     }
 
     public Set<UUID> findValidHubIdsIn(List<UUID> hubIds) {
+
         return hubQueryRepository.findValidHubIdsIn(hubIds);
     }
 
