@@ -8,4 +8,5 @@ spring:
       ddl-auto: validate
     show-sql: false
 slack:
-  webhook-url: ${SLACK_WEBHOOK_URL}
+  base-url: https://slack.com/api
+  bot-token: ${SLACK_BOT_TOKEN}

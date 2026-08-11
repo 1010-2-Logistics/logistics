@@ -3,7 +3,6 @@ package com.logistics.slack.infrastructure.adapter;
 
 import com.logistics.slack.application.dto.result.UserInfo;
 import com.logistics.slack.application.port.UserPort;
-import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
 import com.logistics.slack.global.response.ApiResponse;
@@ -38,10 +37,8 @@ public class UserPortAdapter implements UserPort {
 
             return new UserInfo(
                     response.userId(),
-                    response.slackId(),
-                    null,
-                    null,
-                    null
+                    response.name(),
+                    response.slackId()
             );
 
         } catch (FeignException.NotFound e) {

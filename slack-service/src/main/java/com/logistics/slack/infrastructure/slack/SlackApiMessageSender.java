@@ -14,21 +14,24 @@ public class SlackApiMessageSender implements SlackMessageSender {
 
     @Override
     public void send(
-            String slackId,
+            String receiverSlackId,
             String message
     ) {
+        SlackApiRequest request = new SlackApiRequest(
+                receiverSlackId,
+                message
+        );
+
         SlackApiResponse response = slackRestClient.post()
                 .uri("/chat.postMessage")
-                .body(new SlackApiRequest(slackId, message))
+                .body(request)
                 .retrieve()
                 .body(SlackApiResponse.class);
 
         if (response == null || !response.ok()) {
-            String error = response == null
-                    ? "Slack API 응답 없음"
-                    : response.error();
-
-            throw new IllegalStateException(error);
+            throw new RuntimeException(
+                    response != null ? response.error() : "Slack API 응답이 없습니다."
+            );
         }
     }
 }

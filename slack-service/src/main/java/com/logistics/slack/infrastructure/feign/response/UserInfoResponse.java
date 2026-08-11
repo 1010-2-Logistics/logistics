@@ -1,9 +1,8 @@
 package com.logistics.slack.infrastructure.feign.response;
 
-
-public record UserInfoResponse (
+public record UserInfoResponse(
         Long userId,
         String name,
         String slackId
-){
+) {
 }

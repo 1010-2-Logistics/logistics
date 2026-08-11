@@ -14,14 +14,11 @@ import org.springframework.stereotype.Component;
 public class SlackSendEventListener {
     private final SlackCommandService slackCommandService;
 
-    @RabbitListener(
-            queues = SlackRabbitConfig.QUEUE
-    )
-    public void consume(
-            SlackSendEvent slackSendEvent
-    ) {
+    @RabbitListener(queues = SlackRabbitConfig.INTERNAL_QUEUE)
+    public void consume(SlackSendEvent slackSendEvent) {
         slackCommandService.send(
                 slackSendEvent.slackMessageId(),
+                // TODO AI 연동 후 receiverSlackId 추가 예정
                 slackSendEvent.receiverSlackId()
         );
     }

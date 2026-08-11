@@ -16,26 +16,25 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class SlackFacade {
-    // userClient 조립
     private final SlackCommandService slackCommandService;
-    private final SlackAuthorizationService slackAuthorizationService;
     private final UserPort userPort;
+    private final SlackAuthorizationService slackAuthorizationService;
 
     public SlackCreateResult createSlack(
             SlackCreateCommand slackCreateCommand,
             AuthenticatedUser authenticatedUser
     ) {
-        UserInfo receiver = userPort.getUser(slackCreateCommand.receiverId());
+        UserInfo receiver = userPort.getUser(
+                slackCreateCommand.receiverId()
+        );
 
         slackAuthorizationService.validateCreateAccess(
                 authenticatedUser,
-                receiver,
                 slackCreateCommand.referenceId()
         );
 
         return slackCommandService.createSlack(
                 slackCreateCommand,
-                authenticatedUser,
                 receiver.slackId()
         );
     }
@@ -44,9 +43,13 @@ public class SlackFacade {
             UUID slackMessageId,
             AuthenticatedUser authenticatedUser
     ) {
+        Long receiverId = slackCommandService.getReceiverId(slackMessageId);
+
+        UserInfo receiver = userPort.getUser(receiverId);
+
         return slackCommandService.retrySlack(
                 slackMessageId,
-                authenticatedUser
+                receiver.slackId()
         );
     }
 }
