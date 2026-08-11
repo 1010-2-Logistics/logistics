@@ -29,8 +29,7 @@ public class SlackAuthorizationService {
 
     public void validateDeleteAccess(
             AuthenticatedUser authenticatedUser
-    ) {
-        validateMaster(authenticatedUser);
+    ) {        validateMaster(authenticatedUser);
     }
 
     private void validateAuthenticated(

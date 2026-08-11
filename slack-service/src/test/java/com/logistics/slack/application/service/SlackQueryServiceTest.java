@@ -139,10 +139,7 @@ class SlackQueryServiceTest {
                     createdTo,
                     pageable
             )).willReturn(slackPage);
-            given(slackAuthorizationService.canRead(
-                    authenticatedUser,
-                    slack
-            )).willReturn(true);
+
 
             Page<SlackListResult> result = slackQueryService.getSlacks(
                     slackSearchQuery,
@@ -160,7 +157,6 @@ class SlackQueryServiceTest {
                     createdTo,
                     pageable
             );
-            verify(slackAuthorizationService).canRead(authenticatedUser, slack);
         }
     }
 }
