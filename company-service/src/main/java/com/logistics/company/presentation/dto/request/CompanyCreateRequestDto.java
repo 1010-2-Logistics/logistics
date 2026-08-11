@@ -28,6 +28,7 @@ public record CompanyCreateRequestDto(
 		return new CompanyCreateCommand(
 				user.getUserId(),
 				user.getRole(),
+				user.getHubId(),
 				hubId,
 				companyManagerId,
 				companyName,

@@ -136,6 +136,10 @@ public class CompanyFacade {
 			throw new CompanyException(CommonErrorCode.AUTH_FORBIDDEN);
 		}
 		
+		if(command.role() == Role.HUB_MANAGER && !Objects.equals(command.hubId(), command.userHubId())) {
+			throw new CompanyException(CompanyErrorCode.COMPANY_NOT_SELF_HUB);
+		}
+		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
 		
 		// 업체 담당자를 지정하여 요청을 보낸 경우

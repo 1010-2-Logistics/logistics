@@ -9,6 +9,7 @@ import com.logistics.company.domain.entity.Role;
 public record CompanyCreateCommand(
 		Long userId,
 		Role role,
+		UUID userHubId,
 		UUID hubId,
 		Long companyManagerId,
 		String companyName,
