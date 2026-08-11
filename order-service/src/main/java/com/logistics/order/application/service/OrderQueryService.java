@@ -1,5 +1,7 @@
 package com.logistics.order.application.service;
 
+import com.logistics.order.application.authorization.OrderAuthorizationService;
+import com.logistics.order.application.dto.auth.AuthenticatedUser;
 import com.logistics.order.application.dto.query.OrderSearchQuery;
 import com.logistics.order.application.dto.result.DeliveryGetResult;
 import com.logistics.order.application.dto.result.OrderDetailResult;
@@ -51,7 +53,7 @@ public class OrderQueryService {
             AuthenticatedUser authenticatedUser
     ) {
         int page = validatePage(orderSearchQuery.page());
-        int size = validateSize(orderSearchQuery.size());
+        int size = normalizeSize(orderSearchQuery.size());
         String sortProperty = validateSort(orderSearchQuery.sort());
 
         Pageable pageable = PageRequest.of(
@@ -110,7 +112,7 @@ public class OrderQueryService {
         return page;
     }
 
-    private int validateSize(Integer size) {
+    private int normalizeSize(Integer size) {
         if (size == null) {
             return 10;
         }
