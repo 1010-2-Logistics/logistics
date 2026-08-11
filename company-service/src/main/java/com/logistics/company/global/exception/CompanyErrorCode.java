@@ -17,7 +17,11 @@ public enum CompanyErrorCode implements ErrorCode {
 	
 	COMPANY_USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 회원입니다."),
 	
-	COMPANY_DUPLICATE_HUB_NAME(HttpStatus.CONFLICT, "소속 허브에 동일한 업체명이 존재합니다.")
+	COMPANY_DUPLICATE_HUB_NAME(HttpStatus.CONFLICT, "소속 허브에 동일한 업체명이 존재합니다."),
+	
+	COMPANY_NOT_SELF_HUB(HttpStatus.FORBIDDEN, "소속 허브가 아닙니다."),
+	
+	COMPANY_NOT_SELF_COMPANY(HttpStatus.FORBIDDEN, "소속 업체가 아닙니다."),
 	;
 	
   private final HttpStatus httpStatus;
