@@ -29,7 +29,9 @@ public class OrderCommandService {
             OrderCreateCommand orderCreateCommand,
             UUID orderId,
             UUID deliveryId,
-            UUID startCompanyId
+            UUID startCompanyId,
+            String receiverName,
+            String receiverSlackId
     ) {
         Order order = Order.create(
                 orderId,
@@ -48,7 +50,11 @@ public class OrderCommandService {
                         savedOrder.getOrderId(),
                         savedOrder.getDeliveryId(),
                         savedOrder.getProductId(),
-                        savedOrder.getQuantity()
+                        savedOrder.getQuantity(),
+                        savedOrder.getRequest(),
+                        receiverName,
+                        receiverSlackId,
+                        savedOrder.getCreatedAt()
                 )
         );
 
@@ -86,10 +92,10 @@ public class OrderCommandService {
     }
 
     public void deleteOrder(
-            Order order
+            Order order,
+            Long deletedBy
     ) {
-        // TODO : 인증 구현 후 실사용자 ID로 변경
-        order.delete(null);
+        order.delete(deletedBy);
         orderCommandRepository.save(order);
     }
 

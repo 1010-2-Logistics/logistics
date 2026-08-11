@@ -3,8 +3,10 @@ package com.logistics.order.infrastructure.feign.response;
 import java.util.UUID;
 
 public record InventoryDeductionResponse(
-        UUID inventoryId,
+        UUID operationId,
+        UUID orderId,
         UUID productId,
-        Integer stock
+        UUID hubId,
+        Integer quantity
 ) {
 }
