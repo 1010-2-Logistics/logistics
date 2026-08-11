@@ -13,6 +13,7 @@ import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -95,9 +96,11 @@ public class DeliveryCommandService {
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
     }
 
-    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command) {
+    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
+
+        validateDeliveryOwnership(principal, delivery);
 
         if (command.status() != DeliveryStatus.DELIVERED || delivery.getStatus() != DeliveryStatus.COMPANY_MOVING) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
@@ -107,12 +110,26 @@ public class DeliveryCommandService {
         return new DeliveryDetailResult(delivery);
     }
 
-    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId, ChangeDeliveryRouteStatusCommand command) {
+    // MASTER 전체, COMPANY_DELIVERY_MANAGER는 본인 배송만
+    private void validateDeliveryOwnership(UserPrincipal principal, Delivery delivery) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        if (principal.getRole() == Role.COMPANY_DELIVERY_MANAGER
+                && principal.getUserId().equals(delivery.getCompanyDeliveryManagerId())) {
+            return;
+        }
+        throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+    }
+
+    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId,
+                                                     ChangeDeliveryRouteStatusCommand command, UserPrincipal principal) {
         DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
         if (!route.getDeliveryId().equals(deliveryId)) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
         }
+        validateRouteOwnership(principal, route);
         validateRouteTransition(route.getStatus(), command.status());
         validateSequentialProgress(deliveryId, route.getSequence());
 
@@ -165,10 +182,24 @@ public class DeliveryCommandService {
         }
     }
 
-    public void delete(UUID deliveryId) {
+    public void delete(UUID deliveryId, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
-        delivery.markDeleted(TEMP_CREATED_BY);
+        validateHubManagerOwnership(principal, delivery);
+        delivery.markDeleted(principal.getUserId());
+    }
+
+    // MASTER 전체, HUB_MANAGER는 담당 허브 소속만
+    private void validateHubManagerOwnership(UserPrincipal principal, Delivery delivery) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        if (principal.getRole() == Role.HUB_MANAGER
+                && (principal.getHubId().equals(delivery.getStartHubId())
+                        || principal.getHubId().equals(delivery.getEndHubId()))) {
+            return;
+        }
+        throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     public void cancel(UUID orderId) {
@@ -181,5 +212,20 @@ public class DeliveryCommandService {
             throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
         }
         found.changeStatus(DeliveryStatus.CANCELLED);
+    }
+
+    private void validateRouteOwnership(UserPrincipal principal, DeliveryRoute route) {
+        if (principal.getRole() == Role.MASTER) {
+            return;
+        }
+        boolean owns = switch (principal.getRole()) {
+            case HUB_MANAGER -> principal.getHubId().equals(route.getStartHubId())
+                    || principal.getHubId().equals(route.getEndHubId());
+            case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> principal.getUserId().equals(route.getDeliveryManagerId());
+            default -> false;
+        };
+        if (!owns) {
+            throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+        }
     }
 }

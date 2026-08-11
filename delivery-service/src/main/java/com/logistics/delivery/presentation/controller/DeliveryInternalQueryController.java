@@ -44,7 +44,7 @@ public class DeliveryInternalQueryController {
     )
     @GetMapping("/{deliveryId}/routes")
     public ApiResponse<DeliveryRouteListResponse> getRoutesInternal(@PathVariable UUID deliveryId) {
-        var result = deliveryQueryService.getRoutes(deliveryId);
+        var result = deliveryQueryService.getRoutesInternal(deliveryId);
         return ApiResponse.success(200, "배송 경로 조회 성공", DeliveryRouteListResponse.from(result));
     }
 }

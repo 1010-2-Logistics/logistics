@@ -27,10 +27,12 @@ import com.logistics.delivery.domain.entity.DeliveryRoute;
 import com.logistics.delivery.domain.entity.DeliveryRouteStatus;
 import com.logistics.delivery.domain.entity.DeliveryStatus;
 import com.logistics.delivery.domain.entity.ManagerType;
+import com.logistics.delivery.domain.entity.Role;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -64,6 +66,8 @@ class DeliveryCommandServiceTest {
 
     @InjectMocks
     private DeliveryCommandService deliveryCommandService;
+
+    private static final UserPrincipal MASTER = new UserPrincipal(1L, Role.MASTER, null, null);
 
     private List<HubRoutePort.HubRouteSegment> singleSegment(UUID startHubId, UUID endHubId) {
         return List.of(new HubRoutePort.HubRouteSegment(startHubId, endHubId, BigDecimal.ONE, 1));
@@ -282,9 +286,42 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED));
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER);
 
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+    }
+
+    @Test
+    void 본인이_배정된_COMPANY_DELIVERY_MANAGER는_상태변경_가능() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+        delivery.assignCompanyDeliveryManager(42L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal companyManager = new UserPrincipal(42L, Role.COMPANY_DELIVERY_MANAGER, null, null);
+
+        DeliveryResults.DeliveryDetailResult result = deliveryCommandService.changeStatus(
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), companyManager);
+
+        assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
+    }
+
+    @Test
+    void 본인_배송이_아닌_COMPANY_DELIVERY_MANAGER는_상태변경시_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
+        delivery.assignCompanyDeliveryManager(42L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal otherManager = new UserPrincipal(99L, Role.COMPANY_DELIVERY_MANAGER, null, null);
+
+        assertThatThrownBy(() -> deliveryCommandService.changeStatus(
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), otherManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     @Test
@@ -295,7 +332,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         assertThatThrownBy(() -> deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED)))
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
@@ -307,7 +344,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deliveryCommandService.changeStatus(
-                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED)))
+                deliveryId, new ChangeDeliveryStatusCommand(DeliveryStatus.DELIVERED), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
@@ -328,7 +365,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null));
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER);
 
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.HUB_MOVING);
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.HUB_MOVING);
@@ -343,10 +380,42 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null)))
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+    }
+
+    @Test
+    void HUB_MANAGER가_담당_허브가_아닌_구간을_변경하려하면_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryRoute route = DeliveryRoute.create(
+                deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        UserPrincipal otherHubManager = new UserPrincipal(5L, Role.HUB_MANAGER, UUID.randomUUID(), null);
+
+        assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), otherHubManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
+    }
+
+    @Test
+    void 본인이_배정되지_않은_구간을_변경하려하면_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryRoute route = DeliveryRoute.create(
+                deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30, 1L);
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        UserPrincipal otherManager = new UserPrincipal(99L, Role.HUB_DELIVERY_MANAGER, null, null);
+
+        assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), otherManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     @Test
@@ -363,7 +432,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(priorRoute, route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null)))
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
@@ -391,7 +460,7 @@ class DeliveryCommandServiceTest {
                 .thenReturn(companyManager);
 
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null));
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null), MASTER);
 
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.DEST_HUB_ARRIVED);
         assertThat(result.route().getActualDistance()).isEqualTo(route.getExpectedDistance());
@@ -415,7 +484,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(2);
 
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null));
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null), MASTER);
 
         assertThat(result.route().getStatus()).isEqualTo(DeliveryRouteStatus.DEST_HUB_ARRIVED);
         assertThat(result.delivery().getStatus()).isEqualTo(DeliveryStatus.HUB_WAITING);
@@ -441,7 +510,7 @@ class DeliveryCommandServiceTest {
 
         RouteStatusChangeResult result = deliveryCommandService.changeRouteStatus(
                 deliveryId, routeId,
-                new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, new BigDecimal("158.40"), 115));
+                new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, new BigDecimal("158.40"), 115), MASTER);
 
         assertThat(result.route().getActualDistance()).isEqualByComparingTo("158.40");
         assertThat(result.route().getActualDuration()).isEqualTo(115);
@@ -454,7 +523,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null)))
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
@@ -470,7 +539,7 @@ class DeliveryCommandServiceTest {
         when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null)))
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);
@@ -494,7 +563,7 @@ class DeliveryCommandServiceTest {
                 .thenThrow(new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE));
 
         assertThatThrownBy(() -> deliveryCommandService.changeRouteStatus(
-                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null)))
+                deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null), MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_MANAGER_UNAVAILABLE);
@@ -509,9 +578,37 @@ class DeliveryCommandServiceTest {
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
-        deliveryCommandService.delete(deliveryId);
+        deliveryCommandService.delete(deliveryId, MASTER);
 
         assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 담당_허브인_HUB_MANAGER는_삭제_가능() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID startHubId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal hubManager = new UserPrincipal(3L, Role.HUB_MANAGER, startHubId, null);
+
+        deliveryCommandService.delete(deliveryId, hubManager);
+
+        assertThat(delivery.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 담당_허브가_아닌_HUB_MANAGER가_삭제하면_예외() {
+        UUID deliveryId = UUID.randomUUID();
+        Delivery delivery = Delivery.create(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", 1L);
+        when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
+        UserPrincipal otherHubManager = new UserPrincipal(3L, Role.HUB_MANAGER, UUID.randomUUID(), null);
+
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId, otherHubManager))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
     @Test
@@ -519,7 +616,7 @@ class DeliveryCommandServiceTest {
         UUID deliveryId = UUID.randomUUID();
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId))
+        assertThatThrownBy(() -> deliveryCommandService.delete(deliveryId, MASTER))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
                 .isEqualTo(DeliveryErrorCode.DELIVERY_NOT_FOUND);
