@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "slack")
 public record SlackProperties(
-        String webhookUrl
+        String baseUrl,
+        String botToken
 ) {
 }

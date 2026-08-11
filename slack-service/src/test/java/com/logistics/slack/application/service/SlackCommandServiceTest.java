@@ -1,14 +1,17 @@
 package com.logistics.slack.application.service;
 
+import com.logistics.slack.application.authorization.SlackAuthorizationService;
+import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackRetryResult;
 import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
+import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
 import com.logistics.slack.global.exception.CustomException;
-import com.logistics.slack.infrastructure.messaging.SlackEventPublisher;
+import com.logistics.slack.infrastructure.messaging.RabbitSlackEventPublisher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -41,17 +45,33 @@ class SlackCommandServiceTest {
     private final Long senderId = 1L;
     private final Long receiverId = 2L;
     private final UUID referenceId = UUID.randomUUID();
+    private final String receiverSlackId = "U123456789";
+
+
+    private final AuthenticatedUser authenticatedUser = new AuthenticatedUser(
+            senderId,
+            Role.MASTER,
+            null,
+            null
+    );
+
     @Mock
     private SlackCommandRepository slackCommandRepository;
 
     @Mock
-    private SlackEventPublisher slackEventPublisher;
+    private RabbitSlackEventPublisher slackEventPublisher;
 
     @Mock
     private SlackMessageSender slackMessageSender;
 
     @InjectMocks
     private SlackCommandService slackCommandService;
+
+    @Mock
+    private SlackAuthorizationService slackAuthorizationService;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private Slack createFailedSlack() {
         Slack slack = crateSlack();
@@ -97,7 +117,10 @@ class SlackCommandServiceTest {
             );
             TransactionSynchronizationManager.initSynchronization();
 
-            slackCommandService.createSlack(slackCreateCommand);
+            slackCommandService.createSlack(
+                    slackCreateCommand,
+                    receiverSlackId
+            );
             ArgumentCaptor<Slack> slackCaptor = ArgumentCaptor.forClass(Slack.class);
             verify(slackCommandRepository).save(slackCaptor.capture());
             Slack savedSlack = slackCaptor.getValue();
@@ -122,8 +145,14 @@ class SlackCommandServiceTest {
             Slack slack = createFailedSlack();
 
             given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
-            slackCommandService.send(slackMessageId);
-            verify(slackMessageSender).send("주문이 생성되었습니다.");
+            slackCommandService.send(
+                    slackMessageId,
+                    receiverSlackId
+            );
+            verify(slackMessageSender).send(
+                    receiverSlackId,
+                    "주문이 생성되었습니다."
+            );
 
             assertThat(slack.getStatus()).isEqualTo(SlackStatus.SUCCESS);
             assertThat(slack.getSentAt()).isNotNull();
@@ -136,10 +165,19 @@ class SlackCommandServiceTest {
             Slack slack = createFailedSlack();
 
             given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
-            willThrow(new RuntimeException("Webhook 발송 실패")).given(slackMessageSender).send("주문이 생성되었습니다.");
-            slackCommandService.send(slackMessageId);
+            willThrow(new RuntimeException("Webhook 발송 실패")).given(slackMessageSender).send(
+                    receiverSlackId,
+                    "주문이 생성되었습니다."
+            );
+            slackCommandService.send(
+                    slackMessageId,
+                    receiverSlackId
+            );
 
-            verify(slackMessageSender).send("주문이 생성되었습니다.");
+            verify(slackMessageSender).send(
+                    receiverSlackId,
+                    "주문이 생성되었습니다."
+            );
 
             assertThat(slack.getStatus()).isEqualTo(SlackStatus.FAILED);
             assertThat(slack.getErrorMessage()).isEqualTo("Webhook 발송 실패");
@@ -150,10 +188,14 @@ class SlackCommandServiceTest {
         void slack_send_not_found() {
             given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> slackCommandService.send(slackMessageId))
+            assertThatThrownBy(() -> slackCommandService.send(
+                    slackMessageId,
+                    receiverSlackId
+            ))
+
                     .isInstanceOf(Exception.class);
 
-            verify(slackMessageSender, never()).send(any(String.class));
+            verify(slackMessageSender, never()).send(any(String.class), any(String.class));
         }
     }
 
@@ -166,9 +208,14 @@ class SlackCommandServiceTest {
         void slack_retry_success() {
             Slack slack = createFailedSlack();
 
-            given(slackCommandRepository.findById(slackMessageId)).willReturn(Optional.of(slack));
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
+
             TransactionSynchronizationManager.initSynchronization();
-            SlackRetryResult result = slackCommandService.retrySlack(slackMessageId);
+
+            SlackRetryResult result = slackCommandService.retrySlack(
+                    slackMessageId,
+                    receiverSlackId
+            );
 
             assertThat(slack.getRetryCount()).isEqualTo(1);
             assertThat(slack.getStatus()).isEqualTo(SlackStatus.PENDING);
@@ -180,11 +227,15 @@ class SlackCommandServiceTest {
         @DisplayName("트랜잭션 커밋 전에는 발송 이벤트를 발행하지 않는다")
         void slack_retry_before_commit() {
             Slack slack = createFailedSlack();
-            given(slackCommandRepository.findById(slackMessageId)).willReturn(Optional.of(slack));
+
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
 
             TransactionSynchronizationManager.initSynchronization();
 
-            slackCommandService.retrySlack(slackMessageId);
+            slackCommandService.retrySlack(
+                    slackMessageId,
+                    receiverSlackId
+            );
 
             verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
         }
@@ -194,9 +245,16 @@ class SlackCommandServiceTest {
         void slack_retry_after_commit() {
             Slack slack = createFailedSlack();
 
-            given(slackCommandRepository.findById(slackMessageId)).willReturn(Optional.of(slack));
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)
+            ).willReturn(Optional.of(slack));
+
             TransactionSynchronizationManager.initSynchronization();
-            slackCommandService.retrySlack(slackMessageId);
+
+            slackCommandService.retrySlack(
+                    slackMessageId,
+                    receiverSlackId
+            );
+
             List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
 
             assertThat(synchronizations).hasSize(1);
@@ -206,16 +264,19 @@ class SlackCommandServiceTest {
             ArgumentCaptor<SlackSendEvent> eventCaptor = ArgumentCaptor.forClass(SlackSendEvent.class);
 
             verify(slackEventPublisher).publish(eventCaptor.capture());
+
             assertThat(eventCaptor.getValue().slackMessageId()).isEqualTo(slackMessageId);
         }
 
         @Test
         @DisplayName("존재하지 않는 슬랙 메시지를 재발송하면 예외")
         void slack_retry_not_found() {
-            given(slackCommandRepository.findById(slackMessageId)).willReturn(Optional.empty());
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> slackCommandService.retrySlack(slackMessageId))
-                    .isInstanceOf(CustomException.class);
+            assertThatThrownBy(() -> slackCommandService.retrySlack(
+                    slackMessageId,
+                    receiverSlackId
+            )).isInstanceOf(CustomException.class);
 
             verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
         }
@@ -224,54 +285,56 @@ class SlackCommandServiceTest {
         @DisplayName("최대 재시도 횟수를 초과하면 예외")
         void slack_retry_max_count() {
             Slack slack = createFailedSlack();
-            slack.retry(3);
-            slack.markFailed("1회 재발송 실패");
-            slack.retry(3);
-            slack.markFailed("2회 재발송 실패");
-            slack.retry(3);
-            slack.markFailed("3회 재발송 실패");
 
-            given(slackCommandRepository.findById(slackMessageId)).willReturn(Optional.of(slack));
+            ReflectionTestUtils.setField(
+                    slack,
+                    "retryCount",
+                    3
+            );
 
-            TransactionSynchronizationManager.initSynchronization();
+            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
 
-            assertThatThrownBy(() -> slackCommandService.retrySlack(slackMessageId))
-                    .isInstanceOf(CustomException.class);
+            assertThatThrownBy(() -> slackCommandService.retrySlack(
+                    slackMessageId,
+                    receiverSlackId
+            )).isInstanceOf(CustomException.class);
 
             assertThat(slack.getRetryCount()).isEqualTo(3);
             assertThat(slack.getStatus()).isEqualTo(SlackStatus.FAILED);
 
             verify(slackEventPublisher, never()).publish(any(SlackSendEvent.class));
         }
-    }
 
-    @Nested
-    @DisplayName("슬랙 메시지 삭제")
-    class slack_delete {
-        @Test
-        @DisplayName("슬랙 메시지 삭제 시 삭제 정보 기록")
-        void slack_delete_success() {
-            Slack slack = createFailedSlack();
-            Long deletedBy = 1L;
+        @Nested
+        @DisplayName("슬랙 메시지 삭제")
+        class slack_delete {
+            @Test
+            @DisplayName("슬랙 메시지 삭제 시 삭제 정보 기록")
+            void slack_delete_success() {
+                Slack slack = createFailedSlack();
+                Long deletedBy = 1L;
 
-            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
+                given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.of(slack));
 
-            slackCommandService.deleteSlack(
-                    slackMessageId,
-                    deletedBy
-            );
+                slackCommandService.deleteSlack(
+                        slackMessageId,
+                        authenticatedUser
+                );
 
-            assertThat(slack.getDeletedAt()).isNotNull();
-            assertThat(slack.getDeletedBy()).isEqualTo(deletedBy);
-        }
+                assertThat(slack.getDeletedAt()).isNotNull();
+                assertThat(slack.getDeletedBy()).isEqualTo(deletedBy);
+            }
 
-        @Test
-        @DisplayName("존재하지 않는 메시지 삭제 시 예외")
-        void slack_delete_not_found() {
-            given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
+            @Test
+            @DisplayName("존재하지 않는 메시지 삭제 시 예외")
+            void slack_delete_not_found() {
+                given(slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> slackCommandService.deleteSlack(slackMessageId, 1L))
-                    .isInstanceOf(CustomException.class);
+                assertThatThrownBy(() -> slackCommandService.deleteSlack(
+                        slackMessageId,
+                        authenticatedUser
+                )).isInstanceOf(CustomException.class);
+            }
         }
     }
 }

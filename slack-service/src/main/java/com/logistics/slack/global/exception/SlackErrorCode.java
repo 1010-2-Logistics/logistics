@@ -24,6 +24,8 @@ public enum SlackErrorCode implements ErrorCode {
             "삭제된 Slack 메시지는 재발송할 수 없습니다."
     ),
     SLACK_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다."),
+    SLACK_RECEIVER_NOT_FOUND(HttpStatus.NOT_FOUND, "Slack 수신자를 찾을 수 없습니다."),
+    SLACK_EXTERNAL_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "외부 서비스와 통신할 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
