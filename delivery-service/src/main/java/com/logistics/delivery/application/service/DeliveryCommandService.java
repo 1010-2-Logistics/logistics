@@ -50,7 +50,8 @@ public class DeliveryCommandService {
 
         Delivery delivery = Delivery.create(
                 command.orderId(), command.startHubId(), command.endHubId(),
-                command.deliveryAddress(), command.receiverName(), command.slackId());
+                command.deliveryAddress(), command.receiverName(), command.slackId(),
+                command.startCompanyId(), command.endCompanyId());
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
         List<RouteSegment> segments = resolveRouteSegments(command.startHubId(), command.endHubId());
