@@ -1,8 +1,7 @@
-package com.logistics.company.infrastructure.config;
+package com.logistics.ai.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -10,8 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.logistics.company.domain.entity.Role;
-import com.logistics.company.infrastructure.security.filter.HeaderAuthenticationFilter;
+import com.logistics.ai.infrastructure.security.filter.HeaderAuthenticationFilter;
 
 @EnableWebSecurity
 @Configuration
@@ -27,35 +25,7 @@ public class SecurityConfig {
 		.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 		.authorizeHttpRequests(auth -> auth
 				
-				// PATCH /api/v1/companies/manager/fix
-				.requestMatchers(HttpMethod.PATCH, "/api/v1/companies/update/manager/fix").hasAnyRole(
-						Role.MASTER.name(), Role.HUB_MANAGER.name()
-				)
-				
-				// DELETED /api/v1/companies/{companyId}
-				.requestMatchers(HttpMethod.DELETE, "/api/v1/companies/{companyId}").hasAnyRole(
-						Role.MASTER.name(), Role.HUB_MANAGER.name(), Role.COMPANY_MANAGER.name()
-				)
-				
-				// PATCH /api/v1/companies/{companyId}
-				.requestMatchers(HttpMethod.PATCH, "/api/v1/companies/{companyId}").hasAnyRole(
-						Role.MASTER.name(), Role.HUB_MANAGER.name(), Role.COMPANY_MANAGER.name()
-				)
-				
-				// POST /api/v1/companies
-				.requestMatchers(HttpMethod.POST, "/api/v1/companies").hasAnyRole(
-						Role.MASTER.name(), Role.HUB_MANAGER.name()
-				)
-				
-				.requestMatchers(HttpMethod.GET,
-						"/api/v1/companies/{companyId}",
-						"/api/v1/companies"
-				).permitAll()
-				
-				// 내부 API 권한 검증은 어떻게?
 				.requestMatchers(
-						"/internal/v1/companies",
-						"/internal/v1/companies/{companyId}/exists",
 						"/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",

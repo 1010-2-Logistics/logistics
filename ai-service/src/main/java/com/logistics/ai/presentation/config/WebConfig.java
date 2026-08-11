@@ -1,10 +1,10 @@
-package com.logistics.company.presentation.config;
+package com.logistics.ai.presentation.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.logistics.company.presentation.interceptor.AuthenticationInterceptor;
+import com.logistics.ai.presentation.interceptor.AuthenticationInterceptor;
 
 import lombok.RequiredArgsConstructor;
 

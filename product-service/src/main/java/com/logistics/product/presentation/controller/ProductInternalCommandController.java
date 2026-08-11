@@ -10,6 +10,7 @@ import com.logistics.product.application.service.ProductCommandService;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.request.CompanyNameUpdateRequestDto;
 import com.logistics.product.presentation.dto.response.CompanyNameUpdateResponseDto;
+import com.logistics.product.presentation.interceptor.NoAuthentication;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class ProductInternalCommandController {
 	
 	// 업체명 수정시 업체 수정 내부 API
 	@PatchMapping("/{companyId}")
+	@NoAuthentication
 	public ApiResponse<CompanyNameUpdateResponseDto> companyNameUpdate(@Valid @RequestBody CompanyNameUpdateRequestDto request) {
 		
 		CompanyNameUpdateResponseDto response = CompanyNameUpdateResponseDto.from(

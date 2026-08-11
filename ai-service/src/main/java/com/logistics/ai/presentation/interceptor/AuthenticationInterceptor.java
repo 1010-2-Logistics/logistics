@@ -1,4 +1,4 @@
-package com.logistics.product.presentation.interceptor;
+package com.logistics.ai.presentation.interceptor;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.logistics.product.infrastructure.security.principal.UserPrincipal;
+import com.logistics.ai.infrastructure.security.principal.UserPrincipal;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
