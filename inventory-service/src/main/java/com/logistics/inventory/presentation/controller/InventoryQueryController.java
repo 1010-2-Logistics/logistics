@@ -28,10 +28,7 @@ public class InventoryQueryController {
             summary = "재고 상세 조회",
             description = """
                      접근 권한:
-                    - MASTER : 모든 허브의 재고 단건 조회 가능
-                    - HUB_MANAGER : 본인이 담당하는 허브의 재고만 단건 조회 가능
-                    - COMPANY_DELIVERY_MANAGER : 재고 단건 조회 가능
-                    - COMPANY_MANAGER : 재고 단건 조회 가능
+                    - 모든 로그인 사용자
                     """
     )
     @GetMapping("/{inventoryId}")
