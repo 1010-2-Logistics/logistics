@@ -26,4 +26,14 @@ interface DeliveryJpaRepository extends JpaRepository<Delivery, UUID> {
             + "                AND r.deletedAt IS NULL "
             + "                AND (r.startHubId = :hubId OR r.endHubId = :hubId)))")
     Page<Delivery> search(@Param("status") DeliveryStatus status, @Param("hubId") UUID hubId, Pageable pageable);
+
+    @Query("SELECT d FROM Delivery d "
+            + "WHERE d.deletedAt IS NULL "
+            + "AND (:status IS NULL OR d.status = :status) "
+            + "AND (d.companyDeliveryManagerId = :managerId "
+            + "     OR EXISTS (SELECT 1 FROM DeliveryRoute r "
+            + "                WHERE r.deliveryId = d.deliveryId "
+            + "                AND r.deletedAt IS NULL "
+            + "                AND r.deliveryManagerId = :managerId))")
+    Page<Delivery> searchByManager(@Param("status") DeliveryStatus status, @Param("managerId") Long managerId, Pageable pageable);
 }
