@@ -10,6 +10,7 @@ import com.logistics.delivery.domain.repository.DeliveryManagerAssignmentStateRe
 import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import com.logistics.delivery.global.exception.CustomException;
 import com.logistics.delivery.global.exception.DeliveryErrorCode;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
 import java.util.List;
 import java.util.Set;
@@ -60,6 +61,8 @@ public class DeliveryManagerCommandService {
     private void syncUserAffiliation(Long userId, ManagerType managerType, UUID hubId) {
         try {
             userAffiliationPort.changeAffiliation(userId, managerType.name(), hubId);
+        } catch (FeignException.Conflict e) {
+            // user-service에 이미 동일한 소속으로 등록돼 있음 = 목표 상태 달성이므로 성공 처리(멱등)
         } catch (FeignException e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
         }
@@ -93,9 +96,9 @@ public class DeliveryManagerCommandService {
         return manager;
     }
 
-    public void delete(Long deliveryManagerId) {
+    public void delete(Long deliveryManagerId, UserPrincipal principal) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
-        manager.markDeleted(null);
+        manager.markDeleted(principal.getUserId());
     }
 }
