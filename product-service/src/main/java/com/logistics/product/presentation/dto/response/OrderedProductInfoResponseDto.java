@@ -9,11 +9,12 @@ public record OrderedProductInfoResponseDto(
 		UUID productId,
     UUID companyId,
     String productName,
+    String companyName,
     boolean exists
 ) {
 	public static OrderedProductInfoResponseDto from(Optional<Product> productOptional) {
 		if(productOptional.isEmpty()) {
-			return new OrderedProductInfoResponseDto(null, null, null, false);
+			return new OrderedProductInfoResponseDto(null, null, null, null, false);
 		}
 		
 		Product product = productOptional.get();
@@ -22,6 +23,7 @@ public record OrderedProductInfoResponseDto(
 				product.getProductId(),
 				product.getCompanyId(),
 				product.getProductName(),
+				product.getCompanyName(),
 				true
 		);
 	}
