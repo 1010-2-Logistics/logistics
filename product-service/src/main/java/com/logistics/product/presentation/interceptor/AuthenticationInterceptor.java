@@ -2,6 +2,7 @@ package com.logistics.product.presentation.interceptor;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.logistics.product.infrastructure.security.principal.UserPrincipal;
@@ -9,6 +10,7 @@ import com.logistics.product.infrastructure.security.principal.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@Component
 public class AuthenticationInterceptor implements HandlerInterceptor {
 
 	@Override
