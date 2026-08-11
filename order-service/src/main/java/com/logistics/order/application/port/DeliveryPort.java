@@ -8,6 +8,8 @@ import java.util.UUID;
 public interface DeliveryPort {
     DeliveryCreateResult createDelivery(
             UUID orderId,
+            UUID startCompanyId,
+            UUID endCompanyId,
             UUID startHubId,
             UUID endHubId,
             String deliveryAddress,
