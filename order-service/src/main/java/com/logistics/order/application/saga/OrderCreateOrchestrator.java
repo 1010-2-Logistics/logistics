@@ -130,6 +130,8 @@ public class OrderCreateOrchestrator {
         try {
             return deliveryPort.createDelivery(
                     orderId,
+                    orderCreateSagaCommand.startCompanyId(),
+                    orderCreateSagaCommand.orderCommand().endCompanyId(),
                     orderCreateSagaCommand.startHubId(),
                     orderCreateSagaCommand.endHubId(),
                     orderCreateSagaCommand.endCompanyAddress(),

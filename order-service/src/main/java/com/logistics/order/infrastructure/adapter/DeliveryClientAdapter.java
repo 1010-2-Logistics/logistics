@@ -25,6 +25,8 @@ public class DeliveryClientAdapter implements DeliveryPort {
     @Override
     public DeliveryCreateResult createDelivery(
             UUID orderId,
+            UUID startCompanyId,
+            UUID endCompanyId,
             UUID startHubId,
             UUID endHubId,
             String deliveryAddress,
@@ -34,6 +36,8 @@ public class DeliveryClientAdapter implements DeliveryPort {
         try {
             DeliveryCreateRequest deliveryCreateRequest = new DeliveryCreateRequest(
                     orderId,
+                    startCompanyId,
+                    endCompanyId,
                     startHubId,
                     endHubId,
                     deliveryAddress,
