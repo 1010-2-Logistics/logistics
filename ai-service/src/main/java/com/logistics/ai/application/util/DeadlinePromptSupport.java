@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
+import com.logistics.ai.application.dto.internal.UserInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 
 import lombok.AccessLevel;
@@ -95,7 +95,7 @@ public class DeadlinePromptSupport {
 //		);
 //	}
 	
-	public static String generatedPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+	public static String generatedPrompt(OrderCreatedEvent event, ProductInfo product, UserInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
 		return String.format(SYSTEM_PROMPT, bindingPrompt(
 				event,
 				product,
@@ -107,7 +107,7 @@ public class DeadlinePromptSupport {
 	}
 	
 	// 파라미터 타입 미확정
-	private static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, DeliveryManagerInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
+	private static String bindingPrompt(OrderCreatedEvent event, ProductInfo product, UserInfo deliveryManagerInfo, Map<UUID, HubInfo> hubMap, List<RouteInfo> routes, int hubWayPoint) {
 		// 주문 기본 정보
 		PromptOrder orderPrompt = PromptOrder.from(event);
 		
@@ -127,8 +127,8 @@ public class DeadlinePromptSupport {
 				hubPrompt.getStartHubName(),
 				hubPrompt.getTransitHubNames(),
 				hubPrompt.getEndHubName(),
-				deliveryManagerInfo.deliveryManagerName(),
-				deliveryManagerInfo.deliveryManagerSlackId()
+				deliveryManagerInfo.name(),
+				deliveryManagerInfo.slackId()
 		);
 	}
 	
