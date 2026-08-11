@@ -252,7 +252,7 @@ class DeliveryCommandServiceTest {
         assertThatThrownBy(() -> deliveryCommandService.createDelivery(command))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+                .isEqualTo(DeliveryErrorCode.DELIVERY_HUB_ROUTE_SERVICE_UNAVAILABLE);
     }
 
     @Test
