@@ -84,7 +84,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
+                orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -115,7 +115,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01");
+                orderId, startHubId, endHubId, "서울시 송파구", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -146,7 +146,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of());
@@ -163,12 +163,12 @@ class DeliveryCommandServiceTest {
     void 이미_존재하는_주문이면_기존_배송을_그대로_반환한다() {
         UUID orderId = UUID.randomUUID();
         Delivery existing = Delivery.create(
-                orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.of(existing));
         when(deliveryRouteRepository.countByDeliveryId(existing.getDeliveryId())).thenReturn(1);
 
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
 
         DeliveryCreateResult result = deliveryCommandService.createDelivery(command);
 
@@ -184,7 +184,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -210,7 +210,7 @@ class DeliveryCommandServiceTest {
         UUID midHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -238,7 +238,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -261,7 +261,7 @@ class DeliveryCommandServiceTest {
         UUID startHubId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         CreateDeliveryCommand command = new CreateDeliveryCommand(
-                orderId, startHubId, endHubId, "주소", "홍길동", "U01");
+                orderId, startHubId, endHubId, "주소", "홍길동", "U01", null, null);
 
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
         when(hubPort.validateHubIds(List.of(startHubId))).thenReturn(Set.of(startHubId));
@@ -284,7 +284,7 @@ class DeliveryCommandServiceTest {
     void COMPANY_MOVING_상태에서_DELIVERED로_변경된다() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
@@ -298,7 +298,7 @@ class DeliveryCommandServiceTest {
     void 본인이_배정된_COMPANY_DELIVERY_MANAGER는_상태변경_가능() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         delivery.assignCompanyDeliveryManager(42L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
@@ -316,7 +316,7 @@ class DeliveryCommandServiceTest {
     void 본인_배송이_아닌_COMPANY_DELIVERY_MANAGER는_상태변경시_예외() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         delivery.assignCompanyDeliveryManager(42L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
@@ -333,7 +333,7 @@ class DeliveryCommandServiceTest {
     void COMPANY_MOVING이_아닌_상태에서_DELIVERED_요청하면_예외() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryStatus(
@@ -362,7 +362,7 @@ class DeliveryCommandServiceTest {
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
 
@@ -451,7 +451,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01", null, null);
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
@@ -479,7 +479,7 @@ class DeliveryCommandServiceTest {
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
@@ -502,7 +502,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01", null, null);
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
@@ -556,7 +556,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         UUID endHubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), endHubId, "주소", "홍길동", "U01", null, null);
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
@@ -580,7 +580,7 @@ class DeliveryCommandServiceTest {
     void 정상_삭제되면_deletedAt이_채워진다() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         deliveryCommandService.deleteDelivery(deliveryId, MASTER);
@@ -593,7 +593,7 @@ class DeliveryCommandServiceTest {
         UUID deliveryId = UUID.randomUUID();
         UUID startHubId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), startHubId, UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         UserPrincipal hubManager = new UserPrincipal(3L, Role.HUB_MANAGER, startHubId, null);
 
@@ -606,7 +606,7 @@ class DeliveryCommandServiceTest {
     void 담당_허브가_아닌_HUB_MANAGER가_삭제하면_예외() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         UserPrincipal otherHubManager = new UserPrincipal(3L, Role.HUB_MANAGER, UUID.randomUUID(), null);
 
@@ -632,7 +632,7 @@ class DeliveryCommandServiceTest {
     @Test
     void 배송이_있으면_CANCELLED로_변경된다() {
         UUID orderId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.of(delivery));
 
         deliveryCommandService.cancelDelivery(orderId);
@@ -652,7 +652,7 @@ class DeliveryCommandServiceTest {
     @Test
     void 이미_배송완료된_건은_취소할_수_없다() {
         UUID orderId = UUID.randomUUID();
-        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+        Delivery delivery = Delivery.create(orderId, UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         delivery.changeStatus(DeliveryStatus.DELIVERED);
         when(deliveryRepository.findByOrderId(orderId)).thenReturn(Optional.of(delivery));
 
@@ -666,7 +666,7 @@ class DeliveryCommandServiceTest {
     void 해제된_업체담당자는_배송을_완료처리할_수_없다() {
         UUID deliveryId = UUID.randomUUID();
         Delivery delivery = Delivery.create(
-                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01");
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "주소", "홍길동", "U01", null, null);
         delivery.changeStatus(DeliveryStatus.COMPANY_MOVING);
         delivery.assignCompanyDeliveryManager(9L);
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
