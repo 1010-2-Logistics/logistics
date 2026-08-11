@@ -4,11 +4,15 @@ import com.logistics.hub.application.dto.command.HubCreateCommand;
 import com.logistics.hub.application.dto.command.HubUpdateCommand;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.domain.entity.Hub;
+import com.logistics.hub.domain.entity.Role;
 import com.logistics.hub.domain.repository.HubCommandRepository;
+import com.logistics.hub.global.exception.CommonErrorCode;
 import com.logistics.hub.global.exception.CustomException;
+import com.logistics.hub.global.exception.ErrorCode;
 import com.logistics.hub.global.exception.HubErrorCode;
 import java.util.UUID;
 
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
 import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import jakarta.validation.Valid;
@@ -25,7 +29,13 @@ public class HubCommandService {
     private final EventPublisher eventPublisher;
 
     //허브 등록
-    public HubCreateResponseDto createHub(@Valid HubCreateCommand hubCreateCommand) {
+    public HubCreateResponseDto createHub(HubCreateCommand hubCreateCommand, UserPrincipal userPrincipal) {
+
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
+
         //위도 경도 중복 검사
         if(hubCommandRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(hubCreateCommand.latitude(),hubCreateCommand.longitude()))
         {
@@ -51,7 +61,11 @@ public class HubCommandService {
     }
 
     //허브 수정
-    public HubResponseDto updateHub(UUID hubId, HubUpdateCommand hubUpdateCommand) {
+    public HubResponseDto updateHub(UUID hubId, UserPrincipal userPrincipal ,HubUpdateCommand hubUpdateCommand) {
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
 
         //허브가 존재하는지 체크
         if(!hubCommandRepository.findByhubIdAndDeletedAtIsNull(hubId))
@@ -81,7 +95,12 @@ public class HubCommandService {
     }
 
     //허브 삭제
-    public void deleteHub(UUID hubId, long deletedBy) {
+    public void deleteHub(UUID hubId, UserPrincipal userPrincipal) {
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
+
         //이미 삭제 되었는지 체크
         if(!hubCommandRepository.findByhubIdAndDeletedAtIsNull(hubId))
         {
@@ -90,6 +109,6 @@ public class HubCommandService {
 
         Hub hub = hubCommandRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new CustomException(HubErrorCode.HUB_NOT_FOUND));
-        hub.markDeleted(deletedBy);
+        hub.markDeleted(userPrincipal.getUserId());
     }
 }

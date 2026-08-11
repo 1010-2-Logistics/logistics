@@ -6,6 +6,7 @@ import com.logistics.hub.domain.entity.Hub;
 import com.logistics.hub.domain.repository.HubQueryRepository;
 import com.logistics.hub.global.exception.CustomException;
 import com.logistics.hub.global.exception.HubErrorCode;
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
