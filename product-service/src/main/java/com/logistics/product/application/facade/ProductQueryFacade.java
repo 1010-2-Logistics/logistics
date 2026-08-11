@@ -8,11 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
-import com.logistics.product.application.dto.internal.response.HubAuthResponseDto;
 import com.logistics.product.application.dto.query.ProductSearchQuery;
 import com.logistics.product.application.port.CompanyPort;
-import com.logistics.product.application.port.HubPort;
-import com.logistics.product.application.service.ProductPolicy;
 import com.logistics.product.application.service.ProductQueryService;
 import com.logistics.product.domain.entity.Product;
 import com.logistics.product.domain.entity.Role;
@@ -29,11 +26,7 @@ public class ProductQueryFacade {
 
 	private final ProductQueryService productQueryService;
 	
-	private final ProductPolicy policy;
-	
 	private final CompanyPort companyPort;
-	
-	private final HubPort hubPort;
 	
 	public Product productGetOne(UUID productId, UserPrincipal user) {
 		Product product = productQueryService.findProduct(productId);
@@ -52,12 +45,9 @@ public class ProductQueryFacade {
 		
 		// Role = HUB_MANAGER + 검색 조건에 hubId 포함된 경우
 		if(query.role() == Role.HUB_MANAGER && query.hubId() != null) {
-			HubAuthResponseDto hubAuth = new HubAuthResponseDto(
-					UUID.randomUUID(),
-					1L
-			);
-			
-			policy.validateCompanyBelongsToHub(query, query.hubId(), hubAuth);
+			if(query.user().getHubId() != query.hubId()) {
+				throw new ProductException(ProductErrorCode.PRODUCT_HUB_ACCESS_DENIED);
+			}
 		}
 		
 		if(query.hubId() != null) {

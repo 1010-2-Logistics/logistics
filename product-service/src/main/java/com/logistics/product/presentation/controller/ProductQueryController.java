@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.product.application.facade.ProductQueryFacade;
-import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.global.response.PageResponse;
 import com.logistics.product.infrastructure.security.principal.UserPrincipal;
@@ -53,10 +52,8 @@ public class ProductQueryController {
 	public ApiResponse<PageResponse<ProductInfoResponseDto>> productSearch(
 			@AuthenticationPrincipal UserPrincipal user,
 			@Valid @ModelAttribute ProductSearchRequestDto request) {
-		Long userId = user.getUserId();
-		Role role = user.getRole();
 		
-		Page<ProductInfoResponseDto> productPage = productQueryFacade.search(request.toQuery(userId, role));
+		Page<ProductInfoResponseDto> productPage = productQueryFacade.search(request.toQuery(user));
 		
 		return ApiResponse.success(
 				HttpStatus.OK.value(),
