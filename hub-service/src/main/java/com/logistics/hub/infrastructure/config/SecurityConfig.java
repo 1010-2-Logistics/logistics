@@ -48,6 +48,8 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
+                                "/internal/v1/hubs",
+                                "/internal/v1/hubs/**",
                                 "/internal/v1/hubs/{hubId}",
                                 "/internal/v1/hubs/getHubInfos"
                         ).permitAll()

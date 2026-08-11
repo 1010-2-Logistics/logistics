@@ -52,7 +52,8 @@ public class HubCommandService {
                 hubCreateCommand.hubName(),
                 hubCreateCommand.hubAddress(),
                 hubCreateCommand.latitude(),
-                hubCreateCommand.longitude()
+                hubCreateCommand.longitude(),
+                userPrincipal.getUserId()
         );
 
         hubCommandRepository.save(hub);

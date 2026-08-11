@@ -38,12 +38,13 @@ public class Hub extends BaseEntity {
     @Column(name = "longitude", precision = 10, scale = 7, nullable = false)
     private BigDecimal longitude;
 
-    public static Hub create(String hubName, String hubAddress, BigDecimal latitude, BigDecimal longitude) {
+    public static Hub create(String hubName, String hubAddress, BigDecimal latitude, BigDecimal longitude, Long createdBy) {
         Hub hub = new Hub();
         hub.hubName = hubName;
         hub.hubAddress = hubAddress;
         hub.latitude = latitude;
         hub.longitude = longitude;
+        hub.setCreatedBy(createdBy);
         return hub;
     }
 

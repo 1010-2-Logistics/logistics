@@ -8,16 +8,14 @@ public record HubCreateCommand(
         String hubName,
         String hubAddress,
         BigDecimal latitude,
-        BigDecimal longitude,
-        Long createdBy
+        BigDecimal longitude
 ) {
     public static HubCreateCommand from(HubCreateRequestDto dto) {
         return new HubCreateCommand(
                 dto.getHubName(),
                 dto.getHubAddress(),
                 dto.getLatitude(),
-                dto.getLongitude(),
-                dto.getCreatedBy()
+                dto.getLongitude()
         );
     }
 }

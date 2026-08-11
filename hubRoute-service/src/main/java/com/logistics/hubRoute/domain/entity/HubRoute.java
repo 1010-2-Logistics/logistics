@@ -39,11 +39,6 @@ public class HubRoute extends BaseEntity {
     private BigDecimal distance;
 
 
-    // ※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
-    // ※※※※※※※※※임시 코드, 중복인거 앎, 포스트맨에서 테스트 할 경우 유저아이디가 없어서 못하는것 방지하기 위함※※※※※※※※※
-    // ※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※※
-    private Long createdBy;
-
 
     public static HubRoute create(UUID startHubId, UUID endHubId, Integer duration, BigDecimal distance, Long createdBy) {
         HubRoute hub = new HubRoute();
@@ -51,7 +46,7 @@ public class HubRoute extends BaseEntity {
         hub.endHubId = endHubId;
         hub.duration = duration;
         hub.distance = distance;
-        hub.createdBy = createdBy;
+        hub.setCreatedBy(createdBy);
         return hub;
     }
 
