@@ -27,7 +27,7 @@ public class SlackFacade {
     ) {
         UserInfo receiver = userPort.getUser(slackCreateCommand.receiverId());
 
-        slackAuthorizationService.validateAccess(
+        slackAuthorizationService.validateCreateAccess(
                 authenticatedUser,
                 receiver,
                 slackCreateCommand.referenceId()
@@ -35,7 +35,8 @@ public class SlackFacade {
 
         return slackCommandService.createSlack(
                 slackCreateCommand,
-                authenticatedUser
+                authenticatedUser,
+                receiver.slackId()
         );
     }
 

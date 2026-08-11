@@ -114,7 +114,11 @@ class SlackCommandServiceTest {
             );
             TransactionSynchronizationManager.initSynchronization();
 
-            slackCommandService.createSlack(slackCreateCommand, authenticatedUser);
+            slackCommandService.createSlack(
+                    slackCreateCommand,
+                    authenticatedUser,
+                    receiverSlackId
+            );
             ArgumentCaptor<Slack> slackCaptor = ArgumentCaptor.forClass(Slack.class);
             verify(slackCommandRepository).save(slackCaptor.capture());
             Slack savedSlack = slackCaptor.getValue();

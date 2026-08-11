@@ -6,12 +6,15 @@ import com.logistics.slack.application.port.UserPort;
 import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
+import com.logistics.slack.global.response.ApiResponse;
 import com.logistics.slack.infrastructure.feign.client.UserClient;
 import com.logistics.slack.infrastructure.feign.response.UserInfoResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UserPortAdapter implements UserPort {
@@ -22,7 +25,8 @@ public class UserPortAdapter implements UserPort {
             Long userId
     ) {
         try {
-            UserInfoResponse response = userClient.getUser(userId);
+            ApiResponse<UserInfoResponse> apiResponse = userClient.getUser(userId);
+            UserInfoResponse response = apiResponse.getData();
 
             if (response == null
                     || response.slackId() == null
@@ -35,17 +39,27 @@ public class UserPortAdapter implements UserPort {
             return new UserInfo(
                     response.userId(),
                     response.slackId(),
-                    Role.valueOf(response.role()),
-                    response.hubId(),
-                    response.companyId()
+                    null,
+                    null,
+                    null
             );
 
         } catch (FeignException.NotFound e) {
+            log.error(
+                    "UserClient 404 - status={}, response={}",
+                    e.status(),
+                    e.contentUTF8()
+            );
             throw new CustomException(
                     SlackErrorCode.SLACK_RECEIVER_NOT_FOUND
             );
 
         } catch (FeignException e) {
+            log.error(
+                    "UserClient 호출 실패 - status={}, response={}",
+                    e.status(),
+                    e.contentUTF8()
+            );
             throw new CustomException(
                     SlackErrorCode.SLACK_EXTERNAL_SERVICE_UNAVAILABLE
             );

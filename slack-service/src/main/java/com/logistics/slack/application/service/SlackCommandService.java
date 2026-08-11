@@ -9,18 +9,14 @@ import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
-
-import java.util.UUID;
-
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
-import com.logistics.slack.infrastructure.messaging.SlackEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +24,14 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class SlackCommandService {
     private static final int MAX_RETRY_COUNT = 3;
     private final SlackCommandRepository slackCommandRepository;
-    private final SlackEventPublisher slackEventPublisher;
     private final SlackMessageSender slackMessageSender;
     private final SlackAuthorizationService slackAuthorizationService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public SlackCreateResult createSlack(
             SlackCreateCommand slackCreateCommand,
-            AuthenticatedUser authenticatedUser
+            AuthenticatedUser authenticatedUser,
+            String receiverSlackId
     ) {
         Slack slack = Slack.create(
                 authenticatedUser.userId(),
@@ -46,7 +42,10 @@ public class SlackCommandService {
         slackCommandRepository.save(slack);
 
         applicationEventPublisher.publishEvent(
-                new SlackSendEvent(slack.getSlackMessageId())
+                new SlackSendEvent(
+                        slack.getSlackMessageId(),
+                        receiverSlackId
+                )
         );
 
         // 이 시점의 slack.status는 아직 PENDING!
@@ -81,7 +80,7 @@ public class SlackCommandService {
                 .findByIdAndDeletedAtIsNull(slackMessageId)
                 .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
-        slackAuthorizationService.validateAccess(
+        slackAuthorizationService.validateRetryAccess(
                 authenticatedUser,
                 slack
         );
@@ -89,7 +88,10 @@ public class SlackCommandService {
         slack.retry(MAX_RETRY_COUNT);
 
         applicationEventPublisher.publishEvent(
-                new SlackSendEvent(slack.getSlackMessageId())
+                new SlackSendEvent(
+                        slack.getSlackMessageId(),
+                        null
+                )
         );
 
         return SlackRetryResult.from(slack);
@@ -103,7 +105,7 @@ public class SlackCommandService {
                 .findByIdAndDeletedAtIsNull(slackMessageId)
                 .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
-        slackAuthorizationService.validateAccess(
+        slackAuthorizationService.validateDeleteAccess(
                 authenticatedUser
         );
 

@@ -3,6 +3,7 @@ package com.logistics.slack.application.authorization;
 
 import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.application.dto.result.UserInfo;
+import com.logistics.slack.application.port.UserPort;
 import com.logistics.slack.domain.entity.Role;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.global.exception.CommonErrorCode;
@@ -15,8 +16,10 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class SlackAuthorizationService {
+    private final UserPort userPort;
+
     // 메시지 생성 시 수신자 기준 권한 검증
-    public void validateAccess(
+    public void validateCreateAccess(
             AuthenticatedUser authenticatedUser,
             UserInfo receiver,
             UUID referenceId
@@ -37,10 +40,55 @@ public class SlackAuthorizationService {
             return;
         }
 
-        if ((authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
-                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER)
-                && referenceId != null) {
-            // 업무 연관성 검증은 Order/Delivery 조회 계약 추가 후 검증
+        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+
+            if (referenceId != null) {
+                return;
+            }
+        }
+
+        throw new CustomException(
+                CommonErrorCode.AUTH_FORBIDDEN
+        );
+    }
+
+    // 단건 조회 권한 검증
+    public void validateReadAccess(
+            AuthenticatedUser authenticatedUser,
+            Slack slack
+    ) {
+        if (authenticatedUser.role() == Role.MASTER) {
+            return;
+        }
+
+        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+
+            if (authenticatedUser.userId().equals(slack.getSenderId())
+                    || authenticatedUser.userId().equals(slack.getReceiverId())) {
+                return;
+            }
+
+            throw new CustomException(
+                    CommonErrorCode.AUTH_FORBIDDEN
+            );
+        }
+
+        UserInfo sender = userPort.getUser(slack.getSenderId());
+        UserInfo receiver = userPort.getUser(slack.getReceiverId());
+
+        if (authenticatedUser.role() == Role.HUB_MANAGER
+                && authenticatedUser.hubId() != null
+                && (authenticatedUser.hubId().equals(sender.hubId())
+                || authenticatedUser.hubId().equals(receiver.hubId()))) {
+            return;
+        }
+
+        if (authenticatedUser.role() == Role.COMPANY_MANAGER
+                && authenticatedUser.companyId() != null
+                && (authenticatedUser.companyId().equals(sender.companyId())
+                || authenticatedUser.companyId().equals(receiver.companyId()))) {
             return;
         }
 
@@ -49,8 +97,8 @@ public class SlackAuthorizationService {
         );
     }
 
-    // 단건 조회 / 재발송 등 Slack 이력 접근 검증
-    public void validateAccess(
+    // 재발송 권한 검증
+    public void validateRetryAccess(
             AuthenticatedUser authenticatedUser,
             Slack slack
     ) {
@@ -58,8 +106,32 @@ public class SlackAuthorizationService {
             return;
         }
 
-        if (authenticatedUser.userId().equals(slack.getSenderId())
-                || authenticatedUser.userId().equals(slack.getReceiverId())) {
+        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+
+            if (authenticatedUser.userId().equals(slack.getSenderId())) {
+                return;
+            }
+
+            throw new CustomException(
+                    CommonErrorCode.AUTH_FORBIDDEN
+            );
+        }
+
+        UserInfo sender = userPort.getUser(slack.getSenderId());
+        UserInfo receiver = userPort.getUser(slack.getReceiverId());
+
+        if (authenticatedUser.role() == Role.HUB_MANAGER
+                && authenticatedUser.hubId() != null
+                && (authenticatedUser.hubId().equals(sender.hubId())
+                || authenticatedUser.hubId().equals(receiver.hubId()))) {
+            return;
+        }
+
+        if (authenticatedUser.role() == Role.COMPANY_MANAGER
+                && authenticatedUser.companyId() != null
+                && (authenticatedUser.companyId().equals(sender.companyId())
+                || authenticatedUser.companyId().equals(receiver.companyId()))) {
             return;
         }
 
@@ -69,7 +141,7 @@ public class SlackAuthorizationService {
     }
 
     // 삭제 권한 검증
-    public void validateAccess(
+    public void validateDeleteAccess(
             AuthenticatedUser authenticatedUser
     ) {
         if (authenticatedUser.role() == Role.MASTER) {
@@ -90,7 +162,30 @@ public class SlackAuthorizationService {
             return true;
         }
 
-        return authenticatedUser.userId().equals(slack.getSenderId())
-                || authenticatedUser.userId().equals(slack.getReceiverId());
+        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+
+            return authenticatedUser.userId().equals(slack.getSenderId())
+                    || authenticatedUser.userId().equals(slack.getReceiverId());
+        }
+
+        UserInfo sender = userPort.getUser(slack.getSenderId());
+        UserInfo receiver = userPort.getUser(slack.getReceiverId());
+
+        if (authenticatedUser.role() == Role.HUB_MANAGER
+                && authenticatedUser.hubId() != null) {
+
+            return authenticatedUser.hubId().equals(sender.hubId())
+                    || authenticatedUser.hubId().equals(receiver.hubId());
+        }
+
+        if (authenticatedUser.role() == Role.COMPANY_MANAGER
+                && authenticatedUser.companyId() != null) {
+
+            return authenticatedUser.companyId().equals(sender.companyId())
+                    || authenticatedUser.companyId().equals(receiver.companyId());
+        }
+
+        return false;
     }
 }

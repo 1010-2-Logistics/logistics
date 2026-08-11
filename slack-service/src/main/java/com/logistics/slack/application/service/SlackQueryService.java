@@ -31,7 +31,7 @@ public class SlackQueryService {
         Slack slack = slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)
                 .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
-        slackAuthorizationService.validateAccess(
+        slackAuthorizationService.validateReadAccess(
                 authenticatedUser,
                 slack
         );
