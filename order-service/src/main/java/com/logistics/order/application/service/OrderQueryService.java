@@ -83,5 +83,4 @@ public class OrderQueryService {
 
         throw new CustomException(OrderErrorCode.ORDER_INVALID_REQUEST);
     }
-
 }
