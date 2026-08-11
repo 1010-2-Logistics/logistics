@@ -13,13 +13,12 @@ import com.logistics.order.domain.repository.OrderQueryRepository;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -72,6 +71,25 @@ public class OrderQueryService {
                     orderSearchQuery.endCompanyId(),
                     pageable
             );
+        } else if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
+                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+            Page<Order> searchedOrders = orderQueryRepository.search(
+                    orderSearchQuery.productId(),
+                    orderSearchQuery.endCompanyId(),
+                    pageable
+            );
+
+            List<Order> filteredOrders = searchedOrders.getContent().stream()
+                    .filter(order -> isAssignedDeliveryManager(
+                            order,
+                            authenticatedUser.userId()
+                    )).toList();
+
+            orders = new PageImpl<>(
+                    filteredOrders,
+                    pageable,
+                    filteredOrders.size()
+            );
         } else {
             orders = orderQueryRepository.search(
                     orderSearchQuery.productId(),
@@ -115,5 +133,17 @@ public class OrderQueryService {
         }
 
         throw new CustomException(OrderErrorCode.ORDER_INVALID_REQUEST);
+    }
+
+    private boolean isAssignedDeliveryManager(
+            Order order,
+            Long userId
+    ) {
+        DeliveryGetResult delivery = deliveryPort.getDelivery(order.getDeliveryId());
+
+        return Objects.equals(
+                delivery.deliveryManagerId(),
+                userId
+        );
     }
 }

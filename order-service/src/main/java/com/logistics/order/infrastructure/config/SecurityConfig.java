@@ -71,6 +71,15 @@ public class SecurityConfig {
                                 "/api/v1/orders/{orderId}",
                                 "/api/v1/orders"
                         ).authenticated()
+
+                        // swagger
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/actuator/health"
+                        ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

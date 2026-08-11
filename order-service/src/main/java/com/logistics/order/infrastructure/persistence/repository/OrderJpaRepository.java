@@ -13,14 +13,15 @@ import java.util.UUID;
 interface OrderJpaRepository extends JpaRepository<Order, UUID> {
 
     Optional<Order> findByOrderIdAndDeletedAtIsNull(UUID orderId);
+
     @Query("""
-        SELECT o
-        FROM Order o
-        WHERE o.deletedAt IS NULL
-          AND o.createdBy = :createdBy
-          AND (:productId IS NULL OR o.productId = :productId)
-          AND (:endCompanyId IS NULL OR o.endCompanyId = :endCompanyId)
-        """)
+            SELECT o
+            FROM Order o
+            WHERE o.deletedAt IS NULL
+              AND o.createdBy = :createdBy
+              AND (:productId IS NULL OR o.productId = :productId)
+              AND (:endCompanyId IS NULL OR o.endCompanyId = :endCompanyId)
+            """)
     Page<Order> searchByCreatedBy(
             @Param("createdBy") Long createdBy,
             @Param("productId") UUID productId,

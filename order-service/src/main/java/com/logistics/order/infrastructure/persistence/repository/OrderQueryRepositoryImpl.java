@@ -40,6 +40,11 @@ public class OrderQueryRepositoryImpl implements OrderQueryRepository {
             UUID endCompanyId,
             Pageable pageable
     ) {
-        return null;
+        return jpaRepository.searchByCreatedBy(
+                createdBy,
+                productId,
+                endCompanyId,
+                pageable
+        );
     }
 }
