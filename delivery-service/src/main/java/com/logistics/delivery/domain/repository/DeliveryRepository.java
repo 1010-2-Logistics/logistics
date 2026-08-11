@@ -16,4 +16,7 @@ public interface DeliveryRepository {
     Optional<Delivery> findByOrderId(UUID orderId);
 
     Page<Delivery> search(DeliveryStatus status, UUID hubId, Pageable pageable);
+
+    // 본인이 배정된 배송만 (HUB_DELIVERY_MANAGER: route 담당자, COMPANY_DELIVERY_MANAGER: 업체 담당자)
+    Page<Delivery> searchByManager(DeliveryStatus status, Long managerId, Pageable pageable);
 }
