@@ -33,6 +33,8 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 		UserPrincipal principal = UserPrincipal.from(userId, userRole, hubId, companyId);
 		
 		if(principal != null) {
+			principal.validateRoleConstraints();
+
 			List<SimpleGrantedAuthority> authorities = (principal.getRole() != null)
 					? List.of(new SimpleGrantedAuthority("ROLE_" + principal.getRole().name()))
 					: Collections.emptyList();
@@ -44,5 +46,4 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 		
 		filterChain.doFilter(request, response);
 	}
-
 }
