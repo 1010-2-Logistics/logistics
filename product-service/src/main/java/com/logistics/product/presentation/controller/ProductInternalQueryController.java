@@ -12,6 +12,7 @@ import com.logistics.product.application.service.ProductQueryService;
 import com.logistics.product.global.response.ApiResponse;
 import com.logistics.product.presentation.dto.response.OrderedProductInfoResponseDto;
 import com.logistics.product.presentation.dto.response.ProductExistsResponseDto;
+import com.logistics.product.presentation.interceptor.NoAuthentication;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,9 +25,10 @@ public class ProductInternalQueryController {
 	
 	// 주문시 상품 정보 조회
 	@GetMapping("/{productId}")
+	@NoAuthentication
 	public ApiResponse<OrderedProductInfoResponseDto> orderedProductInfo(@PathVariable("productId") UUID productId) {
 		OrderedProductInfoResponseDto response = OrderedProductInfoResponseDto.from(
-				productQueryService.findProductOptional(productId)
+				productQueryService.findProduct(productId)
 		);
 		
 		return ApiResponse.success(
@@ -38,6 +40,7 @@ public class ProductInternalQueryController {
 	
 	// 상품 존재 여부 확인
 	@GetMapping("/{productId}/exists")
+	@NoAuthentication
 	public ApiResponse<ProductExistsResponseDto> existsProduct(@PathVariable("productId") UUID productId) {
 		ProductExistsResponseDto response = ProductExistsResponseDto.from(
 				productQueryService.findProductOptional(productId)
