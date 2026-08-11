@@ -64,7 +64,7 @@ public class DeliveryManagerCommandService {
         } catch (FeignException.Conflict e) {
             // user-service에 이미 동일한 소속으로 등록돼 있음 = 목표 상태 달성이므로 성공 처리(멱등)
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
         }
     }
 
@@ -78,7 +78,7 @@ public class DeliveryManagerCommandService {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
         }
     }
 

@@ -76,7 +76,7 @@ public class DeliveryCommandService {
                 throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_HUB_ID);
             }
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_SERVICE_UNAVAILABLE);
         }
     }
 
@@ -88,7 +88,7 @@ public class DeliveryCommandService {
         } catch (FeignException.NotFound e) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_NOT_FOUND);
         } catch (FeignException e) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_EXTERNAL_SERVICE_UNAVAILABLE);
+            throw new CustomException(DeliveryErrorCode.DELIVERY_HUB_ROUTE_SERVICE_UNAVAILABLE);
         }
     }
 
