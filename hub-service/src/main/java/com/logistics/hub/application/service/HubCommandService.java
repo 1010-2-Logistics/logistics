@@ -52,8 +52,7 @@ public class HubCommandService {
                 hubCreateCommand.hubName(),
                 hubCreateCommand.hubAddress(),
                 hubCreateCommand.latitude(),
-                hubCreateCommand.longitude(),
-                hubCreateCommand.createdBy()//임시 코드임
+                hubCreateCommand.longitude()
         );
 
         hubCommandRepository.save(hub);
