@@ -63,6 +63,7 @@ public class CompanyFacadeTest {
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
 					1L,
 					Role.MASTER,
+					UUID.randomUUID(),
 					hubId,
 					companyManagerId,
 					companyName,
