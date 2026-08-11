@@ -3,6 +3,7 @@ package com.logistics.delivery.presentation.controller;
 import com.logistics.delivery.application.service.DeliveryManagerCommandService;
 import com.logistics.delivery.domain.entity.DeliveryManager;
 import com.logistics.delivery.global.response.ApiResponse;
+import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import com.logistics.delivery.presentation.dto.request.DeliveryManagerRegisterRequest;
 import com.logistics.delivery.presentation.dto.request.DeliveryManagerUpdateRequest;
 import com.logistics.delivery.presentation.dto.response.DeliveryManagerRegisterResponse;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name= "Delivery Manager")
@@ -61,7 +63,8 @@ public class DeliveryManagerCommandController {
     )
     @DeleteMapping("/{deliveryManagerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long deliveryManagerId) {
-        deliveryManagerCommandService.delete(deliveryManagerId);
+    public void delete(@PathVariable Long deliveryManagerId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        deliveryManagerCommandService.delete(deliveryManagerId, principal);
     }
 }
