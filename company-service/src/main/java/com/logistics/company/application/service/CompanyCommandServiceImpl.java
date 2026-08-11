@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.logistics.company.application.dto.command.CompanyCreateCommand;
 import com.logistics.company.application.dto.command.CompanyUpdateCommand;
-import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
+import com.logistics.company.application.port.CompanyCommandService;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.Role;
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class CompanyCommandService {
+public class CompanyCommandServiceImpl implements CompanyCommandService {
 
 	private final CompanyCommandRepository companyCommandRepository;
 	
@@ -63,7 +63,7 @@ public class CompanyCommandService {
 	
 	
 	@Transactional(rollbackFor = Exception.class)
-	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand command) {
+	public Company updateCompany(UUID companyId, CompanyUpdateCommand command) {
 		Company entity = companyQueryService.findByCompany(companyId);
 		
 		if(command.getRoleFromAuthentication() == Role.HUB_MANAGER 
@@ -84,7 +84,17 @@ public class CompanyCommandService {
 		
 		entity.updateCompanyName(command.companyName());
 		
-		return CompanyUpdateResultDto.from(entity);
+		return entity;
+	}
+	
+	@Transactional(rollbackFor = Exception.class)
+	@Override
+	public Company updateFailCompany(UUID companyId, String companyName) {
+		Company entity = companyQueryService.findByCompany(companyId);
+		
+		entity.updateCompanyName(companyName);
+		
+		return entity;
 	}
 	
 	@Transactional(rollbackFor = Exception.class)

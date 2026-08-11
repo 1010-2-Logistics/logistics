@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.facade.CompanyFacade;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.service.CompanyCommandServiceImpl;
 import com.logistics.company.global.response.ApiResponse;
 import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 import com.logistics.company.presentation.dto.request.CompanyCreateRequestDto;
@@ -35,7 +35,7 @@ public class CompanyCommandController {
 
 	private final CompanyFacade companyFacade;
 	
-	private final CompanyCommandService companyCommandService;
+	private final CompanyCommandServiceImpl companyCommandService;
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
@@ -61,7 +61,7 @@ public class CompanyCommandController {
 			@AuthenticationPrincipal UserPrincipal user,
 			@Valid @RequestBody CompanyUpdateRequestDto request,
 			@PathVariable("companyId") UUID companyId) {
-		CompanyUpdateResultDto result = companyCommandService.updateCompany(companyId, request.toCommand(user));
+		CompanyUpdateResultDto result = companyFacade.updateCompany(companyId, request.toCommand(user));
 		
 		CompanyUpdateResponseDto response = CompanyUpdateResponseDto.from(result);
 		

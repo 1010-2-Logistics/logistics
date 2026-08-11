@@ -23,7 +23,7 @@ public class ProductInternalCommandController {
 	private final ProductCommandService productCommandService;
 	
 	// 업체명 수정시 업체 수정 내부 API
-	@PatchMapping("/{companyId}")
+	@PatchMapping
 	@NoAuthentication
 	public ApiResponse<CompanyNameUpdateResponseDto> companyNameUpdate(@Valid @RequestBody CompanyNameUpdateRequestDto request) {
 		

@@ -32,7 +32,7 @@ import com.logistics.company.global.exception.CompanyException;
 import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 
 @ExtendWith(MockitoExtension.class)
-public class CompanyCommandServiceTest {
+public class CompanyCommandServiceImplTest {
 
 	UUID hubId = UUID.randomUUID();
 	
@@ -43,7 +43,7 @@ public class CompanyCommandServiceTest {
 	CompanyQueryService companyQueryService;
 	
 	@InjectMocks
-	CompanyCommandService companyCommandService;
+	CompanyCommandServiceImpl companyCommandService;
 	
 	@Nested
 	@DisplayName("업체 생성")
@@ -143,11 +143,11 @@ public class CompanyCommandServiceTest {
 			
 			given(companyQueryService.findByCompany(companyId)).willReturn(company);
 			
-			CompanyUpdateResultDto result = companyCommandService.updateCompany(companyId, companyUpdateCommand);
+			Company result = companyCommandService.updateCompany(companyId, companyUpdateCommand);
 			
-			assertThat(result.companyName()).isEqualTo(updatedCompanyName);
-			assertThat(result.companyAddress()).isEqualTo(companyAddress);
-			assertThat(result.companyType()).isEqualByComparingTo(companyType);
+			assertThat(result.getCompanyName()).isEqualTo(updatedCompanyName);
+			assertThat(result.getCompanyAddress()).isEqualTo(companyAddress);
+			assertThat(result.getCompanyType()).isEqualByComparingTo(companyType);
 			
 			assertThat(company.getCompanyName()).isEqualTo(updatedCompanyName);
 			

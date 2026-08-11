@@ -23,7 +23,7 @@ import com.logistics.company.application.dto.internal.response.UserRoleUpdateRes
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.port.UserPort;
-import com.logistics.company.application.service.CompanyCommandService;
+import com.logistics.company.application.service.CompanyCommandServiceImpl;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
@@ -38,7 +38,7 @@ public class CompanyFacadeTest {
 	CompanyFacade companyFacade;
 	
 	@Mock
-	CompanyCommandService companyCommandService;
+	CompanyCommandServiceImpl companyCommandService;
 	
 	@Mock
 	HubPort hubPort;
