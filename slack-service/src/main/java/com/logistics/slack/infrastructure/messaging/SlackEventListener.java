@@ -10,7 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 @RequiredArgsConstructor
 public class SlackEventListener {
-    private final SlackEventPublisher slackEventPublisher;
+    private final RabbitSlackEventPublisher slackEventPublisher;
 
     @TransactionalEventListener(
             phase = TransactionPhase.AFTER_COMMIT

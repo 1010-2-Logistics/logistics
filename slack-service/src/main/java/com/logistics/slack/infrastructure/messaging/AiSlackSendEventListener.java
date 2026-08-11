@@ -23,6 +23,19 @@ public class AiSlackSendEventListener {
 
     @RabbitListener(queues = SlackRabbitConfig.QUEUE)
     public void consume(AiSlackSendEvent event) {
+        log.info(
+                "AI Slack 이벤트 수신 - receiverId={}, referenceId={}",
+                event.receiverId(),
+                event.referenceId()
+        );
+        if (event.receiverId() == null) {
+            log.error(
+                    "AI Slack 이벤트 receiverId 누락 - event={}",
+                    event
+            );
+            return;
+        }
+
         UserInfo receiver = userPort.getUser(event.receiverId());
 
         SlackCreateCommand slackCreateCommand = new SlackCreateCommand(

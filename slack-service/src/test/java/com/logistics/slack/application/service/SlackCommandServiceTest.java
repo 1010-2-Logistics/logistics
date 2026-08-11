@@ -11,7 +11,7 @@ import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.entity.SlackStatus;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
 import com.logistics.slack.global.exception.CustomException;
-import com.logistics.slack.infrastructure.messaging.SlackEventPublisher;
+import com.logistics.slack.infrastructure.messaging.RabbitSlackEventPublisher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -59,7 +59,7 @@ class SlackCommandServiceTest {
     private SlackCommandRepository slackCommandRepository;
 
     @Mock
-    private SlackEventPublisher slackEventPublisher;
+    private RabbitSlackEventPublisher slackEventPublisher;
 
     @Mock
     private SlackMessageSender slackMessageSender;

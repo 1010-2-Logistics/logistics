@@ -18,7 +18,6 @@ public class SlackSendEventListener {
     public void consume(SlackSendEvent slackSendEvent) {
         slackCommandService.send(
                 slackSendEvent.slackMessageId(),
-                // TODO AI 연동 후 receiverSlackId 추가 예정
                 slackSendEvent.receiverSlackId()
         );
     }
