@@ -3,110 +3,57 @@ package com.logistics.slack.application.authorization;
 
 import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.domain.entity.Role;
-import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.global.exception.CommonErrorCode;
 import com.logistics.slack.global.exception.CustomException;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class SlackAuthorizationService {
     public void validateCreateAccess(
-            AuthenticatedUser authenticatedUser,
-            UUID referenceId
+            AuthenticatedUser authenticatedUser
     ) {
-        if (authenticatedUser.role() == Role.MASTER) {
-            return;
-        }
-
-        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
-                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
-
-            if (referenceId != null) {
-                return;
-            }
-        }
-
-        throw new CustomException(
-                CommonErrorCode.AUTH_FORBIDDEN
-        );
+        validateAuthenticated(authenticatedUser);
     }
 
-    // 단건 조회 권한 검증
     public void validateReadAccess(
-            AuthenticatedUser authenticatedUser,
-            Slack slack
+            AuthenticatedUser authenticatedUser
     ) {
-        if (authenticatedUser.role() == Role.MASTER) {
-            return;
-        }
-
-        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
-                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
-
-            if (authenticatedUser.userId().equals(slack.getSenderId())
-                    || authenticatedUser.userId().equals(slack.getReceiverId())) {
-                return;
-            }
-        }
-
-        throw new CustomException(
-                CommonErrorCode.AUTH_FORBIDDEN
-        );
+        validateMaster(authenticatedUser);
     }
 
-    // 재발송 권한 검증
     public void validateRetryAccess(
-            AuthenticatedUser authenticatedUser,
-            Slack slack
+            AuthenticatedUser authenticatedUser
     ) {
-        if (authenticatedUser.role() == Role.MASTER) {
-            return;
-        }
-
-        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
-                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
-
-            if (authenticatedUser.userId().equals(slack.getSenderId())) {
-                return;
-            }
-        }
-
-        throw new CustomException(
-                CommonErrorCode.AUTH_FORBIDDEN
-        );
+        validateMaster(authenticatedUser);
     }
 
-    // 삭제 권한 검증
     public void validateDeleteAccess(
             AuthenticatedUser authenticatedUser
     ) {
-        if (authenticatedUser.role() == Role.MASTER) {
-            return;
-        }
-
-        throw new CustomException(
-                CommonErrorCode.AUTH_FORBIDDEN
-        );
+        validateMaster(authenticatedUser);
     }
 
-    // 목록 조회 권한 검증
-    public boolean canRead(
-            AuthenticatedUser authenticatedUser,
-            Slack slack
+    private void validateAuthenticated(
+            AuthenticatedUser authenticatedUser
     ) {
-        if (authenticatedUser.role() == Role.MASTER) {
-            return true;
+        if (authenticatedUser == null
+                || authenticatedUser.userId() == null
+                || authenticatedUser.role() == null) {
+            throw new CustomException(
+                    CommonErrorCode.AUTH_FORBIDDEN
+            );
         }
+    }
 
-        if (authenticatedUser.role() == Role.HUB_DELIVERY_MANAGER
-                || authenticatedUser.role() == Role.COMPANY_DELIVERY_MANAGER) {
+    private void validateMaster(
+            AuthenticatedUser authenticatedUser
+    ) {
+        validateAuthenticated(authenticatedUser);
 
-            return authenticatedUser.userId().equals(slack.getSenderId())
-                    || authenticatedUser.userId().equals(slack.getReceiverId());
+        if (authenticatedUser.role() != Role.MASTER) {
+            throw new CustomException(
+                    CommonErrorCode.AUTH_FORBIDDEN
+            );
         }
-
-        return false;
     }
 }

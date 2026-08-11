@@ -10,11 +10,13 @@ import com.logistics.slack.domain.repository.SlackQueryRepository;
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,13 +30,17 @@ public class SlackQueryService {
             UUID slackMessageId,
             AuthenticatedUser authenticatedUser
     ) {
-        Slack slack = slackQueryRepository.findByIdAndDeletedAtIsNull(slackMessageId)
-                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
-
         slackAuthorizationService.validateReadAccess(
-                authenticatedUser,
-                slack
+                authenticatedUser
         );
+
+        Slack slack = slackQueryRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() ->
+                        new CustomException(
+                                SlackErrorCode.SLACK_NOT_FOUND
+                        )
+                );
 
         return SlackDetailResult.from(slack);
     }
@@ -43,14 +49,29 @@ public class SlackQueryService {
             SlackSearchQuery slackSearchQuery,
             AuthenticatedUser authenticatedUser
     ) {
-        int page = validatePage(slackSearchQuery.page());
-        int size = normalizeSize(slackSearchQuery.size());
-        String sortProperty = validateSort(slackSearchQuery.sort());
+        slackAuthorizationService.validateReadAccess(
+                authenticatedUser
+        );
+
+        int page = validatePage(
+                slackSearchQuery.page()
+        );
+
+        int size = normalizeSize(
+                slackSearchQuery.size()
+        );
+
+        String sortProperty = validateSort(
+                slackSearchQuery.sort()
+        );
 
         Pageable pageable = PageRequest.of(
                 page,
                 size,
-                Sort.by(Sort.Direction.DESC, sortProperty)
+                Sort.by(
+                        Sort.Direction.DESC,
+                        sortProperty
+                )
         );
 
         Page<Slack> slackPage = slackQueryRepository.search(
@@ -63,21 +84,8 @@ public class SlackQueryService {
                 pageable
         );
 
-        List<SlackListResult> content = slackPage.getContent()
-                .stream()
-                .filter(slack ->
-                        slackAuthorizationService.canRead(
-                                authenticatedUser,
-                                slack
-                        )
-                )
-                .map(SlackListResult::from)
-                .toList();
-
-        return new PageImpl<>(
-                content,
-                pageable,
-                slackPage.getTotalElements()
+        return slackPage.map(
+                SlackListResult::from
         );
     }
 

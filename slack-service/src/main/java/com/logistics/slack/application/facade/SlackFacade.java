@@ -29,8 +29,7 @@ public class SlackFacade {
         );
 
         slackAuthorizationService.validateCreateAccess(
-                authenticatedUser,
-                slackCreateCommand.referenceId()
+                authenticatedUser
         );
 
         return slackCommandService.createSlack(
@@ -43,9 +42,17 @@ public class SlackFacade {
             UUID slackMessageId,
             AuthenticatedUser authenticatedUser
     ) {
-        Long receiverId = slackCommandService.getReceiverId(slackMessageId);
+        slackAuthorizationService.validateRetryAccess(
+                authenticatedUser
+        );
 
-        UserInfo receiver = userPort.getUser(receiverId);
+        Long receiverId = slackCommandService.getReceiverId(
+                slackMessageId
+        );
+
+        UserInfo receiver = userPort.getUser(
+                receiverId
+        );
 
         return slackCommandService.retrySlack(
                 slackMessageId,

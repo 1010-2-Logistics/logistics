@@ -9,9 +9,6 @@ import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
-
-import java.util.UUID;
-
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
 import com.logistics.slack.infrastructure.messaging.RabbitSlackEventPublisher;
@@ -20,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.UUID;
 
 
 @Service
@@ -77,8 +76,13 @@ public class SlackCommandService {
             UUID slackMessageId,
             String receiverSlackId
     ) {
-        Slack slack = slackCommandRepository.findById(slackMessageId)
-                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
+        Slack slack = slackCommandRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() ->
+                        new CustomException(
+                                SlackErrorCode.SLACK_NOT_FOUND
+                        )
+                );
 
         slack.retry(MAX_RETRY_COUNT);
 
@@ -126,7 +130,6 @@ public class SlackCommandService {
                         slackEventPublisher.publish(
                                 new SlackSendEvent(
                                         slackMessageId,
-                                        // TODO AI 연동 후 receiverSlackId 함께 전달
                                         receiverSlackId
                                 )
                         );
