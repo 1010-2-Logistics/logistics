@@ -44,7 +44,7 @@ public class Delivery extends BaseEntity {
     private String slackId;
 
     public static Delivery create(UUID orderId, UUID startHubId, UUID endHubId,
-                                  String deliveryAddress, String receiverName, String slackId, Long createdBy) {
+                                  String deliveryAddress, String receiverName, String slackId) {
         Delivery delivery = new Delivery();
         delivery.orderId = orderId;
         delivery.startHubId = startHubId;
@@ -53,7 +53,6 @@ public class Delivery extends BaseEntity {
         delivery.receiverName = receiverName;
         delivery.slackId = slackId;
         delivery.status = DeliveryStatus.HUB_WAITING;
-        delivery.setCreatedBy(createdBy);
         return delivery;
     }
 

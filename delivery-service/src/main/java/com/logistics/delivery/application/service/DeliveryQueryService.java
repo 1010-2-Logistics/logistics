@@ -27,8 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeliveryQueryService {
 
     private final DeliveryRepository deliveryRepository;
+    private final DeliveryRouteRepository deliveryRouteRepository;
 
-    public DeliveryDetailResult getById(UUID deliveryId, UserPrincipal principal) {
+
+    public DeliveryDetailResult getDeliveryById(UUID deliveryId, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         List<DeliveryRoute> routes = deliveryRouteRepository.findAllByDeliveryId(deliveryId);
@@ -36,7 +38,7 @@ public class DeliveryQueryService {
         return new DeliveryDetailResult(delivery);
     }
 
-    public Page<DeliveryDetailResult> search(SearchDeliveryQuery query, UserPrincipal principal) {
+    public Page<DeliveryDetailResult> searchDelivery(SearchDeliveryQuery query, UserPrincipal principal) {
         PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by(Sort.Direction.DESC, query.sort()));
 
         return switch (principal.getRole()) {
@@ -53,9 +55,7 @@ public class DeliveryQueryService {
         };
     }
 
-    private final DeliveryRouteRepository deliveryRouteRepository;
-
-    public DeliveryResults.DeliveryRouteListResult getRoutes(UUID deliveryId, UserPrincipal principal) {
+    public DeliveryResults.DeliveryRouteListResult getDeliveryRoutes(UUID deliveryId, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         List<DeliveryRoute> routes = deliveryRouteRepository.findAllByDeliveryId(deliveryId);
@@ -63,14 +63,14 @@ public class DeliveryQueryService {
         return new DeliveryResults.DeliveryRouteListResult(routes);
     }
 
-    public DeliveryResults.DeliveryRouteListResult getRoutesInternal(UUID deliveryId) {
+    public DeliveryResults.DeliveryRouteListResult getDeliveryRoutesInternal(UUID deliveryId) {
         deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         List<DeliveryRoute> routes = deliveryRouteRepository.findAllByDeliveryId(deliveryId);
         return new DeliveryResults.DeliveryRouteListResult(routes);
     }
 
-    public DeliveryResults.DeliveryInternalResult getInternal(UUID deliveryId) {
+    public DeliveryResults.DeliveryInternalResult getDeliveryInternal(UUID deliveryId) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         List<DeliveryRoute> routes = deliveryRouteRepository.findAllByDeliveryId(deliveryId);

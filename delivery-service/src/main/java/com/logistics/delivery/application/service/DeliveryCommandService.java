@@ -9,6 +9,7 @@ import com.logistics.delivery.application.dto.result.DeliveryResults.RouteStatus
 import com.logistics.delivery.application.port.HubPort;
 import com.logistics.delivery.application.port.HubRoutePort;
 import com.logistics.delivery.domain.entity.*;
+import com.logistics.delivery.domain.repository.DeliveryManagerRepository;
 import com.logistics.delivery.domain.repository.DeliveryRepository;
 import com.logistics.delivery.domain.repository.DeliveryRouteRepository;
 import com.logistics.delivery.global.exception.CustomException;
@@ -29,15 +30,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeliveryCommandService {
 
-    private static final Long TEMP_CREATED_BY = 1L; // TODO: 인증 붙으면 실제 로그인 사용자(호출자)로 교체
-
     private final DeliveryRepository deliveryRepository;
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryManagerAssignmentService deliveryManagerAssignmentService;
     private final HubPort hubPort;
     private final HubRoutePort hubRoutePort;
+    private final DeliveryManagerRepository deliveryManagerRepository;
 
-    public DeliveryCreateResult create(CreateDeliveryCommand command) {
+    public DeliveryCreateResult createDelivery(CreateDeliveryCommand command) {
         Optional<Delivery> existing = deliveryRepository.findByOrderId(command.orderId());
         if (existing.isPresent()) {
             Delivery delivery = existing.get();
@@ -50,7 +50,7 @@ public class DeliveryCommandService {
 
         Delivery delivery = Delivery.create(
                 command.orderId(), command.startHubId(), command.endHubId(),
-                command.deliveryAddress(), command.receiverName(), command.slackId(), TEMP_CREATED_BY);
+                command.deliveryAddress(), command.receiverName(), command.slackId());
         Delivery savedDelivery = deliveryRepository.save(delivery);
 
         List<RouteSegment> segments = resolveRouteSegments(command.startHubId(), command.endHubId());
@@ -62,8 +62,7 @@ public class DeliveryCommandService {
 
             DeliveryRoute route = DeliveryRoute.create(
                     savedDelivery.getDeliveryId(), sequence++, segment.startHubId(), segment.endHubId(),
-                    manager.getDeliveryManagerId(), segment.expectedDistance(), segment.expectedDuration(),
-                    TEMP_CREATED_BY);
+                    manager.getDeliveryManagerId(), segment.expectedDistance(), segment.expectedDuration());
             deliveryRouteRepository.save(route);
         }
 
@@ -96,7 +95,7 @@ public class DeliveryCommandService {
     private record RouteSegment(UUID startHubId, UUID endHubId, BigDecimal expectedDistance, Integer expectedDuration) {
     }
 
-    public DeliveryDetailResult changeStatus(UUID deliveryId, ChangeDeliveryStatusCommand command, UserPrincipal principal) {
+    public DeliveryDetailResult changeDeliveryStatus(UUID deliveryId, ChangeDeliveryStatusCommand command, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
 
@@ -117,12 +116,13 @@ public class DeliveryCommandService {
         }
         if (principal.getRole() == Role.COMPANY_DELIVERY_MANAGER
                 && principal.getUserId().equals(delivery.getCompanyDeliveryManagerId())) {
+            validateActiveManager(principal.getUserId());
             return;
         }
         throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
-    public RouteStatusChangeResult changeRouteStatus(UUID deliveryId, UUID routeId,
+    public RouteStatusChangeResult changeDeliveryRouteStatus(UUID deliveryId, UUID routeId,
                                                      ChangeDeliveryRouteStatusCommand command, UserPrincipal principal) {
         DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
@@ -182,7 +182,7 @@ public class DeliveryCommandService {
         }
     }
 
-    public void delete(UUID deliveryId, UserPrincipal principal) {
+    public void deleteDelivery(UUID deliveryId, UserPrincipal principal) {
         Delivery delivery = deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_NOT_FOUND));
         validateHubManagerOwnership(principal, delivery);
@@ -202,7 +202,7 @@ public class DeliveryCommandService {
         throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
     }
 
-    public void cancel(UUID orderId) {
+    public void cancelDelivery(UUID orderId) {
         Optional<Delivery> delivery = deliveryRepository.findByOrderId(orderId);
         if (delivery.isEmpty()) {
             return; // 이미 없음 = 목표 상태 달성, 그냥 성공 처리
@@ -221,11 +221,22 @@ public class DeliveryCommandService {
         boolean owns = switch (principal.getRole()) {
             case HUB_MANAGER -> principal.getHubId().equals(route.getStartHubId())
                     || principal.getHubId().equals(route.getEndHubId());
-            case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> principal.getUserId().equals(route.getDeliveryManagerId());
+            case HUB_DELIVERY_MANAGER, COMPANY_DELIVERY_MANAGER -> {
+                validateActiveManager(principal.getUserId());
+                yield principal.getUserId().equals(route.getDeliveryManagerId());
+            }
+
             default -> false;
         };
         if (!owns) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN);
         }
+
+    }
+
+    // 해제된 담당자는 경로에 ID가 남아있어도 접근할 수 없어야 한다
+    private void validateActiveManager(Long userId) {
+        deliveryManagerRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_FORBIDDEN));
     }
 }

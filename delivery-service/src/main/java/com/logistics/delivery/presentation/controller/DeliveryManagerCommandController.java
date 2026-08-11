@@ -33,9 +33,9 @@ public class DeliveryManagerCommandController {
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<DeliveryManagerRegisterResponse> register(
+    public ApiResponse<DeliveryManagerRegisterResponse> registerDeliveryManager(
             @Valid @RequestBody DeliveryManagerRegisterRequest request) {
-        DeliveryManager manager = deliveryManagerCommandService.register(request.toCommand());
+        DeliveryManager manager = deliveryManagerCommandService.registerDeliveryManager(request.toCommand());
         return ApiResponse.success(201, "배송 담당자 등록 성공", DeliveryManagerRegisterResponse.from(manager));
     }
 
@@ -47,10 +47,10 @@ public class DeliveryManagerCommandController {
                 """
     )
     @PatchMapping("/{deliveryManagerId}")
-    public ApiResponse<DeliveryManagerUpdateResponse> update(
+    public ApiResponse<DeliveryManagerUpdateResponse> updateDeliveryManager(
             @PathVariable Long deliveryManagerId,
             @RequestBody DeliveryManagerUpdateRequest request) {
-        DeliveryManager manager = deliveryManagerCommandService.update(deliveryManagerId, request.hubId());
+        DeliveryManager manager = deliveryManagerCommandService.updateDeliveryManager(deliveryManagerId, request.hubId());
         return ApiResponse.success(200, "배송 담당자 수정 성공", DeliveryManagerUpdateResponse.from(manager));
     }
 
@@ -63,8 +63,8 @@ public class DeliveryManagerCommandController {
     )
     @DeleteMapping("/{deliveryManagerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long deliveryManagerId,
+    public void deleteDeliveryManager(@PathVariable Long deliveryManagerId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        deliveryManagerCommandService.delete(deliveryManagerId, principal);
+        deliveryManagerCommandService.deleteDeliveryManager(deliveryManagerId, principal);
     }
 }
