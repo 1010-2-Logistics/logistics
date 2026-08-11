@@ -4,7 +4,9 @@ import com.logistics.hubRoute.application.dto.command.HubRouteCreateCommand;
 import com.logistics.hubRoute.application.port.EventPublisher;
 import com.logistics.hubRoute.application.port.HubPort;
 import com.logistics.hubRoute.domain.entity.HubRoute;
+import com.logistics.hubRoute.domain.entity.Role;
 import com.logistics.hubRoute.domain.repository.HubRouteCommandRepository;
+import com.logistics.hubRoute.global.exception.CommonErrorCode;
 import com.logistics.hubRoute.global.exception.CustomException;
 import com.logistics.hubRoute.global.exception.HubRouteErrorCode;
 
@@ -13,6 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.logistics.hubRoute.infrastructure.feign.client.HubClient;
+import com.logistics.hubRoute.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hubRoute.presentation.dto.dto.request.HubRouteUpdateRequestDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteCreateResponseDto;
 import com.logistics.hubRoute.presentation.dto.dto.response.HubRouteUpdateResponseDto;
@@ -34,7 +37,12 @@ public class HubRouteCommandService {
 
     //허브 경로 등록
     @CacheEvict(value = "hubRoute", allEntries = true) //경로 생성시 캐시 삭제
-    public HubRouteCreateResponseDto createHubRoute(HubRouteCreateCommand hubRouteCreateCommand) {
+    public HubRouteCreateResponseDto createHubRoute(HubRouteCreateCommand hubRouteCreateCommand, UserPrincipal userPrincipal) {
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
+
         UUID startHubId = hubRouteCreateCommand.startHubId();
         UUID endHubId = hubRouteCreateCommand.endHubId();
 
@@ -58,7 +66,7 @@ public class HubRouteCommandService {
                     endHubId,
                     hubRouteCreateCommand.duration(),
                     hubRouteCreateCommand.distance(),
-                    hubRouteCreateCommand.createdBy()
+                    userPrincipal.getUserId()
             );
 
             hubRouteCommandRepository.save(hubRoute);
@@ -69,7 +77,12 @@ public class HubRouteCommandService {
 
     //허브 경로 수정
     @CacheEvict(value = "hubRoute", allEntries = true) // 경로 수정 시 캐시 무효
-    public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
+    public HubRouteUpdateResponseDto updateHubRoute(UUID hubRouteId, UserPrincipal userPrincipal,HubRouteUpdateRequestDto hubRouteUpdateRequestDto) {
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
+
 
         UUID startHubId = hubRouteUpdateRequestDto.startHubId();
         UUID endHubId = hubRouteUpdateRequestDto.endHubId();
@@ -107,7 +120,12 @@ public class HubRouteCommandService {
     //허브 경로 삭제
     @Transactional
     @CacheEvict(value = "hubRoute", allEntries = true) //경로 삭제시 캐시 삭제
-    public void deleteHubRoute(UUID hubRouteId, long deletedBy) {
+    public void deleteHubRoute(UUID hubRouteId, UserPrincipal userPrincipal) {
+        //마스터 권한인지 확인
+        if(userPrincipal.getRole() != Role.MASTER){
+            throw new CustomException(CommonErrorCode.AUTH_FORBIDDEN);
+        }
+
         //경로가 이미 삭제되었는지 체크
         if(!hubRouteCommandRepository.findByHubRouteIdAndDeletedAtIsNull(hubRouteId))
         {
@@ -116,7 +134,7 @@ public class HubRouteCommandService {
         HubRoute hubRoute = hubRouteCommandRepository.findByIdAndDeletedAtIsNull(hubRouteId)
                 .orElseThrow(() -> new CustomException(HubRouteErrorCode.HUB_ROUTE_NOT_FOUND));
 
-        hubRoute.markDeleted(deletedBy);
+        hubRoute.markDeleted(userPrincipal.getUserId());
     }
 
     @Transactional

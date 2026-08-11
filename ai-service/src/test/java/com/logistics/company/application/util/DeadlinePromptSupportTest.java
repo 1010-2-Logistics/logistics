@@ -11,10 +11,10 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.logistics.ai.application.dto.internal.DeliveryManagerInfo;
 import com.logistics.ai.application.dto.internal.HubInfo;
 import com.logistics.ai.application.dto.internal.ProductInfo;
 import com.logistics.ai.application.dto.internal.RouteInfo;
+import com.logistics.ai.application.dto.internal.UserInfo;
 import com.logistics.ai.application.event.OrderCreatedEvent;
 import com.logistics.ai.application.util.DeadlinePromptSupport;
 
@@ -45,7 +45,8 @@ public class DeadlinePromptSupportTest {
 				"스파르타 컴퓨터"
 		);
 		
-		DeliveryManagerInfo deliveryManager = new DeliveryManagerInfo(
+		UserInfo deliveryManager = new UserInfo(
+				1L,
 				"배송담당자",
 				"U018234"
 		);
@@ -79,8 +80,8 @@ public class DeadlinePromptSupportTest {
 				product.productName() + " " + event.quantity() + " EA",
 				hubMap.get(startHubId).name(),
 				hubMap.get(endHubId).name(),
-				deliveryManager.deliveryManagerName(),
-				deliveryManager.deliveryManagerSlackId()
+				deliveryManager.name(),
+				deliveryManager.slackId()
 		);
 	}
 	
@@ -113,7 +114,8 @@ public class DeadlinePromptSupportTest {
 				"스파르타 컴퓨터"
 				);
 		
-		DeliveryManagerInfo deliveryManager = new DeliveryManagerInfo(
+		UserInfo deliveryManager = new UserInfo(
+				1L,
 				"배송담당자",
 				"U018234"
 				);
@@ -163,8 +165,8 @@ public class DeadlinePromptSupportTest {
 				product.productName() + " " + event.quantity() + " EA",
 				hubMap.get(finalStartHubId).name(),
 				hubMap.get(finalEndHubId).name(),
-				deliveryManager.deliveryManagerName(),
-				deliveryManager.deliveryManagerSlackId(),
+				deliveryManager.name(),
+				deliveryManager.slackId(),
 				
 				// 경유지
 				"인천 허브, 대전 허브, 대구 허브, 창원 허브"
@@ -172,19 +174,19 @@ public class DeadlinePromptSupportTest {
 	}
 	
 	@Test
-	@DisplayName("경유 허브가 3개 이상이면 pro 모델 선택")
+	@DisplayName("경유 허브가 3개 이상이면 3.6 flash 모델 선택")
 	void aiModel_pro() {
-		assertThat(DeadlinePromptSupport.aiModelSelector(3)).isEqualTo("gemini-1.5-pro");
+		assertThat(DeadlinePromptSupport.aiModelSelector(3)).isEqualTo("gemini-3.6-flash");
 	}
 	
 	@Test
 	@DisplayName("경유 허브가 3개 미만이면 flash 모델 선택")
 	void aiModel_flash() {
-		assertThat(DeadlinePromptSupport.aiModelSelector(0)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(0)).isEqualTo("gemini-3.5-flash-lite");
 		
-		assertThat(DeadlinePromptSupport.aiModelSelector(1)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(1)).isEqualTo("gemini-3.5-flash-lite");
 		
-		assertThat(DeadlinePromptSupport.aiModelSelector(2)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(2)).isEqualTo("gemini-3.5-flash-lite");
 	}
 	
 	

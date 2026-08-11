@@ -30,7 +30,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Component
 @RequiredArgsConstructor
-public class MockGatewayAuthenticationFilter
+public class HeaderAuthenticationFilter
         extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
@@ -75,13 +75,16 @@ public class MockGatewayAuthenticationFilter
                     request.getHeader(COMPANY_ID_HEADER)
             );
 
-            AuthenticatedUser principal =
-                    new AuthenticatedUser(
+            UserPrincipal principal =
+                    new UserPrincipal(
                             userId,
                             role,
                             hubId,
                             companyId
                     );
+
+            // 저장 전 Role에 맞는 소속 정보를 갖고 있는지 검증
+            principal.validateRoleConstraints();
 
             /*
              * Spring Security는 ROLE_ 접두사가 붙은 권한을

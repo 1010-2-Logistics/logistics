@@ -26,7 +26,4 @@ public class HubRouteCreateRequestDto {
     @DecimalMin(value = "0.01", message = "거리는 0Km보다 커야 합니다.")
     private BigDecimal distance;
 
-    //유저 정보가 없어서 임시로 추가
-    private Long createdBy = 1L;
-
 }
