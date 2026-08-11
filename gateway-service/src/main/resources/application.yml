@@ -3,6 +3,8 @@ server:
   port: 19091
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     # Eureka에 등록될 서비스 이름
     name: gateway-service

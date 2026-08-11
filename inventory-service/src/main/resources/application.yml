@@ -13,6 +13,9 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+  instance:
+    # 로컬 Windows 호스트명(SUMIN.mshome.net)은 게이트웨이가 접근하지 못한다
+    prefer-ip-address: true
 
 management:
   tracing:
