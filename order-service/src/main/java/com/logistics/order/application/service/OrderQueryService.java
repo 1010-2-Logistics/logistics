@@ -32,7 +32,7 @@ public class OrderQueryService {
 
     public OrderListResult getOrders(OrderSearchQuery orderSearchQuery) {
         int page = validatePage(orderSearchQuery.page());
-        int size = normalizeSize(orderSearchQuery.size());
+        int size = validateSize(orderSearchQuery.size());
         String sortProperty = validateSort(orderSearchQuery.sort());
 
         Pageable pageable = PageRequest.of(
@@ -61,7 +61,7 @@ public class OrderQueryService {
         return page;
     }
 
-    private int normalizeSize(Integer size) {
+    private int validateSize(Integer size) {
         if (size == null) {
             return 10;
         }
