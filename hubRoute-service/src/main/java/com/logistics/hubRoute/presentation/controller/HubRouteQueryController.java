@@ -66,7 +66,7 @@ public class HubRouteQueryController {
     )
     //허브 경로 탐색 (시작허브와 도착 허브를 받아서 검색 -> 연결되어 있지 않은 허브 경로 검색)
     @GetMapping("/findHubRoute")
-    public ApiResponse<HubRouteFindResponseDto> findHubRoute(@RequestBody HubRouteFindRequestDto requestDto){
+    public ApiResponse<HubRouteFindResponseDto> findHubRoute(@ModelAttribute HubRouteFindRequestDto requestDto){
         //redis를 통해 한번 찾거나 조합한 경로는 redis에 저장된다.
         HubRouteFindResponseDto hubRouteFindResponseDto = hubRouteQueryService.findHubRoute(requestDto);
 

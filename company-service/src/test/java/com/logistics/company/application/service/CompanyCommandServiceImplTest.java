@@ -25,12 +25,14 @@ import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 import com.logistics.company.domain.entity.CompanyType;
+import com.logistics.company.domain.entity.Role;
 import com.logistics.company.domain.repository.CompanyCommandRepository;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 
 @ExtendWith(MockitoExtension.class)
-public class CompanyCommandServiceTest {
+public class CompanyCommandServiceImplTest {
 
 	UUID hubId = UUID.randomUUID();
 	
@@ -41,7 +43,7 @@ public class CompanyCommandServiceTest {
 	CompanyQueryService companyQueryService;
 	
 	@InjectMocks
-	CompanyCommandService companyCommandService;
+	CompanyCommandServiceImpl companyCommandService;
 	
 	@Nested
 	@DisplayName("업체 생성")
@@ -63,6 +65,8 @@ public class CompanyCommandServiceTest {
 			);
 			
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
+					1L,
+					Role.MASTER,
 					hubId,
 					companyManagerId,
 					companyName,
@@ -95,6 +99,7 @@ public class CompanyCommandServiceTest {
 			String companyAddress = "업체주소A";
 			
 			CompanyCreateCommand command = new CompanyCreateCommand(
+					1L, Role.MASTER,
 					hubId, companyManagerId,
 					companyName, companyAddress,
 					CompanyType.PRODUCER
@@ -132,15 +137,17 @@ public class CompanyCommandServiceTest {
 			
 			String updatedCompanyName = "업체 이름 B";
 			
-			CompanyUpdateCommand companyUpdateCommand = new CompanyUpdateCommand(updatedCompanyName);
+			CompanyUpdateCommand companyUpdateCommand = new CompanyUpdateCommand(UserPrincipal.from(
+					"1", "HUB_MANAGER", hubId.toString(), companyId.toString()
+			), updatedCompanyName);
 			
 			given(companyQueryService.findByCompany(companyId)).willReturn(company);
 			
-			CompanyUpdateResultDto result = companyCommandService.updateCompany(companyId, companyUpdateCommand);
+			Company result = companyCommandService.updateCompany(companyId, companyUpdateCommand);
 			
-			assertThat(result.companyName()).isEqualTo(updatedCompanyName);
-			assertThat(result.companyAddress()).isEqualTo(companyAddress);
-			assertThat(result.companyType()).isEqualByComparingTo(companyType);
+			assertThat(result.getCompanyName()).isEqualTo(updatedCompanyName);
+			assertThat(result.getCompanyAddress()).isEqualTo(companyAddress);
+			assertThat(result.getCompanyType()).isEqualByComparingTo(companyType);
 			
 			assertThat(company.getCompanyName()).isEqualTo(updatedCompanyName);
 			
@@ -154,7 +161,9 @@ public class CompanyCommandServiceTest {
 			UUID companyId = UUID.randomUUID();
 			String companyName = "같은업체A";
 			
-			CompanyUpdateCommand command = new CompanyUpdateCommand(companyName);
+			CompanyUpdateCommand command = new CompanyUpdateCommand(UserPrincipal.from(
+					"1", "HUB_MANAGER", hubId.toString(), companyId.toString()
+			),companyName);
 			
 			Company company = Company.create(hubId, companyName, companyName, CompanyType.PRODUCER);
 			ReflectionTestUtils.setField(company, "companyId", companyId);
@@ -194,7 +203,9 @@ public class CompanyCommandServiceTest {
 			
 			given(companyQueryService.findByCompany(companyId)).willReturn(company);
 			
-			companyCommandService.deleteCompany(deletedBy, companyId);
+			companyCommandService.deleteCompany(deletedBy, companyId, UserPrincipal.from(
+					"1", "HUB_MANAGER", hubId.toString(), companyId.toString()
+			));
 			
 			assertThat(company.getDeletedAt()).isNotNull();
 			assertThat(company.getDeletedBy()).isEqualTo(deletedBy);
