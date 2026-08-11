@@ -5,6 +5,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -18,6 +19,7 @@ public abstract class BaseEntity {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    @CreatedBy
     @Column(updatable = false)
     private Long createdBy;
 
@@ -29,6 +31,10 @@ public abstract class BaseEntity {
     private LocalDateTime deletedAt;
 
     private Long deletedBy;
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
 
     public void markDeleted(Long deletedBy) {
         this.deletedAt = LocalDateTime.now();
