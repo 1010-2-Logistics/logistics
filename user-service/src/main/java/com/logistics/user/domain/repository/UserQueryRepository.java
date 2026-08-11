@@ -37,7 +37,7 @@ public interface UserQueryRepository {
      *
      * 삭제된 사용자도 조회해야 AUTH_USER_DELETED를 반환 가능
      */
-    Optional<User> findByUsername(String username);
+    Optional<User> findActiveByUsername(String username);
 
     //서비스 시작시 이미 MASTER가 존재하는가?
     boolean existsByRole(

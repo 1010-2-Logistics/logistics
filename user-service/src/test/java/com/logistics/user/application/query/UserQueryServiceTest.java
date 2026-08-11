@@ -54,6 +54,7 @@ class UserQueryServiceTest {
          */
         User user = User.create(
                 "sample01",
+                "sample02",
                 "encoded-password",
                 "U0123456789",
                 UserRole.MASTER,

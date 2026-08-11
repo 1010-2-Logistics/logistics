@@ -49,4 +49,6 @@ interface HubJpaRepository extends JpaRepository<Hub, UUID> {
     @Query("SELECT h.hubId FROM Hub h WHERE h.hubId IN :hubIds AND h.deletedAt IS NULL")
     Set<UUID> findValidHubIdsIn(@Param("hubIds") List<UUID> hubIds);
 
+
+    List<Hub> findAllByHubIdInAndDeletedAtIsNull(List<UUID> hubIds);
 }

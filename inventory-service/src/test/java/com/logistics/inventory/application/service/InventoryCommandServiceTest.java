@@ -32,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InventoryCommandServiceTest {
+    UUID operationId = UUID.randomUUID();
     UUID productId = UUID.randomUUID();
     UUID hubId = UUID.randomUUID();
     UUID inventoryId = UUID.randomUUID();
@@ -62,6 +63,7 @@ class InventoryCommandServiceTest {
                     100
             );
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -69,7 +71,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.acquire(
-                    eq("inventory:deduct:" + orderId),
+                    eq("inventory:deduct:" + operationId),
                     any(Duration.class)
             )).willReturn(true);
 
@@ -124,6 +126,7 @@ class InventoryCommandServiceTest {
         @DisplayName("동일 주문의 재고 차감 요청이면 중복 처리 예외")
         void inventory_deduct_duplicate_fail() {
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -131,7 +134,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.acquire(
-                    eq("inventory:deduct:" + orderId),
+                    eq("inventory:deduct:" + operationId),
                     any(Duration.class)
             )).willReturn(false);
 
@@ -154,13 +157,14 @@ class InventoryCommandServiceTest {
             );
 
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
                     10
             );
 
-            String key = "inventory:deduct:" + orderId;
+            String key = "inventory:deduct:" + operationId;
 
             given(idempotencyPort.acquire(
                     eq(key),
@@ -183,6 +187,7 @@ class InventoryCommandServiceTest {
         @DisplayName("동일 주문의 재고 차감 요청이면 이전 결과 반환")
         void inventory_deduct_duplicate_return_result() {
             InventoryDeductionCommand inventoryDeductionCommand = new InventoryDeductionCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -195,7 +200,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.getResult(
-                    eq("inventory:deduct:" + orderId),
+                    eq("inventory:deduct:" + operationId),
                     eq(InventoryDeductionResult.class)
             )).willReturn(Optional.of(inventoryDeductionResult));
 
@@ -222,6 +227,7 @@ class InventoryCommandServiceTest {
             );
 
             InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -229,7 +235,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.acquire(
-                    eq("inventory:restore:" + orderId),
+                    eq("inventory:restore:" + operationId),
                     any(Duration.class)
             )).willReturn(true);
             given(inventoryCommandRepository.findByProductAndHubIdWithLock(
@@ -255,6 +261,7 @@ class InventoryCommandServiceTest {
         void inventory_restore_not_found() {
             InventoryRestorationCommand command =
                     new InventoryRestorationCommand(
+                            operationId,
                             orderId,
                             productId,
                             hubId,
@@ -262,7 +269,7 @@ class InventoryCommandServiceTest {
                     );
 
             given(idempotencyPort.acquire(
-                    eq("inventory:restore:" + orderId),
+                    eq("inventory:restore:" + operationId),
                     any(Duration.class)
             )).willReturn(true);
             given(inventoryCommandRepository.findByProductAndHubIdWithLock(productId, hubId)).willReturn(Optional.empty());
@@ -282,6 +289,7 @@ class InventoryCommandServiceTest {
         @DisplayName("동일 주문의 재고 복원 요청 예외")
         void inventory_restore_duplicate_fail() {
             InventoryRestorationCommand command = new InventoryRestorationCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -289,7 +297,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.acquire(
-                    eq("inventory:restore:" + orderId),
+                    eq("inventory:restore:" + operationId),
                     any(Duration.class)
             )).willReturn(false);
 
@@ -306,6 +314,7 @@ class InventoryCommandServiceTest {
         @DisplayName("동일 주문의 재고 복원 요청이면 이전 결과 반환")
         void inventory_restore_duplicate_return_result() {
             InventoryRestorationCommand inventoryRestorationCommand = new InventoryRestorationCommand(
+                    operationId,
                     orderId,
                     productId,
                     hubId,
@@ -318,7 +327,7 @@ class InventoryCommandServiceTest {
             );
 
             given(idempotencyPort.getResult(
-                    eq("inventory:restore:" + orderId),
+                    eq("inventory:restore:" + operationId),
                     eq(InventoryRestorationResult.class)
             )).willReturn(Optional.of(previousResult));
 
