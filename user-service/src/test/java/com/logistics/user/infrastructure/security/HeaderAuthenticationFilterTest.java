@@ -13,12 +13,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import tools.jackson.databind.ObjectMapper;
 
-class MockGatewayAuthenticationFilterTest {
+class HeaderAuthenticationFilterTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final MockGatewayAuthenticationFilter filter =
-            new MockGatewayAuthenticationFilter(objectMapper);
+    private final HeaderAuthenticationFilter filter =
+            new HeaderAuthenticationFilter(objectMapper);
 
     @AfterEach
     void clearSecurityContext() {

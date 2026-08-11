@@ -1,7 +1,7 @@
 package com.logistics.user.global.config;
 
 import com.logistics.user.domain.entity.UserRole;
-import com.logistics.user.infrastructure.security.MockGatewayAuthenticationFilter;
+import com.logistics.user.infrastructure.security.HeaderAuthenticationFilter;
 import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final MockGatewayAuthenticationFilter
-            mockGatewayAuthenticationFilter;
+    private final HeaderAuthenticationFilter
+            headerAuthenticationFilter;
 
     /**
      * 비밀번호 단방향 암호화
@@ -103,7 +103,7 @@ public class SecurityConfig {
                  * Authentication을 생성한다.
                  */
                 .addFilterBefore(
-                        mockGatewayAuthenticationFilter,
+                        headerAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
 

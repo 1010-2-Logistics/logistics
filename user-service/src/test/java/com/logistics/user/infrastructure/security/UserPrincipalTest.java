@@ -7,7 +7,7 @@ import com.logistics.user.domain.entity.UserRole;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-class AuthenticatedUserTest {
+class UserPrincipalTest {
 
     @Test
     void MASTER는_소속_정보가_없으면_정상이다() {

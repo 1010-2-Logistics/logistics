@@ -30,7 +30,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Component
 @RequiredArgsConstructor
-public class MockGatewayAuthenticationFilter
+public class HeaderAuthenticationFilter
         extends OncePerRequestFilter {
 
     private final ObjectMapper objectMapper;
@@ -83,6 +83,7 @@ public class MockGatewayAuthenticationFilter
                             companyId
                     );
 
+            // 저장 전 Role에 맞는 소속 정보를 갖고 있는지 검증
             principal.validateRoleConstraints();
 
             /*
