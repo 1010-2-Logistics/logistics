@@ -2,7 +2,6 @@ package com.logistics.user.presentation.controller;
 
 import com.logistics.user.application.dto.query.GetMyInfoQueryDto;
 import com.logistics.user.application.dto.query.GetUserDetailQueryDto;
-import com.logistics.user.application.dto.query.GetUserQueryDto;
 import com.logistics.user.application.dto.query.SearchUserQueryDto;
 import com.logistics.user.application.dto.result.UserDetailResultDto;
 import com.logistics.user.application.service.UserQueryService;
@@ -19,9 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

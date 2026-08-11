@@ -83,6 +83,8 @@ public class MockGatewayAuthenticationFilter
                             companyId
                     );
 
+            principal.validateRoleConstraints();
+
             /*
              * Spring Security는 ROLE_ 접두사가 붙은 권한을
              * 일반적인 역할 권한으로 다룬다.

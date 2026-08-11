@@ -1,6 +1,8 @@
 package com.logistics.user.global.config;
 
+import com.logistics.user.domain.entity.UserRole;
 import com.logistics.user.infrastructure.security.MockGatewayAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,22 +51,50 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        /*
-                         * 회원가입과 로그인은 인증 없이 접근 가능.
-                         */
                         .requestMatchers(
                                 "/api/v1/auth/signup",
                                 "/api/v1/auth/login",
 
-                                // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        /*
-                         * 그 외 요청은 Authentication이 필요하다.
-                         */
+                        // 내 정보 관련 API
+                        // 로그인 사용자라면 모두 접근 가능
+                        .requestMatchers(
+                                "/api/v1/users/me",
+                                "/api/v1/users/me/**"
+                        ).authenticated()
+
+                        // 사용자 목록 / 상세 조회
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/users",
+                                "/api/v1/users/{userId}"
+                        ).hasAnyRole(
+                                UserRole.MASTER.name(),
+                                UserRole.HUB_MANAGER.name()
+                        )
+
+                        // 가입 승인 / 거절
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/v1/users/{userId}/approval"
+                        ).hasAnyRole(
+                                UserRole.MASTER.name(),
+                                UserRole.HUB_MANAGER.name()
+                        )
+
+                        // 관리자 사용자 삭제
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/v1/users/{userId}"
+                        ).hasRole(
+                                UserRole.MASTER.name()
+                        )
+
+                        // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
 
