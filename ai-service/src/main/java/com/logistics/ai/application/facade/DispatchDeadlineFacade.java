@@ -51,15 +51,15 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	
 	@Override
 	public void generate(OrderCreatedEvent event) {
-		log.info("[AI-SERVICE]: OrderCreatedEvent 수신, orderId = {}, deliveryId = {}",
-				event.orderId(),
-				event.deliveryId()
-		);
-		
-		// 내부 API 호출 1 - 경유 허브 목록 조회
+		// 원본코드
+		// 경유 허브 목록 조회
 		List<RouteInfo> routes = deliveryPort.getRoutes(event.deliveryId());
 		
-		// 경유 허브 목록의 허브 정보 추출
+		if(routes == null || routes.isEmpty()) {
+			throw new AiException(AiErrorCode.AI_DELIVERY_ROUTE_EMPTY);
+		}
+		
+		// 경유 허브 목록의 허브 정보 조회
 		Set<UUID> hubIds = routes.stream()
 				.flatMap(route -> Stream.of(route.startHubId(), route.endHubId()))
 				.filter(Objects::nonNull)
@@ -71,14 +71,14 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 		log.info("[AI-SERVICE]: 경유 허브 조회, totalHubCount = {}, hubWayPointCount = {}",
 				hubIds.size(),
 				hubWayPoint
-		);
+				);
 		
 		// 내부 API 호출 2 - 상품 정보 조회
 		ProductInfo product = productPort.getProduct(event.productId());
 		
 		log.info("[AI-SERVICE]: 상품 조회, productId = {}",
 				product.productId()
-		);
+				);
 		
 		// 내부 API 호출 3 - 허브 정보 조회
 		List<HubInfo> hubInfoList = hubPort.getHubInfo(hubIds);
@@ -101,13 +101,11 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				hubMap,
 				routes,
 				hubWayPoint
-		);
+				);
 		
 		// 제미나이 호출
 		String aiModel = DeadlinePromptSupport.aiModelSelector(hubWayPoint);
 		
-		// 제미나이 호출 결과 가져오기
-		// DeadlineGenerationRetryService 는 AI API 호출 Port 를 가지고 있고, Retry 정책이 적용되어 있음.
 		DispatchDeadlineRetryResultDto result = deadlineGenerationRetryService.generate(requestPrompt, aiModel);
 		
 		AiHistory successHistory = AiHistory.succeded(
@@ -115,7 +113,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				event.deliveryId(),
 				requestPrompt,
 				aiModel
-		);
+				);
 		
 		successHistory.success(
 				result.responsePrompt(),
@@ -123,7 +121,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				result.timeMs(),
 				result.retryCount(),
 				result.lastRetryReason()
-		);
+				);
 		
 		commandService.saveSucceeded(successHistory);
 	}

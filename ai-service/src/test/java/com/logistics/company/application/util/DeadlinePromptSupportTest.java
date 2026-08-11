@@ -174,19 +174,19 @@ public class DeadlinePromptSupportTest {
 	}
 	
 	@Test
-	@DisplayName("경유 허브가 3개 이상이면 pro 모델 선택")
+	@DisplayName("경유 허브가 3개 이상이면 3.6 flash 모델 선택")
 	void aiModel_pro() {
-		assertThat(DeadlinePromptSupport.aiModelSelector(3)).isEqualTo("gemini-1.5-pro");
+		assertThat(DeadlinePromptSupport.aiModelSelector(3)).isEqualTo("gemini-3.6-flash");
 	}
 	
 	@Test
 	@DisplayName("경유 허브가 3개 미만이면 flash 모델 선택")
 	void aiModel_flash() {
-		assertThat(DeadlinePromptSupport.aiModelSelector(0)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(0)).isEqualTo("gemini-3.5-flash-lite");
 		
-		assertThat(DeadlinePromptSupport.aiModelSelector(1)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(1)).isEqualTo("gemini-3.5-flash-lite");
 		
-		assertThat(DeadlinePromptSupport.aiModelSelector(2)).isEqualTo("gemini-1.5-flash");
+		assertThat(DeadlinePromptSupport.aiModelSelector(2)).isEqualTo("gemini-3.5-flash-lite");
 	}
 	
 	

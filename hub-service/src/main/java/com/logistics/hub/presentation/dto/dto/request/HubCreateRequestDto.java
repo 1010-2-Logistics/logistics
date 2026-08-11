@@ -30,8 +30,4 @@ public class HubCreateRequestDto {
     @DecimalMax(value = "180.0", message = "경도는 180 이하여야 합니다")
     @Digits(integer = 3, fraction = 7, message = "경도는 정수 최대 3자리, 소수점 최대 7자리까지 입력 가능합니다")
     private BigDecimal longitude;
-
-    //유저 정보가 없어서 임시로 추가
-    private Long createdBy = 1L;
-
 }

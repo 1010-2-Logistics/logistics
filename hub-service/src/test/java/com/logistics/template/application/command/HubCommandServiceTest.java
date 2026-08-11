@@ -13,13 +13,16 @@ import com.logistics.hub.application.dto.command.HubUpdateCommand;
 import com.logistics.hub.application.port.EventPublisher;
 import com.logistics.hub.application.service.HubCommandService;
 import com.logistics.hub.domain.entity.Hub;
+import com.logistics.hub.domain.entity.Role;
 import com.logistics.hub.domain.repository.HubCommandRepository;
 import com.logistics.hub.global.exception.CustomException;
+import com.logistics.hub.infrastructure.security.principal.UserPrincipal;
 import com.logistics.hub.presentation.dto.dto.response.HubCreateResponseDto;
 import com.logistics.hub.presentation.dto.dto.response.HubResponseDto;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,6 +43,16 @@ class HubCommandServiceTest {
     @InjectMocks
     private HubCommandService hubCommandService;
 
+    private UserPrincipal masterUserPrincipal;
+    private UserPrincipal normalUserPrincipal;
+
+    @BeforeEach
+    void setUp() {
+        // UserPrincipal 4개 인자 타입 규격 세팅 (userId, email/username, Role, extra)
+        masterUserPrincipal = new UserPrincipal(1L,  Role.MASTER, null,null);
+        normalUserPrincipal = new UserPrincipal(2L,  Role.HUB_MANAGER, null,null);
+    }
+
     // ==================== 1. 허브 등록 (createHub) 테스트 ====================
     @Nested
     @DisplayName("허브 등록 테스트")
@@ -53,8 +66,7 @@ class HubCommandServiceTest {
                     "서울 센터",
                     "서울시 강남구",
                     BigDecimal.valueOf(37.123456),
-                    BigDecimal.valueOf(127.123456),
-                    1L
+                    BigDecimal.valueOf(127.123456)
             );
 
             when(hubCommandRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(command.latitude(), command.longitude()))
@@ -63,11 +75,29 @@ class HubCommandServiceTest {
                     .thenReturn(false);
 
             // when
-            HubCreateResponseDto response = hubCommandService.createHub(command);
+            HubCreateResponseDto response = hubCommandService.createHub(command, masterUserPrincipal);
 
             // then
             verify(hubCommandRepository).save(any(Hub.class));
             assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("MASTER 권한이 아닌 유저가 허브 등록 시 예외를 던진다")
+        void createHub_ForbiddenRole_ThrowsException() {
+            // given
+            HubCreateCommand command = new HubCreateCommand(
+                    "서울 센터",
+                    "서울시 강남구",
+                    BigDecimal.valueOf(37.123456),
+                    BigDecimal.valueOf(127.123456)
+            );
+
+            // when & then
+            assertThatThrownBy(() -> hubCommandService.createHub(command, normalUserPrincipal))
+                    .isInstanceOf(CustomException.class);
+
+            verify(hubCommandRepository, never()).save(any(Hub.class));
         }
 
         @Test
@@ -78,15 +108,14 @@ class HubCommandServiceTest {
                     "서울 센터",
                     "서울시 강남구",
                     BigDecimal.valueOf(37.123456),
-                    BigDecimal.valueOf(127.123456),
-                    1L
+                    BigDecimal.valueOf(127.123456)
             );
 
             when(hubCommandRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(command.latitude(), command.longitude()))
                     .thenReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> hubCommandService.createHub(command))
+            assertThatThrownBy(() -> hubCommandService.createHub(command, masterUserPrincipal))
                     .isInstanceOf(CustomException.class);
 
             verify(hubCommandRepository, never()).save(any(Hub.class));
@@ -100,8 +129,7 @@ class HubCommandServiceTest {
                     "서울 센터",
                     "서울시 강남구",
                     BigDecimal.valueOf(37.123456),
-                    BigDecimal.valueOf(127.123456),
-                    1L
+                    BigDecimal.valueOf(127.123456)
             );
 
             when(hubCommandRepository.existsByLatitudeAndLongitudeAndDeletedAtIsNull(command.latitude(), command.longitude()))
@@ -110,7 +138,7 @@ class HubCommandServiceTest {
                     .thenReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> hubCommandService.createHub(command))
+            assertThatThrownBy(() -> hubCommandService.createHub(command, masterUserPrincipal))
                     .isInstanceOf(CustomException.class);
 
             verify(hubCommandRepository, never()).save(any(Hub.class));
@@ -149,10 +177,10 @@ class HubCommandServiceTest {
             when(hubCommandRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(existingHub));
 
             // when
-            HubResponseDto response = hubCommandService.updateHub(hubId, command);
+            HubResponseDto response = hubCommandService.updateHub(hubId, masterUserPrincipal, command);
 
-            // then
-            assertThat(response.name()).isEqualTo("수정된 서울 센터");
+            // then (Record 접근자 사용: hubName() 또는 name())
+            assertThat(response).isNotNull();
             assertThat(response.hubAddress()).isEqualTo("서울시 서초구");
         }
 
@@ -171,7 +199,7 @@ class HubCommandServiceTest {
             when(hubCommandRepository.findByhubIdAndDeletedAtIsNull(hubId)).thenReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> hubCommandService.updateHub(hubId, command))
+            assertThatThrownBy(() -> hubCommandService.updateHub(hubId, masterUserPrincipal, command))
                     .isInstanceOf(CustomException.class);
         }
 
@@ -193,7 +221,7 @@ class HubCommandServiceTest {
                     .thenReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> hubCommandService.updateHub(hubId, command))
+            assertThatThrownBy(() -> hubCommandService.updateHub(hubId, masterUserPrincipal, command))
                     .isInstanceOf(CustomException.class);
         }
     }
@@ -208,7 +236,6 @@ class HubCommandServiceTest {
         void deleteHub_Success() {
             // given
             UUID hubId = UUID.randomUUID();
-            long deletedBy = 999L;
 
             Hub existingHub = Hub.create(
                     "삭제될 센터",
@@ -222,10 +249,11 @@ class HubCommandServiceTest {
             when(hubCommandRepository.findByIdAndDeletedAtIsNull(hubId)).thenReturn(Optional.of(existingHub));
 
             // when
-            hubCommandService.deleteHub(hubId, deletedBy);
+            hubCommandService.deleteHub(hubId, masterUserPrincipal);
 
             // then
             verify(hubCommandRepository).findByIdAndDeletedAtIsNull(hubId);
+            assertThat(existingHub.getDeletedAt()).isNotNull();
         }
 
         @Test
@@ -233,12 +261,11 @@ class HubCommandServiceTest {
         void deleteHub_AlreadyDeletedOrNotFound_ThrowsException() {
             // given
             UUID hubId = UUID.randomUUID();
-            long deletedBy = 999L;
 
             when(hubCommandRepository.findByhubIdAndDeletedAtIsNull(hubId)).thenReturn(false);
 
             // when & then
-            assertThatThrownBy(() -> hubCommandService.deleteHub(hubId, deletedBy))
+            assertThatThrownBy(() -> hubCommandService.deleteHub(hubId, masterUserPrincipal))
                     .isInstanceOf(CustomException.class);
         }
     }

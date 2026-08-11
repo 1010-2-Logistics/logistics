@@ -28,7 +28,8 @@ public class DeadlinePromptSupport {
 			2. '최종 발송 시한'은 납기일, 이동 경로, 근무시간을 종합 고려하여
 			차질 없이 도착할 수 있는 발송 시점을 산출하세요.
 			3. 출력 양식 외의 인사말, 서론, 설명 등 부가적인 텍스트는 포함하지 마세요.
-			4. '최종 발송 시한'은 100자 이내로 작성하세요.
+			4. '최종 발송 시한'은 Java LocalDateTime 이 파싱 가능하도록 아래 포맷으로 작성
+			5. '최종 발송 시한 도출 사유'는 100자 이내로 간결하게 작성
 			
 			===[출력양식]===
 			주문 번호 : {주문번호}
@@ -41,7 +42,8 @@ public class DeadlinePromptSupport {
 			도착지 : {도착지}
 			배송담당자 : {배송담당자이름} / {배송담당자이메일}
 			
-			최종 발송 시한 : {AI 계산한 일시 및 사유}
+			최종 발송 시한 : {yyyy-MM-dd HH:mm}
+			최종 발송 시한 도출 사유 : {최종 발송 시한 도출 사유}
 			
 			===[데이터 정보]===
 			%s
@@ -134,10 +136,10 @@ public class DeadlinePromptSupport {
 	
 	public static String aiModelSelector(int hubWayPoint) {
 		if(hubWayPoint >= 3) {
-			return "gemini-1.5-pro";
+			return "gemini-3.6-flash";
 		}
 		
-		return "gemini-1.5-flash";
+		return "gemini-3.5-flash-lite";
 	}
 	
 	@Getter

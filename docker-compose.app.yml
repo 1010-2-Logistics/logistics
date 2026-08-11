@@ -42,7 +42,7 @@ x-app-env: &app-env
 
   # 컨테이너 안에서 localhost는 자기 자신이라 yml의 하드코딩 값이 통하지 않는다
   EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:19090/eureka/"
-  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+  MANAGEMENT_TRACING_EXPORT_ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
 
   # 9개 서비스의 yml에 spring.rabbitmq.* 설정이 아예 없어서 기본값
   # localhost:5672로 동작한다. 컨테이너에서는 반드시 덮어야 한다.
@@ -94,7 +94,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=128m"
-      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      MANAGEMENT_TRACING_EXPORT_ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
     healthcheck:
       test: ["CMD-SHELL", "nc -z 127.0.0.1 19090"]
       <<: *healthcheck-defaults
@@ -112,7 +112,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=128m"
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:19090/eureka/"
-      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      MANAGEMENT_TRACING_EXPORT_ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
       # Phase 1.5에서 JwtAuthenticationGlobalFilter가 사용한다
       JWT_SECRET: ${JWT_SECRET}
     healthcheck:
