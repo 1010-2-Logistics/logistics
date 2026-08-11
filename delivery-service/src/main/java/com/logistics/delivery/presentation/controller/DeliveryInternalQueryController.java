@@ -30,8 +30,8 @@ public class DeliveryInternalQueryController {
                 """
     )
     @GetMapping("/{deliveryId}")
-    public ApiResponse<DeliveryInternalResponse> getInternal(@PathVariable UUID deliveryId) {
-        var result = deliveryQueryService.getInternal(deliveryId);
+    public ApiResponse<DeliveryInternalResponse> getDeliveryInternal(@PathVariable UUID deliveryId) {
+        var result = deliveryQueryService.getDeliveryInternal(deliveryId);
         return ApiResponse.success(200, "배송 조회 성공", DeliveryInternalResponse.from(result));
     }
 
@@ -43,8 +43,8 @@ public class DeliveryInternalQueryController {
                 """
     )
     @GetMapping("/{deliveryId}/routes")
-    public ApiResponse<DeliveryRouteListResponse> getRoutesInternal(@PathVariable UUID deliveryId) {
-        var result = deliveryQueryService.getRoutesInternal(deliveryId);
+    public ApiResponse<DeliveryRouteListResponse> getDeliveryRoutesInternal(@PathVariable UUID deliveryId) {
+        var result = deliveryQueryService.getDeliveryRoutesInternal(deliveryId);
         return ApiResponse.success(200, "배송 경로 조회 성공", DeliveryRouteListResponse.from(result));
     }
 }

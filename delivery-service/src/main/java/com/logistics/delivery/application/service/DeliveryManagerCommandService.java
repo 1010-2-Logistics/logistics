@@ -29,7 +29,7 @@ public class DeliveryManagerCommandService {
     private final HubPort hubPort;
     private final UserAffiliationPort userAffiliationPort;
 
-    public DeliveryManager register(RegisterDeliveryManagerCommand command) {
+    public DeliveryManager registerDeliveryManager(RegisterDeliveryManagerCommand command) {
         if (deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(command.userId())) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_ALREADY_EXISTS);
         }
@@ -82,7 +82,7 @@ public class DeliveryManagerCommandService {
         }
     }
 
-    public DeliveryManager update(Long deliveryManagerId, UUID hubId) {
+    public DeliveryManager updateDeliveryManager(Long deliveryManagerId, UUID hubId) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
 
@@ -96,7 +96,7 @@ public class DeliveryManagerCommandService {
         return manager;
     }
 
-    public void delete(Long deliveryManagerId, UserPrincipal principal) {
+    public void deleteDeliveryManager(Long deliveryManagerId, UserPrincipal principal) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
         manager.markDeleted(principal.getUserId());
