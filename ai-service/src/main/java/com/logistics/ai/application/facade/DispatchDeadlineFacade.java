@@ -21,6 +21,7 @@ import com.logistics.ai.application.event.SlackEvent;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
 import com.logistics.ai.application.port.in.DispatchDeadlineCommandService;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
+import com.logistics.ai.application.service.DispatchDeadlineQueryService;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
@@ -49,6 +50,7 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	private final ProductPort productPort;
 	
 	private final HubPort hubPort;
+	private final DispatchDeadlineQueryService queryService;
 
 	private final UserPort userPort;
 	
