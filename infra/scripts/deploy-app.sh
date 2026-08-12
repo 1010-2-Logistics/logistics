@@ -42,6 +42,9 @@ wait_healthy logistics-delivery-service logistics-hub-service logistics-inventor
 docker compose -f docker-compose.app.yml up -d company-service hubroute-service slack-service
 wait_healthy logistics-company-service logistics-hubroute-service logistics-slack-service
 
+docker compose -f docker-compose.app.yml up -d ai-service
+wait_healthy logistics-ai-service
+
 docker compose -f docker-compose.app.yml ps --format '{{.Name}} {{.State}} {{.Status}}'
 
 for i in $(seq 1 20); do
