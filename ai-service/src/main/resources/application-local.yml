@@ -12,3 +12,29 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+
+  rabbitmq:
+    # .env의 RABBITMQ_HOST(=rabbitmq)는 도커 네트워크 안에서만 유효하다
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+rabbitmq:
+  order-created:
+    exchange: order.exchange
+    queue: order-created.queue
+
+    dlx: ai.dead-letter.exchange
+    dlq: order-created.dlq
+    dlq-routing-key: order-created.dead
+
+  slack:
+    exchange: slack.exchange
+    queue: slack.send.queue
+    routing-key: slack.send
+
+ai:
+  gemini:
+    url: https://generativelanguage.googleapis.com/v1beta/models
+    key: ${GEMINI_KEY}
