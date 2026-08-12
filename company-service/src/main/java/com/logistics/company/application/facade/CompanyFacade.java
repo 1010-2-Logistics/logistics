@@ -68,9 +68,15 @@ public class CompanyFacade {
 			);
 			
 			// success = userRoleUpdate != null && userRoleUpdate.exists();
-			success = userRoleUpdate != null 
-					&& userRoleUpdate.companyId() != null 
-					&& !Objects.equals(userRoleUpdate.companyId(), companyId);
+			if(userRoleUpdate != null) {
+				if(Objects.equals(companyId, userRoleUpdate.companyId())) {
+					log.info("userRoleUpdate.companyId = {}, request.companyId = {}",
+							userRoleUpdate.companyId(),
+							companyId
+					);
+					success = true;
+				}
+			}
 			
 		} catch (Exception e) {
 			log.error("업체 담당자 지정 연동 실패 userId = {}", userId, e);
