@@ -89,9 +89,9 @@ public class CompanyFacadeTest {
 					true
 			);
 			given(userPort.companyManagerRoleUpdateRequest(UserRoleUpdateRequestDto.from(
-					companyCreateCommand.companyManagerId(),
-					company
-			))).willReturn(userRoleUpdate);
+					company),
+					companyCreateCommand.companyManagerId()
+			)).willReturn(userRoleUpdate);
 			
 			company.updateCompanyManager(companyManagerId);
 			company.updateStatus(CompanyStatus.ACTIVE);
