@@ -73,6 +73,41 @@ jobs:
             docker push "${{ env.ECR_REGISTRY }}/$svc:${{ github.sha }}"
           done
 
+      # EC2에는 .env와 docker-compose.app.yml만 올라가 있고 저장소 체크아웃이 없다.
+      # 배포 스크립트만 보내면 compose 변경(서비스 추가, 환경변수 변경)이 반영되지
+      # 않으므로 매 배포마다 파일을 덮어쓴다. 따옴표로 감싼 heredoc 구분자를 써서
+      # compose 안의 ${...} 자리표시자가 EC2 셸에서 치환되지 않게 한다.
+      - name: Sync compose file to EC2
+        run: |
+          set -euo pipefail
+          jq -Rs '{commands: [("cat > /home/ec2-user/logistics/docker-compose.app.yml <<'"'"'COMPOSE_EOF'"'"'\n" + . + "COMPOSE_EOF")]}' \
+            docker-compose.app.yml > /tmp/ssm-compose.json
+
+          SYNC_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.APP_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "sync compose ${{ github.sha }}" \
+            --parameters file:///tmp/ssm-compose.json \
+            --query "Command.CommandId" --output text)
+
+          for i in $(seq 1 30); do
+            SYNC_STATUS=$(aws ssm get-command-invocation \
+              --command-id "$SYNC_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
+              --query "Status" --output text 2>/dev/null || echo "Pending")
+            case "$SYNC_STATUS" in
+              Success|Failed|Cancelled|TimedOut) break ;;
+            esac
+            sleep 5
+          done
+
+          if [ "$SYNC_STATUS" != "Success" ]; then
+            echo "compose sync status: $SYNC_STATUS"
+            aws ssm get-command-invocation \
+              --command-id "$SYNC_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
+              --query "StandardErrorContent" --output text
+            exit 1
+          fi
+
       # SSH 키를 시크릿에 두지 않기 위해 SSM Send-Command로 배포한다.
       # 실제 스크립트는 infra/scripts/deploy-app.sh — 12개를 한 번에 올리지 않고
       # eureka → gateway → 3개씩 3배치 → ai 순으로 기동한다(Phase 6과 동일한 이유).
@@ -103,8 +138,9 @@ jobs:
             sleep 10
           done
 
-          # SSM은 StandardOutputContent를 24,000자에서 자른다. docker pull의 진행률이
-          # 그 한도를 다 먹으면 정작 실패 원인이 잘려 로그에 남지 않는다. 뒷부분만 남긴다.
+          # 잘림은 SSM 쪽에서 일어나므로 여기서 tail을 해도 이미 잘린 내용의 뒷부분일
+          # 뿐이다. 근본 대책은 deploy-app.sh의 pull --quiet이고, 이건 러너 로그를
+          # 읽기 좋게 줄이는 용도다.
           aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" --instance-id "${{ env.APP_INSTANCE_ID }}" \
             --query "StandardOutputContent" --output text | tail -n 100
