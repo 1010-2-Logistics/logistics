@@ -2,10 +2,12 @@ package com.logistics.company.application.dto.internal.response;
 
 import java.util.UUID;
 
+import com.logistics.company.domain.entity.Role;
+
 public record UserRoleUpdateResponseDto(
-		UUID companyId,
-		UUID hubId,
 		Long userId,
-		boolean exists
+		Role role,
+		UUID companyId,
+		UUID hubId
 ) {
 }

@@ -210,7 +210,9 @@ public class DeliveryCommandService {
         }
         Delivery found = delivery.get();
         if (found.getStatus() == DeliveryStatus.DELIVERED) {
-            throw new CustomException(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+            // order-service가 409를 ORDER_CANCEL_CONFLICT로 구분해 처리한다.
+            // 400으로 내리면 일반 오류로 묶여 503으로 나간다.
+            throw new CustomException(DeliveryErrorCode.DELIVERY_ALREADY_DELIVERED);
         }
         found.changeStatus(DeliveryStatus.CANCELLED);
     }
