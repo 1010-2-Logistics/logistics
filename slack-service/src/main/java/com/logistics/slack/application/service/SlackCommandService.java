@@ -1,5 +1,7 @@
 package com.logistics.slack.application.service;
 
+import com.logistics.slack.application.authorization.SlackAuthorizationService;
+import com.logistics.slack.application.dto.auth.AuthenticatedUser;
 import com.logistics.slack.application.dto.command.SlackCreateCommand;
 import com.logistics.slack.application.dto.result.SlackCreateResult;
 import com.logistics.slack.application.dto.result.SlackRetryResult;
@@ -7,17 +9,17 @@ import com.logistics.slack.application.event.SlackSendEvent;
 import com.logistics.slack.application.port.SlackMessageSender;
 import com.logistics.slack.domain.entity.Slack;
 import com.logistics.slack.domain.repository.SlackCommandRepository;
-
-import java.util.UUID;
-
 import com.logistics.slack.global.exception.CustomException;
 import com.logistics.slack.global.exception.SlackErrorCode;
-import com.logistics.slack.infrastructure.messaging.SlackEventPublisher;
+import com.logistics.slack.infrastructure.messaging.RabbitSlackEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +27,13 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class SlackCommandService {
     private static final int MAX_RETRY_COUNT = 3;
     private final SlackCommandRepository slackCommandRepository;
-    private final SlackEventPublisher slackEventPublisher;
+    private final RabbitSlackEventPublisher slackEventPublisher;
     private final SlackMessageSender slackMessageSender;
+    private final SlackAuthorizationService slackAuthorizationService;
 
     public SlackCreateResult createSlack(
-            SlackCreateCommand slackCreateCommand
+            SlackCreateCommand slackCreateCommand,
+            String receiverSlackId
     ) {
         Slack slack = Slack.create(
                 slackCreateCommand.senderId(),
@@ -37,24 +41,30 @@ public class SlackCommandService {
                 slackCreateCommand.message(),
                 slackCreateCommand.referenceId()
         );
+
         slackCommandRepository.save(slack);
 
-        // DB 커밋 전에 RabbitMQ 이벤트가 소비되는 문제 방지를 위해
-        // 트랜잭션 커밋 이후 이벤트 발행
-        publishAfterCommit(slack.getSlackMessageId());
-        // 이 시점의 slack.status는 아직 PENDING!
+        publishAfterCommit(
+                slack.getSlackMessageId(),
+                receiverSlackId
+        );
+
         return SlackCreateResult.from(slack);
     }
 
     public void send(
-            UUID slackMessageId
+            UUID slackMessageId,
+            String receiverSlackId
     ) {
         Slack slack = slackCommandRepository
                 .findByIdAndDeletedAtIsNull(slackMessageId)
-                .orElseThrow();
+                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
         try {
-            slackMessageSender.send(slack.getMessage());
+            slackMessageSender.send(
+                    receiverSlackId,
+                    slack.getMessage()
+            );
             slack.markSuccess();
 
         } catch (Exception e) {
@@ -63,26 +73,40 @@ public class SlackCommandService {
     }
 
     public SlackRetryResult retrySlack(
-            UUID slackMessageId
+            UUID slackMessageId,
+            String receiverSlackId
     ) {
-        Slack slack = slackCommandRepository.findById(slackMessageId)
-                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
+        Slack slack = slackCommandRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() ->
+                        new CustomException(
+                                SlackErrorCode.SLACK_NOT_FOUND
+                        )
+                );
 
         slack.retry(MAX_RETRY_COUNT);
 
-        publishAfterCommit(slack.getSlackMessageId());
+        publishAfterCommit(
+                slack.getSlackMessageId(),
+                receiverSlackId
+        );
 
         return SlackRetryResult.from(slack);
     }
 
     public void deleteSlack(
             UUID slackMessageId,
-            Long deletedBy
+            AuthenticatedUser authenticatedUser
     ) {
-        Slack slack = slackCommandRepository.findByIdAndDeletedAtIsNull(slackMessageId)
+        Slack slack = slackCommandRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
                 .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
 
-        slack.markDeleted(deletedBy);
+        slackAuthorizationService.validateDeleteAccess(
+                authenticatedUser
+        );
+
+        slack.markDeleted(authenticatedUser.userId());
     }
 
     // 스프링이 제공하는 트랜잭션 유틸 클래스 친구들
@@ -95,16 +119,30 @@ public class SlackCommandService {
 
     // 그런데 유틸 클래스인데, service에 있는 게 맞을까?
     // -> 범용 유틸이 아니라 커밋 후 발행 흐름이라 괜찮다고 판단된다
-    private void publishAfterCommit(UUID slackMessageId) {
+    private void publishAfterCommit(
+            UUID slackMessageId,
+            String receiverSlackId
+    ) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
                         slackEventPublisher.publish(
-                                new SlackSendEvent(slackMessageId)
+                                new SlackSendEvent(
+                                        slackMessageId,
+                                        receiverSlackId
+                                )
                         );
                     }
                 }
         );
+    }
+
+    public Long getReceiverId(UUID slackMessageId) {
+        Slack slack = slackCommandRepository
+                .findByIdAndDeletedAtIsNull(slackMessageId)
+                .orElseThrow(() -> new CustomException(SlackErrorCode.SLACK_NOT_FOUND));
+
+        return slack.getReceiverId();
     }
 }

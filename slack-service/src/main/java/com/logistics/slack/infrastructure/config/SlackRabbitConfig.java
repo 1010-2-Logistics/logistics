@@ -12,9 +12,14 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SlackRabbitConfig {
+    // AI -> Slack
     public static final String EXCHANGE = "slack.exchange";
     public static final String QUEUE = "slack.send.queue";
     public static final String ROUTING_KEY = "slack.send";
+
+    // Slack 내부 실제 발송
+    public static final String INTERNAL_QUEUE = "slack.dispatch.queue";
+    public static final String INTERNAL_ROUTING_KEY = "slack.dispatch";
 
     @Bean
     public DirectExchange slackExchange() {
@@ -23,7 +28,6 @@ public class SlackRabbitConfig {
 
     @Bean
     public Queue slackSendQueue() {
-        // true는 RabbitMQ가 재시작되어도 큐를 유지하는 durable 설정
         return new Queue(QUEUE, true);
     }
 
@@ -36,6 +40,22 @@ public class SlackRabbitConfig {
                 .bind(slackSendQueue)
                 .to(slackExchange)
                 .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue slackDispatchQueue() {
+        return new Queue(INTERNAL_QUEUE, true);
+    }
+
+    @Bean
+    public Binding slackDispatchBinding(
+            Queue slackDispatchQueue,
+            DirectExchange slackExchange
+    ) {
+        return BindingBuilder
+                .bind(slackDispatchQueue)
+                .to(slackExchange)
+                .with(INTERNAL_ROUTING_KEY);
     }
 
     @Bean
