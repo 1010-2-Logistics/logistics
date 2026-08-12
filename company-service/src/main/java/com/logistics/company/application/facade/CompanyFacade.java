@@ -1,5 +1,6 @@
 package com.logistics.company.application.facade;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import com.logistics.company.application.dto.internal.response.HubInfoResponseDt
 import com.logistics.company.application.dto.internal.response.UserExistsResponseDto;
 import com.logistics.company.application.dto.internal.response.UserRoleUpdateResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
+import com.logistics.company.application.dto.result.CompanyManagerFixResultDto;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.port.HubPort;
 import com.logistics.company.application.port.ProductPort;
@@ -24,6 +26,7 @@ import com.logistics.company.domain.entity.Role;
 import com.logistics.company.global.exception.CommonErrorCode;
 import com.logistics.company.global.exception.CompanyErrorCode;
 import com.logistics.company.global.exception.CompanyException;
+import com.logistics.company.infrastructure.security.principal.UserPrincipal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +45,48 @@ public class CompanyFacade {
 	private final UserPort userPort;
 	
 	private final ProductPort productPort;
+	
+	// 업체 담당자 지정
+	public CompanyManagerFixResultDto companyManagerFix(UserPrincipal user, UUID companyId, Long userId) {
+		if(user.getRole() != Role.MASTER && user.getRole() != Role.HUB_MANAGER) {
+			throw new CompanyException(CommonErrorCode.AUTH_FORBIDDEN);
+		}
+		
+		if(user.getRole() == Role.HUB_MANAGER) {
+			UUID hubId = companyQueryService.findByCompanyAllStatus(companyId).getHubId();
+			if(!Objects.equals(user.getHubId(), hubId)) {
+				throw new CompanyException(CompanyErrorCode.COMPANY_NOT_SELF_HUB);
+			}
+		}
+		
+		Company company = companyCommandService.assignCompanyManager(companyId, userId);
+		
+		boolean success = false;
+		
+		try {
+			UserRoleUpdateResponseDto userRoleUpdate = userPort.companyManagerRoleUpdateRequest(
+          UserRoleUpdateRequestDto.from(company), userId
+			);
+			
+			success = userRoleUpdate != null && userRoleUpdate.exists();
+			
+		} catch (Exception e) {
+			log.error("업체 담당자 지정 연동 실패 userId = {}", userId, e);
+			success = false;
+		}
+		
+		if(!success) {
+			companyCommandService.assignCompanyManagerFail(companyId, userId);
+			
+			throw new CompanyException(CompanyErrorCode.COMPANY_MANAGER_FIX_FAIL);
+		}
+		
+		return new CompanyManagerFixResultDto(
+				success,
+				companyId,
+				userId
+		);
+	}
 	
 	// 업체 수정
 	public CompanyUpdateResultDto updateCompany(UUID companyId, CompanyUpdateCommand command) {
@@ -91,6 +136,10 @@ public class CompanyFacade {
 			throw new CompanyException(CommonErrorCode.AUTH_FORBIDDEN);
 		}
 		
+		if(command.role() == Role.HUB_MANAGER && !Objects.equals(command.hubId(), command.userHubId())) {
+			throw new CompanyException(CompanyErrorCode.COMPANY_NOT_SELF_HUB);
+		}
+		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
 		
 		// 업체 담당자를 지정하여 요청을 보낸 경우
@@ -113,7 +162,7 @@ public class CompanyFacade {
 		// 업체 생성 후 업체 담당자가 될 대상의 소속 업체, 소속 허브, Role 변경 요청
 		if(command.companyManagerId() != null) {
 			UserRoleUpdateResponseDto userRoleUpdate = userPort.companyManagerRoleUpdateRequest(
-					UserRoleUpdateRequestDto.from(command.companyManagerId(), company)
+					UserRoleUpdateRequestDto.from(company), command.companyManagerId()
 			);
 			
 			if(userRoleUpdate.exists()) {

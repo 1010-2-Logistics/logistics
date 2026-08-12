@@ -22,6 +22,11 @@ rabbitmq:
     dlq: order-created.dlq
     dlq-routing-key: order-created.dead
 
+  slack:
+    exchange: slack.exchange
+    queue: slack.send.queue
+    routing-key: slack.send
+
 ai:
   gemini:
     url: https://generativelanguage.googleapis.com/v1beta/models
