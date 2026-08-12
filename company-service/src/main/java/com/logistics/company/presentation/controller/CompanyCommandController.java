@@ -26,9 +26,12 @@ import com.logistics.company.presentation.dto.request.CompanyUpdateRequestDto;
 import com.logistics.company.presentation.dto.response.CompanyCreateResponseDto;
 import com.logistics.company.presentation.dto.response.CompanyUpdateResponseDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Company")
 @RestController
 @RequestMapping("/api/v1/companies")
 @RequiredArgsConstructor
@@ -38,6 +41,14 @@ public class CompanyCommandController {
 	
 	private final CompanyCommandServiceImpl companyCommandService;
 	
+	@Operation(
+			summary = "업체 생성",
+			description = """
+					접근 권한:
+					  - 관리자
+					  - 허브 담당자		
+			"""
+	)
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER')")
@@ -56,6 +67,15 @@ public class CompanyCommandController {
 		);
 	}
 	
+	@Operation(
+			summary = "업체 수정",
+			description = """
+					접근 권한:
+					  - 관리자
+					  - 허브 담당자: 본인 허브 소속의 업체만 수정 가능 
+					  - 업체 담당자: 본인 업체만 수정 가능
+			"""
+	)
 	@PatchMapping("/{companyId}")
 	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER', 'COMPANY_MANAGER')")
 	public ApiResponse<CompanyUpdateResponseDto> updateCompany(
@@ -73,6 +93,14 @@ public class CompanyCommandController {
 		);
 	}
 	
+	@Operation(
+			summary = "업체 담당자 지정",
+			description = """
+					접근 권한:
+					  - 관리자
+					  - 허브 담당자: 본인 허브 소속의 업체만 담당자 지정 가능
+			"""
+	)
 	@PatchMapping("/{companyId}/{userId}")
 	@PreAuthorize("hasRole('MASTER', 'HUB_MANAGER')")
 	public ApiResponse<Object> companyManagerFix(
@@ -89,7 +117,14 @@ public class CompanyCommandController {
 		);
 	}
 	
-	
+	@Operation(
+			summary = "업체 삭제",
+			description = """
+					접근 권한:
+					  - 관리자
+					  - 허브 담당자: 본인 허브 소속의 업체만 삭제 가능		
+			"""
+	)
 	@DeleteMapping("/{companyId}")
 	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER')")
 	public ApiResponse<Void> deleteCompany(

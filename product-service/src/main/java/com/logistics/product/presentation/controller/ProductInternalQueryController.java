@@ -14,8 +14,11 @@ import com.logistics.product.presentation.dto.response.OrderedProductInfoRespons
 import com.logistics.product.presentation.dto.response.ProductExistsResponseDto;
 import com.logistics.product.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Product Internal")
 @RestController
 @RequestMapping("/internal/v1/products")
 @RequiredArgsConstructor
@@ -24,6 +27,9 @@ public class ProductInternalQueryController {
 	private final ProductQueryService productQueryService;
 	
 	// 주문시 상품 정보 조회
+	@Operation(
+			summary = "주문시 상품 정보 조회"
+	)
 	@GetMapping("/{productId}")
 	@NoAuthentication
 	public ApiResponse<OrderedProductInfoResponseDto> orderedProductInfo(@PathVariable("productId") UUID productId) {
@@ -39,6 +45,9 @@ public class ProductInternalQueryController {
 	}
 	
 	// 상품 존재 여부 확인
+	@Operation(
+			summary = "상품 존재 여부 확인"
+	)
 	@GetMapping("/{productId}/exists")
 	@NoAuthentication
 	public ApiResponse<ProductExistsResponseDto> existsProduct(@PathVariable("productId") UUID productId) {
