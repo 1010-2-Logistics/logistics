@@ -6,7 +6,7 @@ import com.logistics.company.application.dto.internal.response.UserRoleUpdateRes
 
 public interface UserPort {
 	
-	UserRoleUpdateResponseDto companyManagerRoleUpdateRequest(UserRoleUpdateRequestDto request);
+	UserRoleUpdateResponseDto companyManagerRoleUpdateRequest(UserRoleUpdateRequestDto request, Long companyManagerId);
 	
 	UserExistsResponseDto userExistsRequest(Long userId);
 }

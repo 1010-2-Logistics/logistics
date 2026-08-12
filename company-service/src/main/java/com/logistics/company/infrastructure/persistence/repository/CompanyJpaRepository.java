@@ -12,7 +12,9 @@ import com.logistics.company.domain.entity.Company;
 import com.logistics.company.domain.entity.CompanyStatus;
 
 interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
-
+	
+	Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId);
+	
 	Optional<Company> findByCompanyIdAndDeletedAtIsNullAndStatus(UUID companyId, CompanyStatus status);
 
 	@Query("""

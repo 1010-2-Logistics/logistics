@@ -17,6 +17,7 @@ import com.logistics.ai.application.dto.internal.RouteInfo;
 import com.logistics.ai.application.dto.internal.UserInfo;
 import com.logistics.ai.application.dto.result.DispatchDeadlineRetryResultDto;
 import com.logistics.ai.application.event.OrderCreatedEvent;
+import com.logistics.ai.application.event.SlackEvent;
 import com.logistics.ai.application.port.in.DeadlineGenerationRetryService;
 import com.logistics.ai.application.port.in.DispatchDeadlineCommandService;
 import com.logistics.ai.application.port.in.DispatchDeadlineUseCase;
@@ -24,9 +25,11 @@ import com.logistics.ai.application.service.DispatchDeadlineQueryService;
 import com.logistics.ai.application.port.out.DeliveryPort;
 import com.logistics.ai.application.port.out.HubPort;
 import com.logistics.ai.application.port.out.ProductPort;
+import com.logistics.ai.application.port.out.SlackEventPublisher;
 import com.logistics.ai.application.port.out.UserPort;
 import com.logistics.ai.application.util.DeadlinePromptSupport;
 import com.logistics.ai.domain.entity.AiHistory;
+import com.logistics.ai.domain.entity.AiStatus;
 import com.logistics.ai.global.exception.AiErrorCode;
 import com.logistics.ai.global.exception.AiException;
 
@@ -50,6 +53,8 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 	private final DispatchDeadlineQueryService queryService;
 
 	private final UserPort userPort;
+	
+	private final SlackEventPublisher slackPublisher;
 	
 	@Override
 	public void generate(OrderCreatedEvent event) {
@@ -125,7 +130,16 @@ public class DispatchDeadlineFacade implements DispatchDeadlineUseCase {
 				result.lastRetryReason()
 				);
 		
-		commandService.saveSucceeded(successHistory);
+		AiHistory aiHistory = commandService.saveSucceeded(successHistory);
+		
+		if(aiHistory.getStatus() == AiStatus.SUCCESS) {
+			// 이벤트 발행
+			slackPublisher.publish(new SlackEvent(
+					deliveryManagerInfo.userId(),
+					result.responsePrompt(),
+					aiHistory.getAiId()
+			));
+		}
 	}
 	
 	private void validateHubIdsMatch(Map<UUID, HubInfo> hubMap, Set<UUID> hubIds) {
