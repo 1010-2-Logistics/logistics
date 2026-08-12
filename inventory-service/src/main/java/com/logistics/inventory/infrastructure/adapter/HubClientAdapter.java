@@ -10,6 +10,8 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -20,16 +22,10 @@ public class HubClientAdapter implements HubPort {
     @Override
     public HubExistsResponseDto getHub(UUID hubId) {
         try {
-            HubValidationResponse hubValidationResponse = hubClient.getHub(hubId).getData();
-
-            return new HubExistsResponseDto(
-                    hubValidationResponse.hubId(),
-                    hubValidationResponse.exists()
-            );
-        }catch (FeignException e) {
-            throw new CustomException(
-                    CommonErrorCode.INVENTORY_SERVICE_UNAVAILABLE
-            );
+            Set<UUID> validIds = hubClient.validateHubIds(List.of(hubId));
+            return new HubExistsResponseDto(hubId, validIds.contains(hubId));
+        } catch (FeignException e) {
+            throw new CustomException(CommonErrorCode.INVENTORY_SERVICE_UNAVAILABLE);
         }
     }
 }

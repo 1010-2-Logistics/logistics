@@ -327,7 +327,7 @@ public class User extends BaseEntity {
                 }
             }
 
-            case HUB_MANAGER, HUB_DELIVERY_MANAGER -> {
+            case HUB_MANAGER-> {
                 if (hubId == null || companyId != null) {
                     throw new IllegalArgumentException(
                             "허브 역할은 hubId만 가져야 합니다."
@@ -335,7 +335,7 @@ public class User extends BaseEntity {
                 }
             }
 
-            case COMPANY_MANAGER, COMPANY_DELIVERY_MANAGER -> {
+            case COMPANY_MANAGER-> {
                 if (companyId == null || hubId == null) {
                     throw new IllegalArgumentException(
                             "업체 역할은 companyId와 hubId가 모두 필요합니다."

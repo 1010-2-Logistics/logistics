@@ -71,6 +71,11 @@ spring:
               predicates:
                 - Path=/api/v1/slack/**
 
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/v1/ai/**
+
 jwt:
   # user-service와 동일한 값이어야 서명 검증이 성립한다
   secret: ${JWT_SECRET}

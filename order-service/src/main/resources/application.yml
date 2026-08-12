@@ -5,6 +5,11 @@ spring:
     name: order-service # 서비스명 컨벤션대로 바꾸세요 (예: order-service)
   profiles:
     active: local
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
 
 server:
   port: 19093 # 컨벤션 포트표 참고해서 바꾸세요 (19090부터 순서대로 배정됨)
@@ -18,6 +23,9 @@ eureka:
     prefer-ip-address: true
 
 management:
+  endpoint:
+    health:
+      show-details: always
   tracing:
     sampling:
       probability: 1.0

@@ -1,7 +1,10 @@
 package com.logistics.company.infrastructure.adapter;
 
+import java.util.List;
 import java.util.UUID;
 
+import com.logistics.company.global.exception.CompanyErrorCode;
+import com.logistics.company.global.exception.CompanyException;
 import org.springframework.stereotype.Component;
 
 import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
@@ -16,15 +19,14 @@ import lombok.RequiredArgsConstructor;
 public class HubAdapter implements HubPort {
 
 	private final HubClient hubClient;
-	
+
 	@Override
 	public HubInfoResponseDto getHubInfo(UUID hubId) {
-		HubValidationResponse response = hubClient.getHub(hubId).getData();
-		
-		return new HubInfoResponseDto(
-				response.hubId(),
-				response.hubName()
-		);
+		HubValidationResponse response = hubClient.getHubInfos(List.of(hubId)).stream()
+				.findFirst()
+				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_HUB_NOT_FOUND));
+
+		return new HubInfoResponseDto(response.hubId(), response.name());
 	}
 
 	

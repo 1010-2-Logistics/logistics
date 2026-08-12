@@ -22,6 +22,8 @@ public enum CompanyErrorCode implements ErrorCode {
 	COMPANY_NOT_SELF_HUB(HttpStatus.FORBIDDEN, "소속 허브가 아닙니다."),
 	
 	COMPANY_NOT_SELF_COMPANY(HttpStatus.FORBIDDEN, "소속 업체가 아닙니다."),
+
+	COMPANY_HUB_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 허브입니다."),
 	
 	COMPANY_NAME_UPDATE_PRODUCT_FAIL(HttpStatus.CONFLICT, "업체와 관련된 상품의 업데이트에 실패했습니다."),
 	;
