@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
+import com.logistics.company.application.dto.result.CompanyManagerFixResultDto;
 import com.logistics.company.application.dto.result.CompanyUpdateResultDto;
 import com.logistics.company.application.facade.CompanyFacade;
 import com.logistics.company.application.service.CompanyCommandServiceImpl;
@@ -71,6 +72,23 @@ public class CompanyCommandController {
 				response
 		);
 	}
+	
+	@PatchMapping("/{companyId}/{userId}")
+	@PreAuthorize("hasRole('MASTER', 'HUB_MANAGER')")
+	public ApiResponse<Object> companyManagerFix(
+			@AuthenticationPrincipal UserPrincipal user,
+			@PathVariable("companyId") UUID companyId,
+			@PathVariable("userId") Long userId) {
+		
+		CompanyManagerFixResultDto result = companyFacade.companyManagerFix(user, companyId, userId);
+		
+		return ApiResponse.success(
+				HttpStatus.OK.value(),
+				"업체 담당자 지정 성공",
+				result
+		);
+	}
+	
 	
 	@DeleteMapping("/{companyId}")
 	@PreAuthorize("hasRole('HUB_MANAGER', 'MASTER')")

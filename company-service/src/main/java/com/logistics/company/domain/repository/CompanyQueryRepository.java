@@ -20,6 +20,8 @@ public interface CompanyQueryRepository {
 	Optional<Company> findByCompanyIdAndDeletedAtIsNull(UUID companyId);
 	
 	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId);
+	
+	Optional<Company> findByCompanyId(UUID companyId);
 
 	Page<Company> searchCompany(
 			String companyName,

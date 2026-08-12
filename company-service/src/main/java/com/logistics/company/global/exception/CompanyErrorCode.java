@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 public enum CompanyErrorCode implements ErrorCode {
 
   COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 업체입니다."),
+  
+  COMPANY_HUB_NOT_FOUND(HttpStatus.NOT_FOUND, "허브 정보가 존재하지 않습니다."),
 
 	COMPANY_TYPE_FOR_ORDER(HttpStatus.CONFLICT, "출발 업체는 생산 업체여야 하며, 도착 업체는 수령 업체여야 합니다."),
 	
@@ -26,6 +28,8 @@ public enum CompanyErrorCode implements ErrorCode {
 	COMPANY_HUB_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 허브입니다."),
 	
 	COMPANY_NAME_UPDATE_PRODUCT_FAIL(HttpStatus.CONFLICT, "업체와 관련된 상품의 업데이트에 실패했습니다."),
+	
+	COMPANY_MANAGER_FIX_FAIL(HttpStatus.CONFLICT, "업체 담당자 지정에 실패하였습니다."),
 	;
 	
   private final HttpStatus httpStatus;

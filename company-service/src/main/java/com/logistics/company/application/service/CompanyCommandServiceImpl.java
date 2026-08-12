@@ -43,7 +43,7 @@ public class CompanyCommandServiceImpl implements CompanyCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public Company assignCompanyManager(UUID companyId, Long companyManagerId) {
-		Company entity = companyQueryService.findByCompany(companyId);
+		Company entity = companyQueryService.findByCompanyAllStatus(companyId);
 		
 		entity.updateCompanyManager(companyManagerId);
 		entity.updateStatus(CompanyStatus.ACTIVE);
@@ -53,7 +53,7 @@ public class CompanyCommandServiceImpl implements CompanyCommandService {
 	
 	@Transactional(rollbackFor = Exception.class)
 	public Company assignCompanyManagerFail(UUID companyId, Long companyManagerId) {
-		Company entity = companyQueryService.findByCompany(companyId);
+		Company entity = companyQueryService.findByCompanyAllStatus(companyId);
 		
 		entity.updateCompanyManager(companyManagerId);
 		entity.updateStatus(CompanyStatus.FAILED);

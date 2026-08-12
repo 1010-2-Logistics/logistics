@@ -34,6 +34,11 @@ public class CompanyQueryService {
 		return companyQueryRepository.findByCompanyIdAndDeletedAtIsNull(companyId);
 	}
 	
+	public Company findByCompanyAllStatus(UUID companyId) {
+		return companyQueryRepository.findByCompanyId(companyId)
+				.orElseThrow(() -> new CompanyException(CompanyErrorCode.COMPANY_NOT_FOUND));
+	}
+	
 	/**
 	 * 주문 시 출발 업체와 도착 업체의 정보를 조회합니다.
 	 * 출발 업체의 경우 생산 업체만 가능하며, 도착 업체의 경우 수령 업체만 가능합니다.

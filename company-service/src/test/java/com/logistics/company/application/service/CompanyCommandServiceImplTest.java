@@ -67,6 +67,7 @@ public class CompanyCommandServiceImplTest {
 			CompanyCreateCommand companyCreateCommand = new CompanyCreateCommand(
 					1L,
 					Role.MASTER,
+					UUID.randomUUID(),
 					hubId,
 					companyManagerId,
 					companyName,
@@ -99,7 +100,7 @@ public class CompanyCommandServiceImplTest {
 			String companyAddress = "업체주소A";
 			
 			CompanyCreateCommand command = new CompanyCreateCommand(
-					1L, Role.MASTER,
+					1L, Role.MASTER, UUID.randomUUID(),
 					hubId, companyManagerId,
 					companyName, companyAddress,
 					CompanyType.PRODUCER
