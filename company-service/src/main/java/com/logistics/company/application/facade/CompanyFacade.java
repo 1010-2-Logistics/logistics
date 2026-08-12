@@ -11,7 +11,6 @@ import com.logistics.company.application.dto.internal.request.CompanyNameUpdateR
 import com.logistics.company.application.dto.internal.request.UserRoleUpdateRequestDto;
 import com.logistics.company.application.dto.internal.response.CompanyNameUpdateResponseDto;
 import com.logistics.company.application.dto.internal.response.HubInfoResponseDto;
-import com.logistics.company.application.dto.internal.response.UserExistsResponseDto;
 import com.logistics.company.application.dto.internal.response.UserRoleUpdateResponseDto;
 import com.logistics.company.application.dto.result.CompanyCreateResultDto;
 import com.logistics.company.application.dto.result.CompanyManagerFixResultDto;
@@ -68,7 +67,16 @@ public class CompanyFacade {
           UserRoleUpdateRequestDto.from(company), userId
 			);
 			
-			success = userRoleUpdate != null && userRoleUpdate.exists();
+			// success = userRoleUpdate != null && userRoleUpdate.exists();
+			if(userRoleUpdate != null) {
+				if(Objects.equals(companyId, userRoleUpdate.companyId())) {
+					log.info("userRoleUpdate.companyId = {}, request.companyId = {}",
+							userRoleUpdate.companyId(),
+							companyId
+					);
+					success = true;
+				}
+			}
 			
 		} catch (Exception e) {
 			log.error("업체 담당자 지정 연동 실패 userId = {}", userId, e);
@@ -145,13 +153,7 @@ public class CompanyFacade {
 		// 업체 담당자를 지정하여 요청을 보낸 경우
 		// 업체 담당자로 지정될 companyManagerId 로 해당 회원이 존재하는지 확인
 		if(command.companyManagerId() != null) {
-			UserExistsResponseDto userExists = userPort.userExistsRequest(command.companyManagerId());
 			
-			// 해당 회원이 존재하지 않는 경우
-			// 잘못된 요청이라고 판단
-			if(!userExists.exists()) {
-				throw new CompanyException(CompanyErrorCode.COMPANY_USER_NOT_FOUND);
-			}
 		}
 		
 		// T1 - PENDING 상태 업체 생성 완료
@@ -165,7 +167,7 @@ public class CompanyFacade {
 					UserRoleUpdateRequestDto.from(company), command.companyManagerId()
 			);
 			
-			if(userRoleUpdate.exists()) {
+			if(userRoleUpdate != null && Objects.equals(userRoleUpdate.companyId(), company.getCompanyId())) {
 				// T2 - 업체 담당자가 될 대상의 소속 변경 API 가 성공한 경우
 				company = companyCommandService.assignCompanyManager(company.getCompanyId(), userRoleUpdate.userId());
 			} else {

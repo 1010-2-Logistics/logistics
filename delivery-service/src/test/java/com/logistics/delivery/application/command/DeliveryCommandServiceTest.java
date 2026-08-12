@@ -659,7 +659,7 @@ class DeliveryCommandServiceTest {
         assertThatThrownBy(() -> deliveryCommandService.cancelDelivery(orderId))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode")
-                .isEqualTo(DeliveryErrorCode.DELIVERY_INVALID_STATUS_TRANSITION);
+                .isEqualTo(DeliveryErrorCode.DELIVERY_ALREADY_DELIVERED);
     }
 
     @Test

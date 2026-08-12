@@ -19,6 +19,7 @@ import com.logistics.delivery.application.port.UserAffiliationPort;
 import com.logistics.delivery.domain.entity.Role;
 import com.logistics.delivery.infrastructure.security.principal.UserPrincipal;
 import feign.FeignException;
+import feign.RetryableException;
 
 import java.util.List;
 import java.util.Optional;
@@ -128,7 +129,8 @@ class DeliveryManagerCommandServiceTest {
         // when & then
         assertThatThrownBy(() -> deliveryManagerCommandService.registerDeliveryManager(command))
                 .isInstanceOf(CustomException.class)
-                .extracting("errorCode");
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_HUB_SERVICE_UNAVAILABLE);
     }
 
     @Test
@@ -169,7 +171,32 @@ class DeliveryManagerCommandServiceTest {
         // when & then
         assertThatThrownBy(() -> deliveryManagerCommandService.registerDeliveryManager(command))
                 .isInstanceOf(CustomException.class)
-                .extracting("errorCode");
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
+    }
+
+    @Test
+    void 소속변경_응답이_유실되면_결과를_알_수_없으므로_등록이_롤백된다() {
+        // given: 재시도까지 마친 뒤에도 응답을 받지 못한 상황(RetryableException)
+        when(deliveryManagerRepository.existsByDeliveryManagerIdAndDeletedAtIsNull(41L)).thenReturn(false);
+        when(deliveryManagerRepository.findMaxSequence(ManagerType.HUB_DELIVERY_MANAGER, null))
+                .thenReturn(Optional.empty());
+        when(deliveryManagerRepository.save(any(DeliveryManager.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        RetryableException retryable = mock(RetryableException.class);
+        lenient().when(retryable.getStackTrace()).thenReturn(new StackTraceElement[0]);
+        doThrow(retryable).when(userAffiliationPort).changeAffiliation(eq(41L), any(), any());
+
+        RegisterDeliveryManagerCommand command =
+                new RegisterDeliveryManagerCommand(41L, null, "U41", ManagerType.HUB_DELIVERY_MANAGER);
+
+        // when & then: user-service 반영 여부를 알 수 없으므로 커밋하지 않고 롤백한다.
+        // 클라이언트가 재시도하면 멱등한 PATCH가 다시 나가 양쪽이 수렴한다.
+        assertThatThrownBy(() -> deliveryManagerCommandService.registerDeliveryManager(command))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(DeliveryErrorCode.DELIVERY_USER_SERVICE_UNAVAILABLE);
     }
 
     @Test
