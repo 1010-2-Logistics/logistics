@@ -11,7 +11,10 @@ cd /home/ec2-user/logistics
 aws ecr get-login-password --region ap-northeast-2 \
   | docker login --username AWS --password-stdin 116971679055.dkr.ecr.ap-northeast-2.amazonaws.com
 
-docker compose -f docker-compose.app.yml pull
+# --quiet가 없으면 레이어 추출 진행률이 수천 줄 쏟아진다. SSM은 명령 출력을
+# 24,000자에서 자르므로 진행률이 그 한도를 다 먹고 정작 뒤에서 난 실패 메시지가
+# 잘려 나간다. 실제로 배포 실패 원인을 못 찾아 두 번 헤맸다.
+docker compose -f docker-compose.app.yml pull --quiet
 
 wait_healthy() {
   for name in "$@"; do
