@@ -23,7 +23,7 @@ public class DeliveryManagerQueryService {
 
     private final DeliveryManagerRepository deliveryManagerRepository;
 
-    public DeliveryManager getById(Long deliveryManagerId, UserPrincipal principal) {
+    public DeliveryManager getDeliveryManagerById(Long deliveryManagerId, UserPrincipal principal) {
         DeliveryManager manager = deliveryManagerRepository.findByIdAndDeletedAtIsNull(deliveryManagerId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_MANAGER_NOT_FOUND));
 
@@ -41,7 +41,7 @@ public class DeliveryManagerQueryService {
         return manager;
     }
 
-    public Page<DeliveryManager> search(SearchDeliveryManagerQuery query, UserPrincipal principal) {
+    public Page<DeliveryManager> searchDeliveryManager(SearchDeliveryManagerQuery query, UserPrincipal principal) {
         PageRequest pageRequest = PageRequest.of(query.page(), query.size(), Sort.by(Sort.Direction.DESC, "createdAt"));
 
         if (principal.getRole() == Role.MASTER) {

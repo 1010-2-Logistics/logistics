@@ -11,9 +11,12 @@ public record DeliveryCreateRequest(
         @NotNull UUID endHubId,
         @NotBlank String deliveryAddress,
         @NotBlank String receiverName,
-        @NotBlank String receiverSlackId
+        @NotBlank String receiverSlackId,
+        UUID startCompanyId,
+        UUID endCompanyId
 ) {
     public CreateDeliveryCommand toCommand() {
-        return new CreateDeliveryCommand(orderId, startHubId, endHubId, deliveryAddress, receiverName, receiverSlackId);
+        return new CreateDeliveryCommand(orderId, startHubId, endHubId, deliveryAddress,
+                receiverName, receiverSlackId, startCompanyId, endCompanyId);
     }
 }

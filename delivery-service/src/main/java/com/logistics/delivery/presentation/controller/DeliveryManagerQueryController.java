@@ -39,14 +39,14 @@ public class DeliveryManagerQueryController {
                 """
     )
     @GetMapping
-    public ApiResponse<PageResponse<DeliveryManagerResponse>> search(
+    public ApiResponse<PageResponse<DeliveryManagerResponse>> searchDeliveryManager(
             @RequestParam(required = false) UUID hubId,
             @RequestParam(required = false) ManagerType managerType,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @AuthenticationPrincipal UserPrincipal principal) {
         SearchDeliveryManagerQuery query = SearchDeliveryManagerQuery.of(managerType, hubId, page, size);
-        Page<DeliveryManagerResponse> result = deliveryManagerQueryService.search(query, principal).map(DeliveryManagerResponse::from);
+        Page<DeliveryManagerResponse> result = deliveryManagerQueryService.searchDeliveryManager(query, principal).map(DeliveryManagerResponse::from);
         return ApiResponse.success(200, "배송 담당자 목록 조회 성공", PageResponse.of(result));
     }
 
@@ -60,9 +60,9 @@ public class DeliveryManagerQueryController {
                 """
     )
     @GetMapping("/{deliveryManagerId}")
-    public ApiResponse<DeliveryManagerResponse> getById(@PathVariable Long deliveryManagerId,
+    public ApiResponse<DeliveryManagerResponse> getDeliveryManagerById(@PathVariable Long deliveryManagerId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        DeliveryManager manager = deliveryManagerQueryService.getById(deliveryManagerId, principal);
+        DeliveryManager manager = deliveryManagerQueryService.getDeliveryManagerById(deliveryManagerId, principal);
         return ApiResponse.success(200, "배송 담당자 조회 성공", DeliveryManagerResponse.from(manager));
     }
 }

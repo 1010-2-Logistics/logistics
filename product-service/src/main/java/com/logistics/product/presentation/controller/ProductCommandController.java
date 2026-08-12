@@ -3,6 +3,8 @@ package com.logistics.product.presentation.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,7 @@ import com.logistics.product.application.dto.result.ProductUpdateResultDto;
 import com.logistics.product.application.facade.ProductCommandPacade;
 import com.logistics.product.domain.entity.Role;
 import com.logistics.product.global.response.ApiResponse;
+import com.logistics.product.infrastructure.security.principal.UserPrincipal;
 import com.logistics.product.presentation.dto.request.ProductCreateRequestDto;
 import com.logistics.product.presentation.dto.request.ProductUpdateRequestDto;
 import com.logistics.product.presentation.dto.response.ProductCreateResponseDto;
@@ -36,12 +39,12 @@ public class ProductCommandController {
 	// 상품 생성
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ApiResponse<ProductCreateResponseDto> createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
-		Long exampleUserId = 1L;
-		Role exampleRole = Role.HUB_MANAGER;
-		
+	@PreAuthorize("hasRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+	public ApiResponse<ProductCreateResponseDto> createProduct(
+			@AuthenticationPrincipal UserPrincipal user,
+			@Valid @RequestBody ProductCreateRequestDto request) {
 		ProductCreateResultDto result = productFacade.createProduct(
-				request.toCommand(exampleUserId, exampleRole)
+				request.toCommand(user.getUserId(), user.getRole())
 		);
 		
 		ProductCreateResponseDto response = ProductCreateResponseDto.from(result);
@@ -55,12 +58,12 @@ public class ProductCommandController {
 	
 	// 상품 수정
 	@PatchMapping
-	public ApiResponse<?> updateProduct(@Valid @RequestBody ProductUpdateRequestDto request) {
-		Long exampleUserId = 1L;
-		Role exampleRole = Role.HUB_MANAGER;
-		
+	@PreAuthorize("hasRole('MASTER', 'HUB_MANAGER', 'COMPANY_MANAGER')")
+	public ApiResponse<?> updateProduct(
+			@AuthenticationPrincipal UserPrincipal user,
+			@Valid @RequestBody ProductUpdateRequestDto request) {
 		ProductUpdateResultDto result = productFacade.updateProduct(
-				request.toCommand(exampleUserId, exampleRole)
+				request.toCommand(user.getUserId(), user.getRole())
 		);
 		
 		ProductUpdateResponseDto response = ProductUpdateResponseDto.from(result);
@@ -75,14 +78,14 @@ public class ProductCommandController {
 	// 상품 삭제
 	@DeleteMapping("/{productId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public ApiResponse<Void> deleteProduct(@PathVariable("productId") UUID productId) {
-		Long exampleUserId = 1L;
-		Role exampleRole = Role.HUB_MANAGER;
-		
+	@PreAuthorize("hasRole('MASTER', 'HUB_MANAGER')")	
+	public ApiResponse<Void> deleteProduct(
+			@AuthenticationPrincipal UserPrincipal user,
+			@PathVariable("productId") UUID productId) {
 		ProductDeleteCommand command = new ProductDeleteCommand(
 				productId,
-				exampleUserId,
-				exampleRole
+				user.getUserId(),
+				user.getRole()
 		);
 		
 		productFacade.deleteProduct(command);
