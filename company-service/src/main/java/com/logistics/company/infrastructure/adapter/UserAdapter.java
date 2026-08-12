@@ -20,9 +20,9 @@ public class UserAdapter implements UserPort {
 	private final UserClient userClient;
 
 	@Override
-	public UserRoleUpdateResponseDto companyManagerRoleUpdateRequest(UserRoleUpdateRequestDto request) {
+	public UserRoleUpdateResponseDto companyManagerRoleUpdateRequest(UserRoleUpdateRequestDto request, Long companyManagerId) {
 		UserRoleUpdateClientResponseDto response = userClient.compnayManagerRoleUpdateRequest(
-				request.userId(),
+				companyManagerId,
 				toClientRequest(request)
 		).getData();
 		

@@ -65,7 +65,7 @@ public class CompanyFacade {
 		
 		try {
 			UserRoleUpdateResponseDto userRoleUpdate = userPort.companyManagerRoleUpdateRequest(
-          UserRoleUpdateRequestDto.from(userId, company)
+          UserRoleUpdateRequestDto.from(company), userId
 			);
 			
 			success = userRoleUpdate != null && userRoleUpdate.exists();
@@ -162,7 +162,7 @@ public class CompanyFacade {
 		// 업체 생성 후 업체 담당자가 될 대상의 소속 업체, 소속 허브, Role 변경 요청
 		if(command.companyManagerId() != null) {
 			UserRoleUpdateResponseDto userRoleUpdate = userPort.companyManagerRoleUpdateRequest(
-					UserRoleUpdateRequestDto.from(command.companyManagerId(), company)
+					UserRoleUpdateRequestDto.from(company), command.companyManagerId()
 			);
 			
 			if(userRoleUpdate.exists()) {
