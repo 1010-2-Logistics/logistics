@@ -35,7 +35,7 @@ public class Slack extends BaseEntity {
     @Column(name = "receiver_id", nullable = false)
     private Long receiverId; // 수신자 식별자
 
-    @Column(name = "message", nullable = false)
+    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message; // 메시지 내용
 
     @Column(name = "error_message")

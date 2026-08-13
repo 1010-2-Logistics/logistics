@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS slack_service.p_slack
     slack_message_id UUID PRIMARY KEY,
     sender_id        BIGINT       NOT NULL,
     receiver_id      BIGINT       NOT NULL,
-    message          VARCHAR(255) NOT NULL,
+    message          TEXT         NOT NULL,
     error_message    VARCHAR(255),
     retry_count      INTEGER      NOT NULL DEFAULT 0,
     sent_at          TIMESTAMP,

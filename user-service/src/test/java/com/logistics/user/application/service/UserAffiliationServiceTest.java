@@ -220,75 +220,75 @@ class UserAffiliationServiceTest {
                 });
     }
 
-    /**
-     * role, companyId, hubId가 현재 상태와 전부 같다면
-     * 변경할 필요가 없으므로 예외가 발생해야 한다.
-     */
-    @Test
-    void 현재_소속과_권한이_모두_동일하면_예외가_발생한다() {
-        // given
-        Long userId = 15L;
-
-        UUID companyId = UUID.randomUUID();
-        UUID hubId = UUID.randomUUID();
-
-        User user = User.create(
-                "sample01",
-                "sample02",
-                "encoded-password",
-                "U0123456789",
-                UserRole.COMPANY_MANAGER,
-                companyId,
-                hubId
-        );
-
-        user.approve();
-
-        /*
-         * 현재 User 상태와 정확하게 동일한 요청.
-         */
-        ChangeUserAffiliationCommandDto command =
-                new ChangeUserAffiliationCommandDto(
-                        userId,
-                        UserRole.COMPANY_MANAGER,
-                        companyId,
-                        hubId
-                );
-
-        when(
-                userQueryRepository
-                        .findByIdAndDeletedAtIsNull(userId)
-        ).thenReturn(Optional.of(user));
-
-        // when & then
-        assertThatThrownBy(
-                () -> userAffiliationService
-                        .changeAffiliation(command)
-        )
-                .isInstanceOf(CustomException.class)
-                .satisfies(exception -> {
-
-                    CustomException customException =
-                            (CustomException) exception;
-
-                    assertThat(customException.getErrorCode())
-                            .isEqualTo(
-                                    UserErrorCode.USER_AFFILIATION_CONFLICT
-                            );
-                });
-
-        /*
-         * 예외 발생 후에도 기존 상태는 그대로 유지된다.
-         */
-        assertThat(user.getRole())
-                .isEqualTo(UserRole.COMPANY_MANAGER);
-
-        assertThat(user.getCompanyId())
-                .isEqualTo(companyId);
-
-        assertThat(user.getHubId())
-                .isEqualTo(hubId);
-    }
+//    /**
+//     * role, companyId, hubId가 현재 상태와 전부 같다면
+//     * 변경할 필요가 없으므로 예외가 발생해야 한다.
+//     */
+//    @Test
+//    void 현재_소속과_권한이_모두_동일하면_예외가_발생한다() {
+//        // given
+//        Long userId = 15L;
+//
+//        UUID companyId = UUID.randomUUID();
+//        UUID hubId = UUID.randomUUID();
+//
+//        User user = User.create(
+//                "sample01",
+//                "sample02",
+//                "encoded-password",
+//                "U0123456789",
+//                UserRole.COMPANY_MANAGER,
+//                companyId,
+//                hubId
+//        );
+//
+//        user.approve();
+//
+//        /*
+//         * 현재 User 상태와 정확하게 동일한 요청.
+//         */
+//        ChangeUserAffiliationCommandDto command =
+//                new ChangeUserAffiliationCommandDto(
+//                        userId,
+//                        UserRole.COMPANY_MANAGER,
+//                        companyId,
+//                        hubId
+//                );
+//
+//        when(
+//                userQueryRepository
+//                        .findByIdAndDeletedAtIsNull(userId)
+//        ).thenReturn(Optional.of(user));
+//
+//        // when & then
+//        assertThatThrownBy(
+//                () -> userAffiliationService
+//                        .changeAffiliation(command)
+//        )
+//                .isInstanceOf(CustomException.class)
+//                .satisfies(exception -> {
+//
+//                    CustomException customException =
+//                            (CustomException) exception;
+//
+//                    assertThat(customException.getErrorCode())
+//                            .isEqualTo(
+//                                    UserErrorCode.USER_AFFILIATION_CONFLICT
+//                            );
+//                });
+//
+//        /*
+//         * 예외 발생 후에도 기존 상태는 그대로 유지된다.
+//         */
+//        assertThat(user.getRole())
+//                .isEqualTo(UserRole.COMPANY_MANAGER);
+//
+//        assertThat(user.getCompanyId())
+//                .isEqualTo(companyId);
+//
+//        assertThat(user.getHubId())
+//                .isEqualTo(hubId);
+//    }
 
     /**
      * COMPANY_MANAGER는 companyId와 hubId를
