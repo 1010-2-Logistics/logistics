@@ -257,9 +257,9 @@ DB 스키마는 `infra/postgres/*.sql`이 컨테이너 최초 생성 시 1회 �
 
 | 대상 | 주소 |
 | :--- | :--- |
-| Eureka 대시보드 | http://localhost:19090 |
-| Zipkin | http://localhost:9411 |
-| RabbitMQ 관리 콘솔 | http://localhost:15672 |
+| Eureka 대시보드 | http://13.124.49.114:19090 |
+| Zipkin | http://13.124.49.114:9411 |
+| RabbitMQ 관리 콘솔 | http://13.124.49.114:15672 |
 
 MASTER 계정은 user-service 기동 시 `.env` 값으로 자동 생성됩니다.
 모든 API 요청은 Gateway(19091)를 통합니다.
@@ -281,7 +281,7 @@ curl -X POST http://localhost:19091/api/v1/auth/login \
 ## API 문서
 
 Swagger UI가 적용된 서비스입니다. 권한별 접근 범위는 `@Operation`의 description에 명시되어 있습니다.
-http://localhost:19091/swagger-ui.html
+http://13.124.49.114:19091/swagger-ui.html
 
 <br/>
 
