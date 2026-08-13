@@ -72,8 +72,11 @@ sequenceDiagram
     participant I as inventory
     participant D as delivery
     participant HR as hubRoute
+    participant A as AI
+    participant G as Gemini
+    participant S as Slack
 
-    C->>O: 주문 요청
+    C-->>O: 주문 요청
     O->>O: 상품·업체 조회로 출발/도착 허브 확정
     O->>I: 재고 차감
     O->>D: 배송 생성
@@ -83,6 +86,9 @@ sequenceDiagram
     D-->>O: 배송 생성 완료
     O->>O: 주문 저장
     O-->>C: 주문 완료
+    O->>A: 발송 시한 계산 요청
+    A-->>O: 최종 시한 계산 요청
+    O-->>S: 시한 알림 발송
 ```
 
 이후 배송은 다음 순서로 진행됩니다.
