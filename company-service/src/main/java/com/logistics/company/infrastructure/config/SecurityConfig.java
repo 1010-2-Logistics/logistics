@@ -54,8 +54,7 @@ public class SecurityConfig {
 				
 				// 내부 API 권한 검증은 어떻게?
 				.requestMatchers(
-						"/internal/v1/companies",
-						"/internal/v1/companies/{companyId}/exists",
+						"/internal/v1/companies/**",
 						"/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",

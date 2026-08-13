@@ -32,9 +32,9 @@ public class OrderCreatedRedriveController {
 			@RequestParam(name = "count", defaultValue = "1") int count,
 			@AuthenticationPrincipal UserPrincipal user) {
 		
-//		if(user == null || user.getRole() != Role.MASTER) {
-//			throw new AiException(CommonErrorCode.AUTH_FORBIDDEN);
-//		}
+		if(user == null || user.getRole() != Role.MASTER) {
+			throw new AiException(CommonErrorCode.AUTH_FORBIDDEN);
+		}
 		
 		if(count < 1 || count > 10) {
 			throw new AiException(AiErrorCode.AI_DLQ_REDRIVE_COUNT_INVALID);
