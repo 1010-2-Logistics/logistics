@@ -13,9 +13,11 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.pattern.PathPatternParser;
 import reactor.core.publisher.Mono;
 
 /**
@@ -28,17 +30,23 @@ import reactor.core.publisher.Mono;
 public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
     private static final List<String> FORGEABLE_HEADERS = List.of(
-            "X-User-Id", "X-User-Role", "X-Hub-Id", "X-Company-Id"
+            "X-User-Id",
+            "X-User-Role",
+            "X-Hub-Id",
+            "X-Company-Id"
     );
 
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
 
     private final JwtProperties jwtProperties;
     private final SecretKey secretKey;
+    private final PathPatternParser pathPatternParser = new PathPatternParser();
 
     public JwtAuthenticationGlobalFilter(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.secretKey = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8));
+        this.secretKey = Keys.hmacShaKeyFor(
+                jwtProperties.secret().getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     @Override
@@ -47,57 +55,124 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     }
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        ServerHttpRequest strippedRequest = exchange.getRequest().mutate()
-                .headers(headers -> FORGEABLE_HEADERS.forEach(headers::remove))
+    public Mono<Void> filter(
+            ServerWebExchange exchange,
+            GatewayFilterChain chain
+    ) {
+        // 클라이언트가 임의로 넣은 사용자 식별 헤더 제거
+        ServerHttpRequest strippedRequest = exchange.getRequest()
+                .mutate()
+                .headers(headers ->
+                        FORGEABLE_HEADERS.forEach(headers::remove)
+                )
                 .build();
-        ServerWebExchange strippedExchange = exchange.mutate().request(strippedRequest).build();
+
+        ServerWebExchange strippedExchange = exchange.mutate()
+                .request(strippedRequest)
+                .build();
 
         String path = strippedRequest.getURI().getPath();
-        if (jwtProperties.whitelist().stream().anyMatch(path::startsWith)) {
+
+        // Swagger / 로그인 / 회원가입 등 인증 제외 경로
+        if (isWhitelisted(path)) {
             return chain.filter(strippedExchange);
         }
 
-        String authorization = strippedRequest.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String authorization = strippedRequest.getHeaders()
+                .getFirst(HttpHeaders.AUTHORIZATION);
+
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return unauthorized(strippedExchange);
         }
 
         Claims claims;
+
         try {
             claims = Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
-                    .parseSignedClaims(authorization.substring("Bearer ".length()))
+                    .parseSignedClaims(
+                            authorization.substring("Bearer ".length())
+                    )
                     .getPayload();
+
         } catch (JwtException | IllegalArgumentException e) {
             return unauthorized(strippedExchange);
         }
 
-        if (!ACCESS_TOKEN_TYPE.equals(claims.get("tokenType", String.class))) {
+        if (!ACCESS_TOKEN_TYPE.equals(
+                claims.get("tokenType", String.class)
+        )) {
             return unauthorized(strippedExchange);
         }
 
-        ServerHttpRequest authenticatedRequest = strippedRequest.mutate()
+        ServerHttpRequest authenticatedRequest = strippedRequest
+                .mutate()
                 .headers(headers -> {
-                    headers.set("X-User-Id", claims.getSubject());
-                    headers.set("X-User-Role", claims.get("role", String.class));
-                    setIfPresent(headers, "X-Hub-Id", claims.get("hubId", String.class));
-                    setIfPresent(headers, "X-Company-Id", claims.get("companyId", String.class));
+                    headers.set(
+                            "X-User-Id",
+                            claims.getSubject()
+                    );
+
+                    headers.set(
+                            "X-User-Role",
+                            claims.get("role", String.class)
+                    );
+
+                    setIfPresent(
+                            headers,
+                            "X-Hub-Id",
+                            claims.get("hubId", String.class)
+                    );
+
+                    setIfPresent(
+                            headers,
+                            "X-Company-Id",
+                            claims.get("companyId", String.class)
+                    );
                 })
                 .build();
 
-        return chain.filter(strippedExchange.mutate().request(authenticatedRequest).build());
+        ServerWebExchange authenticatedExchange = strippedExchange
+                .mutate()
+                .request(authenticatedRequest)
+                .build();
+
+        return chain.filter(authenticatedExchange);
     }
 
-    private void setIfPresent(HttpHeaders headers, String name, String value) {
+    /**
+     * application.yml에 정의된 whitelist 경로 패턴과
+     * 실제 요청 경로가 일치하는지 검사한다.
+     *
+     * 예:
+     * /swagger-ui/** -> /swagger-ui/index.html
+     * /v3/api-docs/** -> /v3/api-docs/user-service
+     */
+    private boolean isWhitelisted(String path) {
+        PathContainer pathContainer = PathContainer.parsePath(path);
+
+        return jwtProperties.whitelist()
+                .stream()
+                .map(pathPatternParser::parse)
+                .anyMatch(pattern -> pattern.matches(pathContainer));
+    }
+
+    private void setIfPresent(
+            HttpHeaders headers,
+            String name,
+            String value
+    ) {
         if (value != null) {
             headers.set(name, value);
         }
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        return exchange.getResponse().setComplete();
+        exchange.getResponse()
+                .setStatusCode(HttpStatus.UNAUTHORIZED);
+
+        return exchange.getResponse()
+                .setComplete();
     }
 }
