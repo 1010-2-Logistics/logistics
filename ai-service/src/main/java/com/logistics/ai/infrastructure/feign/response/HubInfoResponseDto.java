@@ -6,13 +6,13 @@ import com.logistics.ai.application.dto.internal.HubInfo;
 
 public record HubInfoResponseDto(
 		UUID hubId,
-		String hubName,
+		String name,
 		String hubAddress
 ) {
 	public HubInfo toApplication() {
 		return new HubInfo(
 				hubId,
-				hubName,
+				name,
 				hubAddress
 		);
 	}

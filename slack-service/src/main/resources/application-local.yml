@@ -3,6 +3,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/logistics?currentSchema=slack_service # 스키마명 바꾸세요
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
   jpa:
     hibernate:
       ddl-auto: validate

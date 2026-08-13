@@ -11,6 +11,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres:/docker-entrypoint-initdb.d
+    # 서비스 12개가 각자 Hikari 기본 풀 10을 잡으면 120이라 기본값 100을 넘긴다.
+    # ("sorry, too many clients already")
+    command: ["postgres", "-c", "max_connections=300"]
 
   redis:
     image: redis:7

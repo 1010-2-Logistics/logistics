@@ -46,10 +46,10 @@ public class UserAffiliationService {
         validateApproved(user);
 
         // 현재 상태와 완전히 동일한 요청 방지
-        validateSameAffiliation(
-                user,
-                command
-        );
+//        validateSameAffiliation(
+//                user,
+//                command
+//        );
 
         user.changeRoleAndAffiliation(
                 command.role(),

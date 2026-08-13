@@ -38,6 +38,11 @@ interface CompanyJpaRepository extends JpaRepository<Company, UUID> {
 	""")
 	Optional<OrderedCompanyInfo> findOrderedCompanyInfo(UUID startCompanyId, UUID endCompanyId, CompanyStatus status);
 
+	@Query("""
+			select c.companyId from Company c
+			where c.hubId = :hubId
+					and c.deletedAt is null
+	""")
 	List<UUID> findCompanyIdByHubIdAndDeletedAtIsNull(UUID hubId);
 
 	boolean existsByHubIdAndCompanyNameAndDeletedAtIsNull(UUID hubId, String companyName);

@@ -59,6 +59,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/internal/v1/users/{userId}/affiliation").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/internal/v1/users/{userId}").permitAll()
 
                         // 내 정보 관련 API
                         // 로그인 사용자라면 모두 접근 가능

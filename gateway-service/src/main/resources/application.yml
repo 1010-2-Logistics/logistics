@@ -3,6 +3,8 @@ server:
   port: 19091
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     # Eureka에 등록될 서비스 이름
     name: gateway-service
@@ -68,6 +70,11 @@ spring:
               uri: lb://slack-service
               predicates:
                 - Path=/api/v1/slack/**
+
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/v1/ai/**
 
 jwt:
   # user-service와 동일한 값이어야 서명 검증이 성립한다

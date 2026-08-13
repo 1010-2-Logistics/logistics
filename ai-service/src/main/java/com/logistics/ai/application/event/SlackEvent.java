@@ -5,7 +5,7 @@ import java.util.UUID;
 public record SlackEvent(
 		Long receiverId,
 		String message,
-		UUID referenceIf
+		UUID referenceId
 ) {
 
 }

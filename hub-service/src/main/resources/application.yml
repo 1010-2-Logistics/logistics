@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: hub-service # 서비스명 컨벤션대로 바꾸세요 (예: order-service)
   profiles:
@@ -11,6 +13,9 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+  instance:
+    # 로컬 Windows 호스트명(SUMIN.mshome.net)은 게이트웨이가 접근하지 못한다
+    prefer-ip-address: true
 
 management:
   tracing:

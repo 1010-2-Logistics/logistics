@@ -1,13 +1,14 @@
 package com.logistics.ai.infrastructure.config;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
+import feign.Request;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 
-@Configuration
 public class AiFeignConfig {
 
 	@Value("${ai.gemini.key}")
@@ -22,6 +23,15 @@ public class AiFeignConfig {
 				template.header("Content-Type", "application/json");
 			}
 		};
+  }
+	
+	@Bean
+  Request.Options feignRequestOptions() {
+      return new Request.Options(3,
+      		TimeUnit.SECONDS, 30,
+      		TimeUnit.SECONDS,
+      		true
+      );
   }
 	
 	

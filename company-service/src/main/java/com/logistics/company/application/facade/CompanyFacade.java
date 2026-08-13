@@ -75,9 +75,10 @@ public class CompanyFacade {
 							companyId
 					);
 					success = true;
+				} else {
+					success = false;
 				}
 			}
-			
 		} catch (Exception e) {
 			log.error("업체 담당자 지정 연동 실패 userId = {}", userId, e);
 			success = false;
@@ -149,12 +150,6 @@ public class CompanyFacade {
 		}
 		
 		HubInfoResponseDto hubInfo = hubPort.getHubInfo(command.hubId());
-		
-		// 업체 담당자를 지정하여 요청을 보낸 경우
-		// 업체 담당자로 지정될 companyManagerId 로 해당 회원이 존재하는지 확인
-		if(command.companyManagerId() != null) {
-			
-		}
 		
 		// T1 - PENDING 상태 업체 생성 완료
 		// 담당자를 지정하지 않은 업체 생성 - Status:PENDING
