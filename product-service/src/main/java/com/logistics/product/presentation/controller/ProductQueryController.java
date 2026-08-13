@@ -19,9 +19,12 @@ import com.logistics.product.presentation.dto.request.ProductSearchRequestDto;
 import com.logistics.product.presentation.dto.response.ProductInfoResponseDto;
 import com.logistics.product.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Product")
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
@@ -30,6 +33,14 @@ public class ProductQueryController {
 	private final ProductQueryFacade productQueryFacade;
 	
 	// 상품 단건 조회
+	@Operation(
+			summary = "상품 단건 조회",
+			description = """
+					접근 권한:
+					  - 모든 사용자 가능
+					  - 허브 담당자의 경우 본인 허브 소속의 상품만 조회 가능		
+			"""
+	)
 	@GetMapping("/{productId}")
 	@NoAuthentication
 	public ApiResponse<ProductInfoResponseDto> productGetOne(
@@ -47,6 +58,14 @@ public class ProductQueryController {
 	}
 	
 	// 상품 검색
+	@Operation(
+			summary = "상품 검색",
+			description = """
+					접근 권한:
+					  - 모든 사용자 가능
+					  - 허브 담당자의 경우 본인 허브 소속의 상품만 조회 가능		
+			"""
+	)
 	@GetMapping
 	@NoAuthentication
 	public ApiResponse<PageResponse<ProductInfoResponseDto>> productSearch(

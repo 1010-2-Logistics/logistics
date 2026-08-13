@@ -19,8 +19,11 @@ import com.logistics.company.global.response.PageResponse;
 import com.logistics.company.presentation.dto.response.CompanyInfoResponseDto;
 import com.logistics.company.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Company")
 @RestController
 @RequestMapping("/api/v1/companies")
 @RequiredArgsConstructor
@@ -28,6 +31,13 @@ public class CompanyQueryController {
 
 	private final CompanyQueryService companyQueryService;
 	
+	@Operation(
+			summary = "업체 단건 조회",
+			description = """
+					접근 권한:
+					  - 전체 사용자		
+			"""
+	)
 	@GetMapping("/{companyId}")
 	@NoAuthentication
 	public ApiResponse<CompanyInfoResponseDto> companyGetOne(@PathVariable("companyId") UUID companyId) {
@@ -40,6 +50,13 @@ public class CompanyQueryController {
 		);
 	}
 	
+	@Operation(
+			summary = "업체 검색",
+			description = """
+					접근 권한:
+					  - 전체 사용자		
+			"""
+	)
 	@GetMapping
 	@NoAuthentication
 	public ApiResponse<PageResponse<CompanyInfoResponseDto>> companySearch(
