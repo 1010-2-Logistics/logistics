@@ -54,7 +54,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
         ServerWebExchange strippedExchange = exchange.mutate().request(strippedRequest).build();
 
         String path = strippedRequest.getURI().getPath();
-        if (jwtProperties.whitelist().contains(path)) {
+        if (jwtProperties.whitelist().stream().anyMatch(path::startsWith)) {
             return chain.filter(strippedExchange);
         }
 

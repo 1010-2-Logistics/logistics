@@ -274,22 +274,14 @@ curl -X POST http://localhost:19091/api/v1/auth/login \
 
 ## ERD
 
-<!-- TODO: ERD 이미지 삽입 (docs/erd.png) -->
+![img.png](img.png)
 
 <br/>
 
 ## API 문서
 
 Swagger UI가 적용된 서비스입니다. 권한별 접근 범위는 `@Operation`의 description에 명시되어 있습니다.
-
-| 서비스 | 주소 |
-| :--- | :--- |
-| user | http://localhost:19092/swagger-ui.html |
-| order | http://localhost:19093/swagger-ui.html |
-| delivery | http://localhost:19096/swagger-ui.html |
-| hub | http://localhost:19097/swagger-ui.html |
-| inventory | http://localhost:19098/swagger-ui.html |
-| hubRoute | http://localhost:19100/swagger-ui.html |
+http://localhost:19091/swagger-ui.html
 
 <br/>
 
