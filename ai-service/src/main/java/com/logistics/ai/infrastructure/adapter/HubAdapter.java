@@ -29,7 +29,7 @@ public class HubAdapter implements HubPort {
 	@Override
 	public List<HubInfo> getHubInfo(Set<UUID> hubIds) {
 		try {
-			Set<HubInfoResponseDto> hubInfoList = hubClient.getHubInfoList(hubIds);
+			Set<HubInfoResponseDto> hubInfoList = hubClient.getHubInfoList(List.copyOf(hubIds));
 			
 			return hubInfoList.stream()
 					.map(HubInfoResponseDto::toApplication)

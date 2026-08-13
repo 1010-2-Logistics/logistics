@@ -23,14 +23,13 @@ public record UserPrincipal(
         }
 
         if (role == UserRole.HUB_MANAGER
-                && hubId == null) {
+                && (hubId == null || companyId != null)) {
             throw new IllegalArgumentException(
                     "HUB_MANAGER는 hubId가 필요합니다."
             );
         }
 
-        if ((role == UserRole.COMPANY_MANAGER
-                || role == UserRole.COMPANY_DELIVERY_MANAGER)
+        if ((role == UserRole.COMPANY_MANAGER)
                 && (hubId == null || companyId == null)) {
             throw new IllegalArgumentException(
                     "업체 역할은 hubId와 companyId가 필요합니다."

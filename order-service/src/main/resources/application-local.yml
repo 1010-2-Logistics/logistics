@@ -10,7 +10,8 @@ spring:
       port: 6379
 
   rabbitmq:
-    host: ${RABBITMQ_HOST}
+    # .env의 RABBITMQ_HOST(=rabbitmq)는 도커 네트워크 안에서만 유효하다
+    host: localhost
     port: 5672
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}

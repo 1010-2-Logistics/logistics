@@ -3,6 +3,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // 기본 클라이언트(HttpURLConnection)는 PATCH를 지원하지 않는다
+    implementation 'io.github.openfeign:feign-hc5'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'org.postgresql:postgresql'
 
