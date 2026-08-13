@@ -17,8 +17,11 @@ import com.logistics.company.presentation.dto.response.CompanyExistsResponseDto;
 import com.logistics.company.presentation.dto.response.OrderedCompanyInfoResponseDto;
 import com.logistics.company.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Company Internal")
 @RestController
 @RequestMapping("/internal/v1/companies")
 @RequiredArgsConstructor
@@ -26,6 +29,9 @@ public class CompanyInternalQueryController {
 	
 	private final CompanyQueryService companyQueryService;
 	
+	@Operation(
+			summary = "주문시 업체 정보 조회"
+	)
 	@GetMapping
 	@NoAuthentication
 	public ApiResponse<OrderedCompanyInfoResponseDto> orderedCompanyInfo(
@@ -43,6 +49,9 @@ public class CompanyInternalQueryController {
 		);
 	}
 	
+	@Operation(
+			summary = "업체 존재 여부 확인"
+	)
 	@GetMapping("/{companyId}/exists")
 	@NoAuthentication
 	public ApiResponse<CompanyExistsResponseDto> existsCompany(
@@ -57,6 +66,9 @@ public class CompanyInternalQueryController {
 		);
 	}
 	
+	@Operation(
+			summary = "허브 소속 업체 ID 리스트 조회"
+	)
 	@GetMapping("/ids/{hubId}")
 	@NoAuthentication
 	public ApiResponse<List<UUID>> getCompanyIdsByHubId(@PathVariable("hubId") UUID hubId) {

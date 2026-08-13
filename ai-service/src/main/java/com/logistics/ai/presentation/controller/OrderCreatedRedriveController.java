@@ -17,8 +17,11 @@ import com.logistics.ai.global.response.ApiResponse;
 import com.logistics.ai.infrastructure.security.principal.UserPrincipal;
 import com.logistics.ai.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "AI")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/ai")
@@ -26,6 +29,13 @@ public class OrderCreatedRedriveController {
 
 	private final OrderCreatedRedrive redriver;
 	
+	@Operation(
+			summary = "주문 생성 메시지 재처리",
+			description = """
+					접근 권한:
+					  - 관리자		
+			"""
+	)
 	@PostMapping("/redrive")
 	@NoAuthentication
 	public ApiResponse<DlqRedriveResult> redrive(

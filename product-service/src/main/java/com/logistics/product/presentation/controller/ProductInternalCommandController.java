@@ -12,9 +12,12 @@ import com.logistics.product.presentation.dto.request.CompanyNameUpdateRequestDt
 import com.logistics.product.presentation.dto.response.CompanyNameUpdateResponseDto;
 import com.logistics.product.presentation.interceptor.NoAuthentication;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Product Internal")
 @RestController
 @RequestMapping("/internal/v1/products")
 @RequiredArgsConstructor
@@ -23,6 +26,9 @@ public class ProductInternalCommandController {
 	private final ProductCommandService productCommandService;
 	
 	// 업체명 수정시 업체 수정 내부 API
+	@Operation(
+			summary = "업체명 수정시 관련 상품의 업체명 전체 수정"
+	)
 	@PatchMapping
 	@NoAuthentication
 	public ApiResponse<CompanyNameUpdateResponseDto> companyNameUpdate(@Valid @RequestBody CompanyNameUpdateRequestDto request) {
