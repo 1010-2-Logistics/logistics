@@ -2,6 +2,7 @@ package com.logistics.product.application.facade;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -31,9 +32,9 @@ public class ProductQueryFacade {
 	public Product productGetOne(UUID productId, UserPrincipal user) {
 		Product product = productQueryService.findProduct(productId);
 		
-		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(productId);
+		CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(product.getCompanyId());
 		
-		if(companyInfo.hubId() != user.getHubId()) {
+		if(!Objects.equals(companyInfo.hubId(), user.getHubId())) {
 			throw new ProductException(ProductErrorCode.PRODUCT_HUB_ACCESS_DENIED);
 		}
 		
@@ -45,7 +46,7 @@ public class ProductQueryFacade {
 		
 		// Role = HUB_MANAGER + 검색 조건에 hubId 포함된 경우
 		if(query.role() == Role.HUB_MANAGER && query.hubId() != null) {
-			if(query.user().getHubId() != query.hubId()) {
+			if(!Objects.equals(query.user().getHubId(), query.hubId())) {
 				throw new ProductException(ProductErrorCode.PRODUCT_HUB_ACCESS_DENIED);
 			}
 		}

@@ -38,7 +38,7 @@ public class ProductPolicy {
 	}
 	
 	private void validateProducerType(CompanyExistsResponseDto company) {
-		if(company.companyType() != CompanyType.PRODUCER) {
+		if(!Objects.equals(company.companyType(), CompanyType.PRODUCER)) {
 			throw new ProductException(ProductErrorCode.PRODUCT_INVALID_PRODUCER_COMPANY_TYPE);
 		}
 	}
