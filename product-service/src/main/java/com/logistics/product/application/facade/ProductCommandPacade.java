@@ -6,10 +6,11 @@ import com.logistics.product.application.dto.command.ProductGroupCommand.Product
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductDeleteCommand;
 import com.logistics.product.application.dto.command.ProductGroupCommand.ProductUpdateCommand;
 import com.logistics.product.application.dto.internal.response.CompanyExistsResponseDto;
+import com.logistics.product.application.dto.internal.response.UserExistsResponseDto;
 import com.logistics.product.application.dto.result.ProductCreateResultDto;
 import com.logistics.product.application.dto.result.ProductUpdateResultDto;
 import com.logistics.product.application.port.CompanyPort;
-import com.logistics.product.application.port.HubPort;
+import com.logistics.product.application.port.UserPort;
 import com.logistics.product.application.service.ProductCommandService;
 import com.logistics.product.application.service.ProductPolicy;
 import com.logistics.product.application.service.ProductQueryService;
@@ -31,9 +32,9 @@ public class ProductCommandPacade {
 	private final ProductPolicy policy;
 	
 	private final CompanyPort companyPort;
-	
-	private final HubPort hubPort;
 
+	private final UserPort userPort;
+	
 	public ProductCreateResultDto createProduct(ProductCreateCommand command) {
 		// Role 체크 - 부적절한 권한일 시 요청을 보내지 않기 위해 role 먼저 검증
 		policy.validateHubManagerAndCompanyManager(command);
@@ -46,10 +47,9 @@ public class ProductCommandPacade {
 		switch(command.role()) {
 			case MASTER -> {}
 			case HUB_MANAGER -> {
-				// TODO: 의논후 API 스펙 확정시 구현
-				// policy.canCreateHubManager();
-				// 해당 업체 허브ID 의 허브매니저 user_id가 command.userId()와 같은지
+				UserExistsResponseDto userInfo = userPort.getUserExists(command.userId());
 				
+				policy.validateMyHub(userInfo, companyInfo.hubId());
 			}
 			case COMPANY_MANAGER -> policy.canProcessCompanyManager(command, companyInfo);
 			
@@ -76,9 +76,11 @@ public class ProductCommandPacade {
 				return ProductUpdateResultDto.from(updatedProduct);
 			}
 			case HUB_MANAGER -> {
-				// TODO: 의논후 API 스펙 확정시 구현
-				// policy.canCreateHubManager();
-				// 해당 업체 허브ID 의 허브매니저 user_id가 command.userId()와 같은지				
+				CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(product.getCompanyId());
+				
+				UserExistsResponseDto userInfo = userPort.getUserExists(command.userId());
+				
+				policy.validateMyHub(userInfo, companyInfo.hubId());
 			}
 			case COMPANY_MANAGER -> {
 				CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(product.getCompanyId());
@@ -105,10 +107,11 @@ public class ProductCommandPacade {
 			case MASTER -> productCommandService.deleteProduct(product.getProductId(), command.userId());
 			
 			case HUB_MANAGER -> {
-				// TODO: 의논후 API 스펙 확정시 구현
-				// policy.canCreateHubManager();
-				// 해당 업체 허브ID 의 허브매니저 user_id가 command.userId()와 같은지
+				CompanyExistsResponseDto companyInfo = companyPort.companyExistsRequest(product.getCompanyId());
 				
+				UserExistsResponseDto userInfo = userPort.getUserExists(command.userId());
+				
+				policy.validateMyHub(userInfo, companyInfo.hubId());
 				
 				productCommandService.deleteProduct(product.getProductId(), command.userId());
 			}
