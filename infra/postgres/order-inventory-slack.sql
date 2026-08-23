@@ -23,6 +23,23 @@ CREATE TABLE IF NOT EXISTS order_service.p_order
     CHECK (status IN ('CREATED', 'CANCELED'))
 );
 
+CREATE TABLE IF NOT EXISTS order_service.p_outbox_event
+(
+    event_id     UUID PRIMARY KEY,
+    aggregate_id UUID         NOT NULL,
+    event_type   VARCHAR(255) NOT NULL,
+    payload      TEXT         NOT NULL,
+    status       VARCHAR(50)  NOT NULL,
+    created_at   TIMESTAMP    NOT NULL,
+    published_at TIMESTAMP,
+
+    CONSTRAINT chk_outbox_status
+    CHECK (status IN ('PENDING', 'PUBLISHED'))
+    );
+
+CREATE INDEX IF NOT EXISTS idx_outbox_status_created_at
+    ON order_service.p_outbox_event (status, created_at);
+
 CREATE TABLE IF NOT EXISTS inventory_service.p_inventory
 (
     inventory_id UUID PRIMARY KEY,
