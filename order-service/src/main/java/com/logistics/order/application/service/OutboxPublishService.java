@@ -32,7 +32,6 @@ public class OutboxPublishService {
             }
         }
     }
-
     private OrderCreatedEvent deserialize(String payload) {
         try {
             return objectMapper.readValue(
