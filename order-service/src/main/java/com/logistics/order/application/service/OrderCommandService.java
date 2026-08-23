@@ -1,6 +1,8 @@
 package com.logistics.order.application.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
@@ -8,11 +10,12 @@ import com.logistics.order.application.dto.result.OrderCreateResult;
 import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.domain.entity.Order;
+import com.logistics.order.domain.entity.OutboxEvent;
 import com.logistics.order.domain.repository.OrderCommandRepository;
+import com.logistics.order.domain.repository.OutboxRepository;
 import com.logistics.order.global.exception.CustomException;
 import com.logistics.order.global.exception.OrderErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +26,8 @@ import java.util.UUID;
 @Transactional
 public class OrderCommandService {
     private final OrderCommandRepository orderCommandRepository;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
@@ -45,18 +49,24 @@ public class OrderCommandService {
 
         Order savedOrder = orderCommandRepository.save(order);
 
-        applicationEventPublisher.publishEvent(
-                new OrderCreatedEvent(
-                        savedOrder.getOrderId(),
-                        savedOrder.getDeliveryId(),
-                        savedOrder.getProductId(),
-                        savedOrder.getQuantity(),
-                        savedOrder.getRequest(),
-                        receiverName,
-                        receiverSlackId,
-                        savedOrder.getCreatedAt()
-                )
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getOrderId(),
+                savedOrder.getDeliveryId(),
+                savedOrder.getProductId(),
+                savedOrder.getQuantity(),
+                savedOrder.getRequest(),
+                receiverName,
+                receiverSlackId,
+                savedOrder.getCreatedAt()
         );
+
+        OutboxEvent outboxEvent = OutboxEvent.create(
+                savedOrder.getOrderId(),
+                "ORDER_CREATED",
+                serialize(event)
+        );
+
+        outboxRepository.save(outboxEvent);
 
         return OrderCreateResult.from(savedOrder);
     }
@@ -133,5 +143,16 @@ public class OrderCommandService {
         }
 
         return order;
+    }
+
+    private String serialize(OrderCreatedEvent event) {
+        try {
+            return objectMapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(
+                    "주문 생성 이벤트 직렬화에 실패했습니다.",
+                    e
+            );
+        }
     }
 }
