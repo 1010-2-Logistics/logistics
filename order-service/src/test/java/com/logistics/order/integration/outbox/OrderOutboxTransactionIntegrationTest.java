@@ -9,10 +9,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.utility.MountableFile;
 
+import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +28,24 @@ import static org.mockito.BDDMockito.given;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Testcontainers
 public class OrderOutboxTransactionIntegrationTest {
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17")
+            .withCopyFileToContainer(MountableFile.forHostPath(
+                            Path.of(
+                                    "..",
+                                    "infra",
+                                    "postgres",
+                                    "order-inventory-slack.sql"
+                            ).toAbsolutePath().normalize()),
+                    "/docker-entrypoint-initdb.d/order-inventory-slack.sql")
+            .withUrlParam(
+                    "currentSchema",
+                    "order_service"
+            );
+
     @Autowired
     private OrderCommandService orderCommandService;
 
