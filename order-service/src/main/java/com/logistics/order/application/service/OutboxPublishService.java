@@ -22,8 +22,14 @@ public class OutboxPublishService {
         for (OutboxEvent outboxEvent : outboxRepository.findPendingEvents()) {
             OrderCreatedEvent orderCreatedEvent = deserialize(outboxEvent.getPayload());
 
-            eventPublisher.publish(orderCreatedEvent);
-            outboxEvent.markPublished();
+            boolean published = eventPublisher.publish(
+                    orderCreatedEvent,
+                    outboxEvent.getEventId()
+            );
+
+            if (published) {
+                outboxEvent.markPublished();
+            }
         }
     }
 
