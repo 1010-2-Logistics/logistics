@@ -10,5 +10,6 @@ public interface DeliveryRouteRepository {
     DeliveryRoute save(DeliveryRoute deliveryRoute);
     int countByDeliveryId(UUID deliveryId);
     Optional<DeliveryRoute> findByIdAndDeletedAtIsNull(UUID deliveryRouteId);
-    List<DeliveryRoute> findAllByDeliveryId(UUID deliveryId);
+    List<DeliveryRoute> findAllByDeliveryId(UUID deliveryId);// 동시성 제어를 위한 락 조회 (SELECT ... FOR UPDATE)
+    Optional<DeliveryRoute> findByIdAndDeletedAtIsNullForUpdate(UUID deliveryRouteId);
 }
