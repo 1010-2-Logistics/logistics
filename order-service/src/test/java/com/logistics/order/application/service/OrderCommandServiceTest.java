@@ -1,7 +1,7 @@
 package com.logistics.order.application.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
@@ -49,7 +49,7 @@ class OrderCommandServiceTest {
     private OutboxRepository outboxRepository;
 
     @Mock
-    private ObjectMapper objectMapper;
+    private JsonMapper jsonMapper;
 
     @InjectMocks
     private OrderCommandService orderCommandService;
@@ -94,7 +94,7 @@ class OrderCommandServiceTest {
             );
 
             given(orderCommandRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
-            given(objectMapper.writeValueAsString(any(OrderCreatedEvent.class))).willReturn("{\"orderId\":\"" + orderId + "\"}");
+            given(jsonMapper.writeValueAsString(any(OrderCreatedEvent.class))).willReturn("{\"orderId\":\"" + orderId + "\"}");
 
             OrderCreateResult result = orderCommandService.createOrder(
                     orderCreateCommand,
@@ -156,7 +156,7 @@ class OrderCommandServiceTest {
             // {} : 정확히 어떤 OrderCreatedEvent 객체인지는 상관없고, OrderCreatedEvent 타입이면 전부 매칭해~
             // ObjectMapper가 어떤 OrderCreatedEvent든 JSON으로 직렬화하려고 하면,
             // 테스트에서는 강제로 JsonProcessingException을 발생시켜라
-            given(objectMapper.writeValueAsString(any(OrderCreatedEvent.class))).willThrow(new JsonProcessingException("직렬화 실패") {
+            given(jsonMapper.writeValueAsString(any(OrderCreatedEvent.class))).willThrow(new JacksonException("직렬화 실패") {
             });
 
             assertThatThrownBy(() ->
