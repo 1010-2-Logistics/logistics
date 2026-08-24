@@ -20,75 +20,133 @@ spring:
               lower-case-service-id: true
 
           # 외부 요청 경로와 내부 서비스를 직접 연결
+          #
+          # 라우트 id는 전역에서 유일해야 한다. 같은 id가 둘이면 하나가 조용히 무시되므로
+          # 문서 취합 라우트에는 -docs 접미사를 붙였다.
           routes:
+
+            # ── 업무 API ────────────────────────────────────────────────────
             - id: user-service
 
               # lb는 LoadBalancer를 의미
-              # Eureka에서 template-service의 실행 위치를 조회해 요청을 전달
+              # Eureka에서 user-service의 실행 위치를 조회해 요청을 전달
               uri: lb://user-service
 
+              predicates:
+                - Path=/api/v1/users/**,/api/v1/auth/**
+
+            - id: hub-service
+              uri: lb://hub-service
+              predicates:
+                - Path=/api/v1/hubs/**
+
+            - id: hubRoute-service
+              uri: lb://hubRoute-service
+              predicates:
+                - Path=/api/v1/hubRoute/**
+
+            - id: company-service
+              uri: lb://company-service
+              predicates:
+                - Path=/api/v1/companies/**
+
+            - id: product-service
+              uri: lb://product-service
+              predicates:
+                - Path=/api/v1/products/**
+
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/v1/orders/**
+
+            - id: inventory-service
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/v1/inventories/**
+
+            - id: delivery-service
+              uri: lb://delivery-service
+              predicates:
+                - Path=/api/v1/deliveries/**,/api/v1/delivery-managers/**
+
+            - id: slack-service
+              uri: lb://slack-service
+              predicates:
+                - Path=/api/v1/slack/**
+
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/v1/ai/**
+
+            # ── Swagger 문서 취합 ───────────────────────────────────────────
+            # 각 서비스의 /v3/api-docs를 게이트웨이 한 곳으로 모아 보여준다.
+            # SetPath로 서비스명 세그먼트를 떼고 원래 경로로 되돌린다.
+            - id: user-service-docs
+              uri: lb://user-service
               predicates:
                 - Path=/v3/api-docs/user-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: hub-service
+            - id: hub-service-docs
               uri: lb://hub-service
               predicates:
                 - Path=/v3/api-docs/hub-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: hubRoute-service
+            - id: hubRoute-service-docs
               uri: lb://hubRoute-service
               predicates:
                 - Path=/v3/api-docs/hubRoute-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: company-service
+            - id: company-service-docs
               uri: lb://company-service
               predicates:
                 - Path=/v3/api-docs/company-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: product-service
+            - id: product-service-docs
               uri: lb://product-service
               predicates:
                 - Path=/v3/api-docs/product-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: order-service
+            - id: order-service-docs
               uri: lb://order-service
               predicates:
                 - Path=/v3/api-docs/order-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: inventory-service
+            - id: inventory-service-docs
               uri: lb://inventory-service
               predicates:
                 - Path=/v3/api-docs/inventory-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: delivery-service
+            - id: delivery-service-docs
               uri: lb://delivery-service
               predicates:
                 - Path=/v3/api-docs/delivery-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: slack-service
+            - id: slack-service-docs
               uri: lb://slack-service
               predicates:
                 - Path=/v3/api-docs/slack-service
               filters:
                 - SetPath=/v3/api-docs
 
-            - id: ai-service
+            - id: ai-service-docs
               uri: lb://ai-service
               predicates:
                 - Path=/v3/api-docs/ai-service
@@ -113,14 +171,17 @@ springdoc:
 jwt:
   # user-service와 동일한 값이어야 서명 검증이 성립한다
   secret: ${JWT_SECRET}
+  # JwtAuthenticationGlobalFilter가 PathPatternParser로 매칭하므로 Ant 패턴을 쓴다.
+  # `**` 를 빼면 정확히 그 경로만 일치해 하위 경로가 전부 401이 된다.
   whitelist:
     - /api/v1/auth/login
     - /api/v1/auth/signup
     - /actuator/health
-    - /swagger-ui
-    - /v3/api-docs
-    - /swagger-resources
-    - /webjars
+    - /swagger-ui.html
+    - /swagger-ui/**
+    - /v3/api-docs/**
+    - /swagger-resources/**
+    - /webjars/**
 
 eureka:
   client:
