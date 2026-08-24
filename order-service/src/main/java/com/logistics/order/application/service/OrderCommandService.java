@@ -1,8 +1,8 @@
 package com.logistics.order.application.service;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
@@ -27,7 +27,7 @@ import java.util.UUID;
 public class OrderCommandService {
     private final OrderCommandRepository orderCommandRepository;
     private final OutboxRepository outboxRepository;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
     public OrderCreateResult createOrder(
             OrderCreateCommand orderCreateCommand,
@@ -147,8 +147,8 @@ public class OrderCommandService {
 
     private String serialize(OrderCreatedEvent event) {
         try {
-            return objectMapper.writeValueAsString(event);
-        } catch (JsonProcessingException e) {
+            return jsonMapper.writeValueAsString(event);
+        } catch (JacksonException e) {
             throw new IllegalStateException(
                     "주문 생성 이벤트 직렬화에 실패했습니다.",
                     e
