@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,5 +26,10 @@ public class OutboxRepositoryImpl implements OutboxRepository {
                 .findTop100ByStatusOrderByCreatedAtAsc(
                         OutboxStatus.PENDING
                 );
+    }
+
+    @Override
+    public Optional<OutboxEvent> findById(UUID eventId) {
+        return jpaRepository.findById(eventId);
     }
 }

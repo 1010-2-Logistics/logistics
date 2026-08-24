@@ -5,33 +5,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.application.port.EventPublisher;
 import com.logistics.order.domain.entity.OutboxEvent;
-import com.logistics.order.domain.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class OutboxPublishService {
-    private final OutboxRepository outboxRepository;
+    private final OutboxTransactionService outboxTransactionService;
     private final EventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
 
-    @Transactional
     public void publishPendingEvents() {
-        for (OutboxEvent outboxEvent : outboxRepository.findPendingEvents()) {
-            OrderCreatedEvent orderCreatedEvent = deserialize(outboxEvent.getPayload());
+        for (OutboxEvent outboxEvent : outboxTransactionService.findPendingEvents()) {
+            OrderCreatedEvent event = deserialize(outboxEvent.getPayload());
 
             boolean published = eventPublisher.publish(
-                    orderCreatedEvent,
+                    event,
                     outboxEvent.getEventId()
             );
 
             if (published) {
-                outboxEvent.markPublished();
+                outboxTransactionService.markPublished(
+                        outboxEvent.getEventId()
+                );
             }
         }
     }
+
     private OrderCreatedEvent deserialize(String payload) {
         try {
             return objectMapper.readValue(

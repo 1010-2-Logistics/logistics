@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.application.port.EventPublisher;
 import com.logistics.order.domain.entity.OutboxEvent;
-import com.logistics.order.domain.entity.OutboxStatus;
-import com.logistics.order.domain.repository.OutboxRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -26,7 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OutboxPublishServiceTest {
     @Mock
-    private OutboxRepository outboxRepository;
+    private OutboxTransactionService outboxTransactionService;
 
     @Mock
     private EventPublisher eventPublisher;
@@ -58,7 +55,7 @@ class OutboxPublishServiceTest {
                 LocalDateTime.now()
         );
 
-        given(outboxRepository.findPendingEvents()).willReturn(List.of(outboxEvent));
+        given(outboxTransactionService.findPendingEvents()).willReturn(List.of(outboxEvent));
         given(objectMapper.readValue(
                 outboxEvent.getPayload(),
                 OrderCreatedEvent.class
@@ -70,11 +67,11 @@ class OutboxPublishServiceTest {
 
         outboxPublishService.publishPendingEvents();
 
-        assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
-        assertThat(outboxEvent.getPublishedAt()).isNotNull();
-
         verify(eventPublisher).publish(
                 orderCreatedEvent,
+                outboxEvent.getEventId()
+        );
+        verify(outboxTransactionService).markPublished(
                 outboxEvent.getEventId()
         );
     }
@@ -100,7 +97,7 @@ class OutboxPublishServiceTest {
                 LocalDateTime.now()
         );
 
-        given(outboxRepository.findPendingEvents()).willReturn(List.of(outboxEvent));
+        given(outboxTransactionService.findPendingEvents()).willReturn(List.of(outboxEvent));
         given(objectMapper.readValue(
                 outboxEvent.getPayload(),
                 OrderCreatedEvent.class
@@ -112,13 +109,11 @@ class OutboxPublishServiceTest {
 
         outboxPublishService.publishPendingEvents();
 
-        assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PENDING);
-        assertThat(outboxEvent.getPublishedAt()).isNull();
-
         verify(eventPublisher).publish(
                 orderCreatedEvent,
                 outboxEvent.getEventId()
         );
+        verify(outboxTransactionService, never()).markPublished(any());
     }
 
     @Test
@@ -143,7 +138,7 @@ class OutboxPublishServiceTest {
                 LocalDateTime.now()
         );
 
-        given(outboxRepository.findPendingEvents()).willReturn(List.of(outboxEvent));
+        given(outboxTransactionService.findPendingEvents()).willReturn(List.of(outboxEvent));
         given(objectMapper.readValue(
                 outboxEvent.getPayload(),
                 OrderCreatedEvent.class
@@ -151,29 +146,22 @@ class OutboxPublishServiceTest {
 
         given(eventPublisher.publish(
                 orderCreatedEvent,
-                outboxEvent.getEventId()
-        ))
+                outboxEvent.getEventId()))
                 .willReturn(false)
                 .willReturn(true);
 
         // 첫 번째 polling
         outboxPublishService.publishPendingEvents();
-
-        // 실패했으므로 PENDING 유지
-        assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PENDING);
-        assertThat(outboxEvent.getPublishedAt()).isNull();
+        verify(outboxTransactionService, never()).markPublished(any());
 
         // 두 번째 polling
         outboxPublishService.publishPendingEvents();
-
-        // 재시도 성공
-        assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
-        assertThat(outboxEvent.getPublishedAt()).isNotNull();
-
         verify(eventPublisher, times(2)).publish(
                 orderCreatedEvent,
                 outboxEvent.getEventId()
         );
+
+        verify(outboxTransactionService, times(1)).markPublished(outboxEvent.getEventId());
     }
 
     @Test
@@ -185,7 +173,7 @@ class OutboxPublishServiceTest {
                 "invalid-json"
         );
 
-        given(outboxRepository.findPendingEvents()).willReturn(List.of(outboxEvent));
+        given(outboxTransactionService.findPendingEvents()).willReturn(List.of(outboxEvent));
         given(objectMapper.readValue(
                 outboxEvent.getPayload(),
                 OrderCreatedEvent.class
@@ -197,8 +185,6 @@ class OutboxPublishServiceTest {
                 .hasMessage("Outbox 이벤트 역직렬화에 실패했습니다.");
 
         verifyNoInteractions(eventPublisher);
-
-        assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PENDING);
-        assertThat(outboxEvent.getPublishedAt()).isNull();
+        verify(outboxTransactionService, never()).markPublished(any());
     }
 }
