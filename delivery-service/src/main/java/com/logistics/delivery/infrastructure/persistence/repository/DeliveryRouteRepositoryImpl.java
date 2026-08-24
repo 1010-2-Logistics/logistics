@@ -34,4 +34,8 @@ public class DeliveryRouteRepositoryImpl implements DeliveryRouteRepository {
         return jpaRepository.findAllByDeliveryIdAndDeletedAtIsNullOrderBySequenceAsc(deliveryId);
     }
 
+    @Override
+    public Optional<DeliveryRoute> findByIdAndDeletedAtIsNullForUpdate(UUID deliveryRouteId) {
+        return jpaRepository.findByDeliveryRouteIdAndDeletedAtIsNullForUpdate(deliveryRouteId);
+    }
 }
