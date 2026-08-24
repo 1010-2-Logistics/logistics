@@ -101,17 +101,20 @@ class DeliveryManagerAssignmentConcurrencyTest {
         testHubId = UUID.randomUUID();
         registerTestManagers(3);
 
-        // when: 스레드 여러 개가 "이 풀에 대한 최초 배정"을 동시에 시도
-        List<Long> results = new CopyOnWriteArrayList<>();
+        // when: 스레드 여러 개가 "이 풀에 대한 최초 상태 row 생성"을 동시에 시도
+        // assignNextManager는 row가 없으면 그냥 예외를 던질 뿐 만들지 않는다(DELIVERY_MANAGER_UNAVAILABLE).
+        // row를 실제로 만드는 건 등록 경로(registerDeliveryManager)의 find-or-create 패턴이라,
+        // 이 테스트가 검증하려는 경쟁 상황은 그 패턴을 직접 재현해야 한다.
         List<Exception> failures = new CopyOnWriteArrayList<>();
-        runConcurrently(THREAD_COUNT, () -> {
-            DeliveryManager assigned = assignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, testHubId);
-            results.add(assigned.getDeliveryManagerId());
-        }, failures);
+        runConcurrently(THREAD_COUNT, () ->
+                assignmentStateRepository
+                        .findForUpdate(ManagerType.COMPANY_DELIVERY_MANAGER, testHubId)
+                        .orElseGet(() -> assignmentStateRepository.save(
+                                DeliveryManagerAssignmentState.init(ManagerType.COMPANY_DELIVERY_MANAGER, testHubId))),
+                failures);
 
         // then: 일부는 유니크 인덱스 위반으로 실패할 수 있음(재시도 로직이 없으므로) — 이건 의도된 트레이드오프.
         // 핵심은 실패가 나더라도 DB엔 절대 중복 row가 남지 않아야 한다는 것.
-        assertThat(results.size() + failures.size()).isEqualTo(THREAD_COUNT);
 
         Integer stateRowCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM delivery_service.p_delivery_manager_assignment_state "

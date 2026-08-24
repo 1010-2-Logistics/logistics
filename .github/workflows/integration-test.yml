@@ -1,0 +1,58 @@
+name: Integration Test
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'delivery-service/**'
+      - 'infra/postgres/**'
+      - '.github/workflows/integration-test.yml'
+
+jobs:
+  integration-test:
+    name: Integration Test (delivery-service)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: logistics
+          POSTGRES_PASSWORD: logistics
+          POSTGRES_DB: logistics
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_USERNAME: logistics
+      DB_PASSWORD: logistics
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # infra/postgres/*.sql는 docker-compose에서는 컨테이너 최초 기동 시
+      # docker-entrypoint-initdb.d로 자동 실행되지만, GitHub Actions의 서비스
+      # 컨테이너는 볼륨 마운트를 지원하지 않아 직접 적용해야 한다.
+      - name: Apply schema
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          for f in infra/postgres/*.sql; do
+            PGPASSWORD=logistics psql -h localhost -U logistics -d logistics -f "$f"
+          done
+
+      - name: Run integration tests
+        run: ./gradlew :delivery-service:integrationTest
