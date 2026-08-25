@@ -1,5 +1,7 @@
 package com.logistics.order.application.service;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 import com.logistics.order.application.dto.command.OrderCreateCommand;
 import com.logistics.order.application.dto.command.OrderUpdateCommand;
 import com.logistics.order.application.dto.result.OrderCancelResult;
@@ -8,7 +10,10 @@ import com.logistics.order.application.dto.result.OrderUpdateResult;
 import com.logistics.order.application.event.OrderCreatedEvent;
 import com.logistics.order.domain.entity.Order;
 import com.logistics.order.domain.entity.OrderStatus;
+import com.logistics.order.domain.entity.OutboxEvent;
+import com.logistics.order.domain.entity.OutboxStatus;
 import com.logistics.order.domain.repository.OrderCommandRepository;
+import com.logistics.order.domain.repository.OutboxRepository;
 import com.logistics.order.global.exception.CustomException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,7 +23,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +46,10 @@ class OrderCommandServiceTest {
     private OrderCommandRepository orderCommandRepository;
 
     @Mock
-    private ApplicationEventPublisher applicationEventPublisher;
+    private OutboxRepository outboxRepository;
+
+    @Mock
+    private JsonMapper jsonMapper;
 
     @InjectMocks
     private OrderCommandService orderCommandService;
@@ -70,10 +78,11 @@ class OrderCommandServiceTest {
     @DisplayName("주문 생성")
     class order_create {
         @Test
-        @DisplayName("주문 생성하고 저장 성공")
-        void order_create_success() {
+        @DisplayName("주문 생성 성공 시 주문과 PENDING Outbox 이벤트를 함께 저장")
+        void createOrder_success_saveOrderAndOutbox() throws Exception {
             UUID orderId = UUID.randomUUID();
             UUID deliveryId = UUID.randomUUID();
+            UUID startCompanyId = UUID.randomUUID();
             UUID endCompanyId = UUID.randomUUID();
             UUID productId = UUID.randomUUID();
 
@@ -85,44 +94,84 @@ class OrderCommandServiceTest {
             );
 
             given(orderCommandRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
+            given(jsonMapper.writeValueAsString(any(OrderCreatedEvent.class))).willReturn("{\"orderId\":\"" + orderId + "\"}");
 
-            OrderCreateResult orderCreateResult = orderCommandService.createOrder(
+            OrderCreateResult result = orderCommandService.createOrder(
                     orderCreateCommand,
                     orderId,
                     deliveryId,
                     startCompanyId,
-                    "name",
-                    "slackId"
+                    "receiverName",
+                    "receiverSlackId"
             );
 
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
 
             verify(orderCommandRepository).save(orderCaptor.capture());
-            ArgumentCaptor<OrderCreatedEvent> eventCaptor =
-                    ArgumentCaptor.forClass(OrderCreatedEvent.class);
-
-            verify(applicationEventPublisher).publishEvent(
-                    eventCaptor.capture()
-            );
-
-            OrderCreatedEvent event = eventCaptor.getValue();
-
-            assertThat(event.orderId()).isEqualTo(orderId);
-            assertThat(event.deliveryId()).isEqualTo(deliveryId);
-            assertThat(event.productId()).isEqualTo(productId);
-            assertThat(event.quantity()).isEqualTo(10);
 
             Order savedOrder = orderCaptor.getValue();
 
             assertThat(savedOrder.getOrderId()).isEqualTo(orderId);
             assertThat(savedOrder.getDeliveryId()).isEqualTo(deliveryId);
+            assertThat(savedOrder.getStartCompanyId()).isEqualTo(startCompanyId);
             assertThat(savedOrder.getEndCompanyId()).isEqualTo(endCompanyId);
             assertThat(savedOrder.getProductId()).isEqualTo(productId);
             assertThat(savedOrder.getQuantity()).isEqualTo(10);
-            assertThat(savedOrder.getRequest()).isEqualTo("8월 6일 오전까지 납품");
             assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.CREATED);
 
-            assertThat(orderCreateResult.orderId()).isEqualTo(orderId);
+            //Outbox 저장 확인
+            ArgumentCaptor<OutboxEvent> outboxCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
+            verify(outboxRepository).save(outboxCaptor.capture());
+            OutboxEvent savedOutbox = outboxCaptor.getValue();
+
+            assertThat(savedOutbox.getEventId()).isNotNull();
+            assertThat(savedOutbox.getAggregateId()).isEqualTo(orderId);
+            assertThat(savedOutbox.getEventType()).isEqualTo("ORDER_CREATED");
+            assertThat(savedOutbox.getStatus()).isEqualTo(OutboxStatus.PENDING);
+            assertThat(savedOutbox.getPayload()).contains(orderId.toString());
+            assertThat(savedOutbox.getCreatedAt()).isNotNull();
+            assertThat(savedOutbox.getPublishedAt()).isNull();
+
+            assertThat(result.orderId()).isEqualTo(orderId);
+        }
+
+        @Test
+        @DisplayName("Outbox 이벤트 직렬화 실패 시 주문 생성 실패 처리")
+        void createOrder_fail_whenOutboxSerializationFails() throws Exception {
+            UUID orderId = UUID.randomUUID();
+            UUID deliveryId = UUID.randomUUID();
+            UUID startCompanyId = UUID.randomUUID();
+            UUID endCompanyId = UUID.randomUUID();
+            UUID productId = UUID.randomUUID();
+
+            OrderCreateCommand orderCreateCommand = new OrderCreateCommand(
+                    endCompanyId,
+                    productId,
+                    10,
+                    "요청사항"
+            );
+
+            given(orderCommandRepository.save(any(Order.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+            // {} : 정확히 어떤 OrderCreatedEvent 객체인지는 상관없고, OrderCreatedEvent 타입이면 전부 매칭해~
+            // ObjectMapper가 어떤 OrderCreatedEvent든 JSON으로 직렬화하려고 하면,
+            // 테스트에서는 강제로 JsonProcessingException을 발생시켜라
+            given(jsonMapper.writeValueAsString(any(OrderCreatedEvent.class))).willThrow(new JacksonException("직렬화 실패") {
+            });
+
+            assertThatThrownBy(() ->
+                    orderCommandService.createOrder(
+                            orderCreateCommand,
+                            orderId,
+                            deliveryId,
+                            startCompanyId,
+                            "receiverName",
+                            "receiverSlackId"
+                    ))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("주문 생성 이벤트 직렬화에 실패했습니다.");
+
+            verify(outboxRepository, never()).save(any(OutboxEvent.class));
         }
     }
 
