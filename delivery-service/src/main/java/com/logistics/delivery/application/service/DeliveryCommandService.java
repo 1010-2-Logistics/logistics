@@ -125,7 +125,7 @@ public class DeliveryCommandService {
 
     public RouteStatusChangeResult changeDeliveryRouteStatus(UUID deliveryId, UUID routeId,
                                                      ChangeDeliveryRouteStatusCommand command, UserPrincipal principal) {
-        DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)
+        DeliveryRoute route = deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)
                 .orElseThrow(() -> new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND));
         if (!route.getDeliveryId().equals(deliveryId)) {
             throw new CustomException(DeliveryErrorCode.DELIVERY_ROUTE_NOT_FOUND);

@@ -366,7 +366,7 @@ class DeliveryCommandServiceTest {
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
 
         RouteStatusChangeResult result = deliveryCommandService.changeDeliveryRouteStatus(
@@ -382,7 +382,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.DEST_HUB_ARRIVED, null, null), MASTER))
@@ -397,7 +397,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         UserPrincipal otherHubManager = new UserPrincipal(5L, Role.HUB_MANAGER, UUID.randomUUID(), null);
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
@@ -413,7 +413,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         UserPrincipal otherManager = new UserPrincipal(99L, Role.HUB_DELIVERY_MANAGER, null, null);
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
@@ -433,7 +433,7 @@ class DeliveryCommandServiceTest {
         DeliveryRoute route = DeliveryRoute.create(
                 deliveryId, 1, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRouteRepository.findAllByDeliveryId(deliveryId)).thenReturn(List.of(priorRoute, route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
@@ -456,7 +456,7 @@ class DeliveryCommandServiceTest {
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(1);
 
@@ -484,7 +484,7 @@ class DeliveryCommandServiceTest {
                 deliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(2);
 
@@ -507,7 +507,7 @@ class DeliveryCommandServiceTest {
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(1);
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, endHubId))
@@ -525,7 +525,7 @@ class DeliveryCommandServiceTest {
     void 존재하지_않는_경로면_예외() {
         UUID deliveryId = UUID.randomUUID();
         UUID routeId = UUID.randomUUID();
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.empty());
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER))
@@ -541,7 +541,7 @@ class DeliveryCommandServiceTest {
         UUID routeId = UUID.randomUUID();
         DeliveryRoute route = DeliveryRoute.create(
                 otherDeliveryId, 0, UUID.randomUUID(), UUID.randomUUID(), 1L, BigDecimal.TEN, 30);
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
 
         assertThatThrownBy(() -> deliveryCommandService.changeDeliveryRouteStatus(
                 deliveryId, routeId, new ChangeDeliveryRouteStatusCommand(DeliveryRouteStatus.HUB_MOVING, null, null), MASTER))
@@ -561,7 +561,7 @@ class DeliveryCommandServiceTest {
                 deliveryId, 0, UUID.randomUUID(), endHubId, 1L, BigDecimal.TEN, 30);
         route.changeStatus(DeliveryRouteStatus.HUB_MOVING);
 
-        when(deliveryRouteRepository.findByIdAndDeletedAtIsNull(routeId)).thenReturn(Optional.of(route));
+        when(deliveryRouteRepository.findByIdAndDeletedAtIsNullForUpdate(routeId)).thenReturn(Optional.of(route));
         when(deliveryRepository.findByIdAndDeletedAtIsNull(deliveryId)).thenReturn(Optional.of(delivery));
         when(deliveryRouteRepository.countByDeliveryId(deliveryId)).thenReturn(1);
         when(deliveryManagerAssignmentService.assignNextManager(ManagerType.COMPANY_DELIVERY_MANAGER, endHubId))
